@@ -1,6 +1,6 @@
 # nophp is a light simple web framework on php.
 
-- HTML specialists can do many things without asking PHP specialists.
+- HTML specialists can write many pages without asking PHP specialists.
 - Designed for inhouse single server web application which anyone have to login and read/write database.
 - Powerful log for debug.
 - Javascript not required.
@@ -51,6 +51,26 @@
  <!--}-->
  </ul>
 ```
+
+- New table must be added by PHP specialists, but fields in the table can be add by HTML specialists.
+- And the 'simple table' that holds a data like items for <select><option>, can be add by HTML specialists.
+- New function can be added by the PHP specialists, and HTML specialists can use it.
+
+# File structure.
+
+- db/ (any path)
+-- master.sq3 (any name)
+
+- html/ (any path)
+-- index.php (this framework)
+-- env.php (server dependent settings written by PHP specialists)
+-- tables.php (table definition and user script written by PHP specialists)
+
+- html/res/ (any path)
+-- *.html (written by HTML specialists)
+
+- html/debuglog/ (any path, optional)
+-- *.php (automatically created)
 
 # Documents in Japanese is not translated to English yet.
 
