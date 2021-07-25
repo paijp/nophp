@@ -1,0 +1,53 @@
+<FORM method=POST>
+`login__:loginrecord`さん、いらっしゃいませ。
+<INPUT type=submit name=":logout" value="ログアウト">
+<A href="g9999.html">目次</A>
+</FORM>
+<FORM method=POST>
+<INPUT type=text name=":reportbody" size=60>
+<INPUT type=submit value="send report">
+</FORM>
+<UL>
+	<LI><A href="g0002.html">前回のtables.php</A>から変更ありません。
+</UL>
+<TABLE border width="96%">
+<TR><TH>g0002d.html
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">`:bq`27__:hex`:bq`<br />
+`:bq`27__:hex:html`:bq`<br />
+`:bq`27__:hex:url`:bq`<br />
+var a = `:bq`27__:hex:js`:bq`;<br />
+var b = `:bq`abc__:js`:bq`;<br />
+`:bq`27__:hex:raw`:bq`<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc-->`27__:hex`
+`27__:hex:html`
+`27__:hex:url`
+var a = `27__:hex:js`;
+var b = `abc__:js`;
+`27__:hex:raw`
+
+<!--}-->
+<TD width="33%">`27__:hex`
+`27__:hex:html`
+`27__:hex:url`
+var a = `27__:hex:js`;
+var b = `abc__:js`;
+`27__:hex:raw`
+
+
+</TABLE>
+
+<UL>
+	<LI>バッククォートで囲まれた箇所は、通常はHTMLエスケープされます。
+	<LI>しかしJavascriptなどで使う場合は、別のエスケープを選ぶこともでます。
+	<LI>「:html」は、HTMLエスケープします。省略時はこれが選択されます。
+	<LI>「:url」は、URLエンコードします。
+	<LI>「:js」は、Javascript用に、エンコードの必要があればURLエンコードとデコード関数、必要がなければ単にダブルクォートで囲って出力します。
+	<LI>「:raw」は、エスケープせずに出力します。
+</UL>
+
+
+<HR>

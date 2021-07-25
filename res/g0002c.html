@@ -1,0 +1,532 @@
+<FORM method=POST>
+`login__:loginrecord`さん、いらっしゃいませ。
+<INPUT type=submit name=":logout" value="ログアウト">
+<A href="g9999.html">目次</A>
+</FORM>
+<FORM method=POST>
+<INPUT type=text name=":reportbody" size=60>
+<INPUT type=submit value="send report">
+</FORM>
+<UL>
+	<LI><A href="g0002.html">前回のtables.php</A>から変更ありません。
+</UL>
+<TABLE border width="96%">
+<TR><TH>g0002c.html
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">ドット `:bq`:dot`:bq`<br />
+コロン `:bq`:col`:bq`<br />
+空白 `:bq`:sp`:bq`<br />
+バッククォート `:bq`:bq`:bq`<br />
+空文字列 `:bq`:null`:bq`<br />
+文字コード `:bq`404142__:hex`:bq`<br />
+結合サンプル `:bq`abc__:sp__123__:cat:cat`:bq`<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc-->ドット `:dot`
+コロン `:col`
+空白 `:sp`
+バッククォート `:bq`
+空文字列 `:null`
+文字コード `404142__:hex`
+結合サンプル `abc__:sp__123__:cat:cat`
+
+<!--}-->
+<TD width="33%">ドット `:dot`
+コロン `:col`
+空白 `:sp`
+バッククォート `:bq`
+空文字列 `:null`
+文字コード `404142__:hex`
+結合サンプル `abc__:sp__123__:cat:cat`
+
+
+</TABLE>
+
+<UL>
+	<LI>「name=」内などで、入力できない文字を入力するためのエスケープです。
+	<LI>`:bq`abc__:sp__123__:cat:cat`:bq`のようにして、他の文字列と結合することができます。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0002c.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">&lt;!--{tableid message_aliias=message2--&gt;<br />
+現在レコードID `:bq`:curid`:bq`<br />
+現在テーブル名 `:bq`:curtable`:bq`<br />
+&lt;!--}--&gt;<br />
+現在ページ名 `:bq`:curpage`:bq`<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc--><!--{tableid message_aliias=message2-->
+現在レコードID `:curid`
+現在テーブル名 `:curtable`
+<!--}-->
+現在ページ名 `:curpage`
+
+<!--}-->
+<TD width="33%"><!--{tableid message_aliias=message2-->
+現在レコードID `:curid`
+現在テーブル名 `:curtable`
+<!--}-->
+現在ページ名 `:curpage`
+
+
+</TABLE>
+
+<UL>
+	<LI>現在の状態を返します。
+	<LI>コピーしたときに、コピー先に合わせて変える必要がなくなります。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0002c.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">&lt;FORM method=POST&gt;<br />
+`:bq`:ispost`:bq`<br />
+&lt;INPUT type=submit value=&quot;POST&quot;&gt;<br />
+&lt;/FORM&gt;<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc--><FORM method=POST>
+`:ispost`
+<INPUT type=submit value="POST">
+</FORM>
+
+<!--}-->
+<TD width="33%"><FORM method=POST>
+`:ispost`
+<INPUT type=submit value="POST">
+</FORM>
+
+
+</TABLE>
+
+<UL>
+	<LI>「:ispost」は、POST(submit)なら「1」、そうでなければ空文字列を返します。
+	<LI>POSTであっても、submitkeyが合っていない場合(他サイトからのPOSTなど)は空文字列を返します。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0002c.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">`:bq`:isvalid`:bq`<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc-->`:isvalid`
+
+<!--}-->
+<TD width="33%">`:isvalid`
+
+
+</TABLE>
+
+<UL>
+	<LI>「:isvalid」は、「&lt;!--{valid」を使っている場合で、エラーがなかった場合は「1」を、エラーがあった場合は空文字列を返します。
+	<LI>「&lt;!--{valid」を使っていない場合は「1」を返します。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0002c.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">`:bq`test0__:g`:bq`&lt;BR&gt;<br />
+&lt;A href=&quot;?test0=100&quot;&gt;100&lt;/A&gt;&lt;BR&gt;<br />
+&lt;A href=&quot;?test0=200&quot;&gt;200&lt;/A&gt;&lt;BR&gt;<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc-->`test0__:g`<BR>
+<A href="?test0=100">100</A><BR>
+<A href="?test0=200">200</A><BR>
+
+<!--}-->
+<TD width="33%">`test0__:g`<BR>
+<A href="?test0=100">100</A><BR>
+<A href="?test0=200">200</A><BR>
+
+
+</TABLE>
+
+<UL>
+	<LI>「:g」は、GETパラメータを取得して、コンマと数字以外を取り除いたものを返します。
+	<LI>GETパラメータは外部サイトから渡される可能性があるため、リスクを減らすためにこのような処理をおこなっています。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0002c.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">&lt;FORM method=POST&gt;<br />
+`:bq`test0__:p`:bq`<br />
+&lt;INPUT type=text name=&quot;test0&quot;&gt;<br />
+&lt;INPUT type=submit value=&quot;送信&quot;&gt;<br />
+&lt;/FORM&gt;<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc--><FORM method=POST>
+`test0__:p`
+<INPUT type=text name="test0">
+<INPUT type=submit value="送信">
+</FORM>
+
+<!--}-->
+<TD width="33%"><FORM method=POST>
+`test0__:p`
+<INPUT type=text name="test0">
+<INPUT type=submit value="送信">
+</FORM>
+
+
+</TABLE>
+
+<UL>
+	<LI>「:p」は、POSTパラメータを取得します。
+	<LI>POSTであっても、submitkeyが合っていない場合(他サイトからのPOSTなど)は空文字列を返します。
+</UL>
+
+
+<UL>
+	<LI>「&lt;!--{selectrows」など、SQL中で使う場合は、バッククォートで囲まれた部分は、コンマと数字以外は取り除かれます。
+	<LI>このような場合は、「:sqllike」「:sqleq」を利用してください。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0002c.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">&lt;!--{selectrows from message2--&gt;<br />
+`:bq`id__:r`:bq`<br />
+&lt;!--}--&gt;<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc--><!--{selectrows from message2-->
+`id__:r`
+<!--}-->
+
+<!--}-->
+<TD width="33%"><!--{selectrows from message2-->
+`id__:r`
+<!--}-->
+
+
+</TABLE>
+
+<UL>
+	<LI>「:r」は、現在レコードから、指定したフィールドを取得します。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0002c.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">`:bq`0__:int`:bq`<br />
+`:bq`1__:int`:bq`<br />
+`:bq`1.5__:int`:bq`<br />
+`:bq`a__:int`:bq`<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc-->`0__:int`
+`1__:int`
+`1.5__:int`
+`a__:int`
+
+<!--}-->
+<TD width="33%">`0__:int`
+`1__:int`
+`1.5__:int`
+`a__:int`
+
+
+</TABLE>
+
+<UL>
+	<LI>「:int」は、文字列を数値とみなして、整数に変換したものを返します。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0002c.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">`:bq`__:isnull`:bq`<br />
+`:bq`__:isnull:isnull`:bq`<br />
+`:bq`0__:isnull`:bq`<br />
+`:bq`0__:isnull:isnull`:bq`<br />
+`:bq` __:isnull`:bq`<br />
+`:bq` __:isnull:isnull`:bq`<br />
+`:bq`abc__:isnull`:bq`<br />
+`:bq`abc__:isnull:isnull`:bq`<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc-->`__:isnull`
+`__:isnull:isnull`
+`0__:isnull`
+`0__:isnull:isnull`
+` __:isnull`
+` __:isnull:isnull`
+`abc__:isnull`
+`abc__:isnull:isnull`
+
+<!--}-->
+<TD width="33%">`__:isnull`
+`__:isnull:isnull`
+`0__:isnull`
+`0__:isnull:isnull`
+` __:isnull`
+` __:isnull:isnull`
+`abc__:isnull`
+`abc__:isnull:isnull`
+
+
+</TABLE>
+
+<UL>
+	<LI>「:isnull」は、指定された値が空文字列であれば「1」を、そうでなければ空文字列を返します。
+	<LI>「:isvalid:isnull」のようにして、他の返り値を反転させるのに使うこともできます。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0002c.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">`:bq`abcあいうＡＢＣ__:h2z`:bq`<br />
+`:bq`abcあいうＡＢＣ__:z2h`:bq`<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc-->`abcあいうＡＢＣ__:h2z`
+`abcあいうＡＢＣ__:z2h`
+
+<!--}-->
+<TD width="33%">`abcあいうＡＢＣ__:h2z`
+`abcあいうＡＢＣ__:z2h`
+
+
+</TABLE>
+
+<UL>
+	<LI>「:h2z」は、指定された値の中の半角文字を、全角文字に変換します。
+	<LI>半角カナは全角カナにし、そのとき濁点・半濁点が結合できるときは結合します。
+	<LI>「:z2h」は、指定された値の中の全角の英数記号を、半角文字に変換します。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0002c.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">`:bq`rootpage__:sys`:bq`<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc-->`rootpage__:sys`
+
+<!--}-->
+<TD width="33%">`rootpage__:sys`
+
+
+</TABLE>
+
+<UL>
+	<LI>「:sys」は、通常、env.phpで定義される、$sys変数の内容を返します。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0002c.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">`:bq`:now`:bq`<br />
+`:bq`:now__y/m/d H:i:s__:todate`:bq`<br />
+`:bq`25__:age2t`:bq`<br />
+`:bq`25__:age2t__y/m/d H:i:s__:todate`:bq`<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc-->`:now`
+`:now__y/m/d H:i:s__:todate`
+`25__:age2t`
+`25__:age2t__y/m/d H:i:s__:todate`
+
+<!--}-->
+<TD width="33%">`:now`
+`:now__y/m/d H:i:s__:todate`
+`25__:age2t`
+`25__:age2t__y/m/d H:i:s__:todate`
+
+
+</TABLE>
+
+<UL>
+	<LI>「:now」は、現在時刻を、1970年1月1日09:00JSTからの秒数で返します。
+	<LI>このサンプルでは取得しているだけですが、「:now__time__:set」のようにしてデータベースに保存することもできます。
+	<LI>「:todate」は、指定された値を、指定された書式で、日付の文字列に変換します。
+	<LI>「:age2t」は、現在時刻から指定した年数を引いた時刻を、1970年1月1日09:00JSTからの秒数で返します。
+	<LI>これは、生年月日が入力されたレコードを、年齢で検索するような場合に使われます。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0002c.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">`:bq`123__abc__:cat`:bq`<br />
+`:bq`123__abc__ABC__:cat:cat`:bq`<br />
+`:bq`123__abcABC__:cat`:bq`<br />
+`:bq`123__abc__:cat__ABC__:cat`:bq`<br />
+`:bq`123__abc__:rcat`:bq`<br />
+`:bq`data__(__:rcat__)__:cat`:bq`<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc-->`123__abc__:cat`
+`123__abc__ABC__:cat:cat`
+`123__abcABC__:cat`
+`123__abc__:cat__ABC__:cat`
+`123__abc__:rcat`
+`data__(__:rcat__)__:cat`
+
+<!--}-->
+<TD width="33%">`123__abc__:cat`
+`123__abc__ABC__:cat:cat`
+`123__abcABC__:cat`
+`123__abc__:cat__ABC__:cat`
+`123__abc__:rcat`
+`data__(__:rcat__)__:cat`
+
+
+</TABLE>
+
+<UL>
+	<LI>「:cat」は、指定された2つの文字列を結合します。
+	<LI>「:rcat」は、指定された2つの文字列を、逆順に結合します。
+	<LI>例えばレコードから得た値を括弧で囲むには「data__:r__(__:rcat__)__:cat」のようにします。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0002c.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">`:bq`abc__b__:ismatch`:bq`<br />
+`:bq`abc__d__:ismatch`:bq`<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc-->`abc__b__:ismatch`
+`abc__d__:ismatch`
+
+<!--}-->
+<TD width="33%">`abc__b__:ismatch`
+`abc__d__:ismatch`
+
+
+</TABLE>
+
+<UL>
+	<LI>「:ismatch」は、1つ目の文字列の中に、2つ目の文字列が含まれていれば「1」を、なければ空文字列を返します。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0002c.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">`:bq`123__6__:addzero`:bq`<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc-->`123__6__:addzero`
+
+<!--}-->
+<TD width="33%">`123__6__:addzero`
+
+
+</TABLE>
+
+<UL>
+	<LI>「:addzero」は、1つ目の文字列の前に「0」を追加して、2つ目の文字列で指定された長さに伸ばした文字列を返します。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0002c.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">`:bq`1__2__:add`:bq`<br />
+`:bq`1__2__:sub`:bq`<br />
+`:bq`1__2__:rsub`:bq`<br />
+`:bq`1__2__:mul`:bq`<br />
+`:bq`1__2__:div`:bq`<br />
+`:bq`1__2__:rdiv`:bq`<br />
+`:bq`1__2__:mod`:bq`<br />
+`:bq`1__2__:rmod`:bq`<br />
+`:bq`1__0__:div`:bq`<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc-->`1__2__:add`
+`1__2__:sub`
+`1__2__:rsub`
+`1__2__:mul`
+`1__2__:div`
+`1__2__:rdiv`
+`1__2__:mod`
+`1__2__:rmod`
+`1__0__:div`
+
+<!--}-->
+<TD width="33%">`1__2__:add`
+`1__2__:sub`
+`1__2__:rsub`
+`1__2__:mul`
+`1__2__:div`
+`1__2__:rdiv`
+`1__2__:mod`
+`1__2__:rmod`
+`1__0__:div`
+
+
+</TABLE>
+
+<UL>
+	<LI>「:add」は、2つの文字列を数値とみなして、加算した結果を返します。
+	<LI>「:sub」は、2つの文字列を数値とみなして、減算した結果を返します。
+	<LI>「:rsub」は、2つの文字列を数値とみなして、逆順に減算した結果を返します。
+	<LI>「:mul」は、2つの文字列を数値とみなして、乗算した結果を返します。
+	<LI>「:div」は、2つの文字列を数値とみなして、除算して切り捨てた結果を返します。
+	<LI>「:rdiv」は、2つの文字列を数値とみなして、逆順に除算して切り捨てた結果を返します。
+	<LI>「:mod」は、2つの文字列を数値とみなして、除算した剰余を返します。
+	<LI>「:rmod」は、2つの文字列を数値とみなして、逆順に除算した剰余を返します。
+	<LI>いずれも、除数が0の場合は、0が返ります。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0002c.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">`:bq`1__2__:ieq`:bq`<br />
+`:bq`1__1__:ieq`:bq`<br />
+`:bq`01__1__:ieq`:bq`<br />
+<br />
+`:bq`1__2__:seq`:bq`<br />
+`:bq`1__1__:seq`:bq`<br />
+`:bq`01__1__:seq`:bq`<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc-->`1__2__:ieq`
+`1__1__:ieq`
+`01__1__:ieq`
+
+`1__2__:seq`
+`1__1__:seq`
+`01__1__:seq`
+
+<!--}-->
+<TD width="33%">`1__2__:ieq`
+`1__1__:ieq`
+`01__1__:ieq`
+
+`1__2__:seq`
+`1__1__:seq`
+`01__1__:seq`
+
+
+</TABLE>
+
+<UL>
+	<LI>「:ieq」は、2つの文字列を数値とみなして、等しければ「1」を、等しくなければ空文字列を返します。
+	<LI>「:seq」は、2つの文字列が、等しければ「1」を、等しくなければ空文字列を返します。
+</UL>
+
+
+<HR>

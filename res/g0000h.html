@@ -1,0 +1,104 @@
+<FORM method=POST>
+`login__:loginrecord`さん、いらっしゃいませ。
+<INPUT type=submit name=":logout" value="ログアウト">
+<A href="g9999.html">目次</A>
+</FORM>
+<FORM method=POST>
+<INPUT type=text name=":reportbody" size=60>
+<INPUT type=submit value="send report">
+</FORM>
+<UL>
+	<LI><A href="g0000.html">前回のtables.php</A>から変更ありません。
+</UL>
+<TABLE border width="96%">
+<TR><TH>g0000h.html
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">&lt;FORM method=POST&gt;<br />
+&lt;!--{tableid message0--&gt;<br />
+記事を投稿する:<br />
+&lt;!--{valid len1- body--&gt;<br />
+&lt;SPAN style=&quot;color:#ff0000;&quot;&gt;空欄なので投稿できません。&lt;/SPAN&gt;<br />
+&lt;!--}--&gt;<br />
+&lt;TEXTAREA name=&quot;body&quot; cols=40 rows=10&gt;&lt;/TEXTAREA&gt;<br />
+&lt;INPUT type=submit name=&quot;:isvalid:orbreak:curtable:h_update:popall:curpage:jump&quot; value=&quot;投稿&quot;&gt;<br />
+&lt;!--}--&gt;<br />
+&lt;/FORM&gt;<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc--><FORM method=POST>
+<!--{tableid message0-->
+記事を投稿する:
+<!--{valid len1- body-->
+<SPAN style="color:#ff0000;">空欄なので投稿できません。</SPAN>
+<!--}-->
+<TEXTAREA name="body" cols=40 rows=10></TEXTAREA>
+<INPUT type=submit name=":isvalid:orbreak:curtable:h_update:popall:curpage:jump" value="投稿">
+<!--}-->
+</FORM>
+
+<!--}-->
+<TD width="33%"><FORM method=POST>
+<!--{tableid message0-->
+記事を投稿する:
+<!--{valid len1- body-->
+<SPAN style="color:#ff0000;">空欄なので投稿できません。</SPAN>
+<!--}-->
+<TEXTAREA name="body" cols=40 rows=10></TEXTAREA>
+<INPUT type=submit name=":isvalid:orbreak:curtable:h_update:popall:curpage:jump" value="投稿">
+<!--}-->
+</FORM>
+
+
+</TABLE>
+
+<UL>
+	<LI>空欄では投稿できないようにしました。
+</UL>
+
+
+<UL>
+	<LI>&lt;!--valid len1- body--&gt;から&lt;!--}--&gt;までは、submit時に、現在レコードのbodyの長さが1以上でない場合に表示されます。
+	<LI>submitの方でも、「:isvalid:orbreak」をつけることで、「&lt;!--valid」が表示されていたらbreakし、データベースを更新しないようします。
+	<LI>この場合は、POSTされた値がそのまま表示されます。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0000h.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">&lt;!--{selectrows from message0 order by id desc --&gt;<br />
+&lt;HR&gt;<br />
+&lt;SPAN style=&quot;color:#a0a0a0;&quot;&gt;`:bq`created__:r__y/m/d H:i:s__:todate`:bq`&lt;/SPAN&gt;<br />
+&lt;PRE&gt;`:bq`body__:r`:bq`&lt;/PRE&gt;<br />
+&lt;!--}--&gt;<br />
+<br />
+&lt;HR&gt;<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc--><!--{selectrows from message0 order by id desc -->
+<HR>
+<SPAN style="color:#a0a0a0;">`created__:r__y/m/d H:i:s__:todate`</SPAN>
+<PRE>`body__:r`</PRE>
+<!--}-->
+
+<HR>
+
+<!--}-->
+<TD width="33%"><!--{selectrows from message0 order by id desc -->
+<HR>
+<SPAN style="color:#a0a0a0;">`created__:r__y/m/d H:i:s__:todate`</SPAN>
+<PRE>`body__:r`</PRE>
+<!--}-->
+
+<HR>
+
+
+</TABLE>
+
+<UL>
+	<LI>こちらは変更ありません。
+</UL>
+
+
+<HR>

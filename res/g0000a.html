@@ -1,0 +1,93 @@
+<FORM method=POST>
+`login__:loginrecord`さん、いらっしゃいませ。
+<INPUT type=submit name=":logout" value="ログアウト">
+<A href="g9999.html">目次</A>
+</FORM>
+<FORM method=POST>
+<INPUT type=text name=":reportbody" size=60>
+<INPUT type=submit value="send report">
+</FORM>
+<UL>
+	<LI><A href="g0000.html">前回のtables.php</A>から変更ありません。
+</UL>
+<TABLE border width="96%">
+<TR><TH>g0000a.html
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">&lt;FORM method=POST&gt;<br />
+&lt;!-- 動作チェック:`:bq`id__:g`:bq` --&gt;<br />
+&lt;!--{if `:bq`id__:g`:bq`--&gt;<br />
+<br />
+&lt;!--{tableid message0 `:bq`id__:g`:bq`--&gt;<br />
+&lt;TEXTAREA name=&quot;body&quot; cols=40 rows=10&gt;&lt;/TEXTAREA&gt;<br />
+&lt;A href=&quot;?&quot;&gt;キャンセル&lt;/A&gt;<br />
+&lt;INPUT type=submit name=&quot;:curtable:h_update:popall:curpage:jump&quot; value=&quot;修正&quot;&gt;<br />
+&lt;!--}--&gt;<br />
+<br />
+&lt;!--}{else--&gt;<br />
+<br />
+&lt;!--{selectrows from message0 order by id desc--&gt;<br />
+&lt;PRE&gt;`:bq`body__:r`:bq` &lt;A href=&quot;?id=`:bq`id__:r`:bq`&quot;&gt;edit&lt;/A&gt;&lt;/PRE&gt;<br />
+&lt;HR&gt;<br />
+&lt;!--}--&gt;<br />
+<br />
+&lt;!--}--&gt;<br />
+&lt;/FORM&gt;<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc--><FORM method=POST>
+<!-- 動作チェック:`id__:g` -->
+<!--{if `id__:g`-->
+
+<!--{tableid message0 `id__:g`-->
+<TEXTAREA name="body" cols=40 rows=10></TEXTAREA>
+<A href="?">キャンセル</A>
+<INPUT type=submit name=":curtable:h_update:popall:curpage:jump" value="修正">
+<!--}-->
+
+<!--}{else-->
+
+<!--{selectrows from message0 order by id desc-->
+<PRE>`body__:r` <A href="?id=`id__:r`">edit</A></PRE>
+<HR>
+<!--}-->
+
+<!--}-->
+</FORM>
+
+<!--}-->
+<TD width="33%"><FORM method=POST>
+<!-- 動作チェック:`id__:g` -->
+<!--{if `id__:g`-->
+
+<!--{tableid message0 `id__:g`-->
+<TEXTAREA name="body" cols=40 rows=10></TEXTAREA>
+<A href="?">キャンセル</A>
+<INPUT type=submit name=":curtable:h_update:popall:curpage:jump" value="修正">
+<!--}-->
+
+<!--}{else-->
+
+<!--{selectrows from message0 order by id desc-->
+<PRE>`body__:r` <A href="?id=`id__:r`">edit</A></PRE>
+<HR>
+<!--}-->
+
+<!--}-->
+</FORM>
+
+
+</TABLE>
+
+<UL>
+	<LI>一覧から選択して、修正するサンプルです。
+	<LI>「`:bq`id__:g`:bq`」は、文字列「id」と、コマンド「:g」になります。
+	<LI>コマンド「:g」は、指定された文字列のGETパラメータ(URLの?id=の部分)を受け取って数字にします。
+	<LI>従って、「?id=」が指定されていないと空文字列になり、「&lt;!--{if--&gt;」「&lt;!--}{else--&gt;」「&lt;!--}--&gt;」の後半が実行され、一覧か表示されます。
+	<LI>「?id=」が指定されていると前半が有効になり、内容を修正する画面になります。
+	<LI>このとき、「&lt;!--{tableid message0 `:bq`id__:g`:bq`--&gt;」とすることで、レコードIDを指定しています。
+	<LI>TEXTAREAタグは、nameを見て、自動的に指定されたIDのレコードに入っていたbodyフィールドが展開されます。
+</UL>
+
+
+<HR>

@@ -1,0 +1,48 @@
+<FORM method=POST>
+`login__:loginrecord`さん、いらっしゃいませ。
+<INPUT type=submit name=":logout" value="ログアウト">
+<A href="g9999.html">目次</A>
+</FORM>
+<FORM method=POST>
+<INPUT type=text name=":reportbody" size=60>
+<INPUT type=submit value="send report">
+</FORM>
+<UL>
+	<LI><A href="g0000.html">前回のtables.php</A>から変更ありません。
+</UL>
+<TABLE border width="96%">
+<TR><TH>g0000b.html
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">&lt;!--{selectrows from message0 order by id desc --&gt;<br />
+&lt;HR&gt;<br />
+&lt;SPAN style=&quot;color:#a0a0a0;&quot;&gt;`:bq`created__:r__y/m/d H:i:s__:todate`:bq`&lt;/SPAN&gt;<br />
+&lt;PRE&gt;`:bq`body__:r`:bq`&lt;/PRE&gt;<br />
+&lt;!--}--&gt;<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc--><!--{selectrows from message0 order by id desc -->
+<HR>
+<SPAN style="color:#a0a0a0;">`created__:r__y/m/d H:i:s__:todate`</SPAN>
+<PRE>`body__:r`</PRE>
+<!--}-->
+
+<!--}-->
+<TD width="33%"><!--{selectrows from message0 order by id desc -->
+<HR>
+<SPAN style="color:#a0a0a0;">`created__:r__y/m/d H:i:s__:todate`</SPAN>
+<PRE>`body__:r`</PRE>
+<!--}-->
+
+
+</TABLE>
+
+<UL>
+	<LI>レコードは生成時にcreatedに、生成時と更新時にmodifiedに、それぞれ現在時刻が入ります。
+	<LI>現在時刻は、1970年1月1日09:00JSTからの経過秒数(つまり数字)です。
+	<LI>`:bq`created__:r`:bq`で、この秒数が得られます。
+	<LI>そのあとに「__y/m/d H:i:s__:todate」で、秒数を、年や時といった数字に変換しています。
+</UL>
+
+
+<HR>

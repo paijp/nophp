@@ -1,0 +1,48 @@
+<FORM method=POST>
+`login__:loginrecord`さん、いらっしゃいませ。
+<INPUT type=submit name=":logout" value="ログアウト">
+<A href="g9999.html">目次</A>
+</FORM>
+<FORM method=POST>
+<INPUT type=text name=":reportbody" size=60>
+<INPUT type=submit value="send report">
+</FORM>
+<!--{if `1__id__:loginrecord:ieq`-->
+<P>user list</P>
+<FORM method=POST>
+<UL>
+<!--{selectrows from login -->
+	<LI>`login__:r`
+<!--{if `1__id__:r:ieq`-->
+(admin)
+<!--}-->
+<!--}-->
+<!--{tableid login -->
+<LI><INPUT type="text" name="login" size="40">
+<INPUT type="submit" name=":curtable:h_update:popall:jump" value="add user">
+<!--}-->
+</UL>
+</FORM>
+<!--}-->
+<UL>
+	<LI><A href="g0000.html">g0000.html 掲示板、tableidとselectrows。</A>
+	<LI><A href="g0000a.html">g0000a.html if/elseと、tableidにIDを指定して編集。</A>
+	<LI><A href="g0000b.html">g0000b.html 投稿日時の表示。:date</A>
+	<LI><A href="g0000c.html">g0000c.html 投稿者の表示。</A>
+	<LI><A href="g0000d.html">g0000d.html 投稿者の表示(ID)。</A>
+	<LI><A href="g0000e.html">g0000e.html 投稿者の表示(submitにコマンド)。</A>
+	<LI><A href="g0000f.html">g0000f.html 投稿者の表示(hiddenにコマンド)。</A>
+	<LI><A href="g0000g.html">g0000g.html 複数レコードを一度に登録。</A>
+	<LI><A href="g0000h.html">g0000h.html バリデーション(空欄をチェック)。</A>
+	<LI><A href="g0001.html">g0001.html バリデーション(ユーザー定義)。</A>
+	<LI><A href="g0002.html">g0002.html テーブル定義。</A>
+	<LI><A href="g0002a.html">g0002a.html 検索。</A>
+	<LI><A href="g0002b.html">g0002b.html シンプルテーブル。</A>
+	<LI><A href="g0002c.html">g0002c.html コマンドリファレンス。</A>
+	<LI><A href="g0002d.html">g0002d.html コマンドリファレンス。出力のエスケープ。</A>
+	<LI><A href="g0002e.html">g0002e.html コマンドリファレンス。シンプルテーブルアクセス。</A>
+	<LI><A href="g0003.html">g0003.html コマンドリファレンス。テーブルアクセス。</A>
+	<LI><A href="g0003a.html">g0003a.html ディフォールト値の設定。</A>
+</UL>
+
+<HR>

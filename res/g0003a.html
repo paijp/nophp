@@ -1,0 +1,76 @@
+<FORM method=POST>
+`login__:loginrecord`さん、いらっしゃいませ。
+<INPUT type=submit name=":logout" value="ログアウト">
+<A href="g9999.html">目次</A>
+</FORM>
+<FORM method=POST>
+<INPUT type=text name=":reportbody" size=60>
+<INPUT type=submit value="send report">
+</FORM>
+<UL>
+	<LI><A href="g0003.html">前回のtables.php</A>から変更ありません。
+</UL>
+<TABLE border width="96%">
+<TR><TH>g0003a.html
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">&lt;FORM method=POST&gt;<br />
+&lt;UL&gt;<br />
+&lt;LI&gt;&lt;SELECT name=&quot;check0&quot; x-value=&quot;x&quot; size=0&gt;<br />
+	&lt;OPTION value=&quot;x&quot;&gt;-&lt;/OPTION&gt;<br />
+	&lt;OPTION value=&quot;&quot;&gt;OFF&lt;/OPTION&gt;<br />
+	&lt;OPTION value=&quot;1&quot;&gt;ON&lt;/OPTION&gt;<br />
+&lt;/SELECT&gt;<br />
+&lt;LI&gt;from: &lt;INPUT type=&quot;text&quot; name=&quot;from&quot; x-value=&quot;`:bq`:now__90__86400__:mul:sub__y/m/d__:todate`:bq`&quot;&gt;<br />
+&lt;LI&gt;to: &lt;INPUT type=&quot;text&quot; name=&quot;to&quot; x-value=&quot;`:bq`:now__y/m/d__:todate`:bq`&quot;&gt;<br />
+&lt;LI&gt;&lt;INPUT type=&quot;submit&quot;&gt;<br />
+&lt;/FORM&gt;<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc--><FORM method=POST>
+<UL>
+<LI><SELECT name="check0" x-value="x" size=0>
+	<OPTION value="x">-</OPTION>
+	<OPTION value="">OFF</OPTION>
+	<OPTION value="1">ON</OPTION>
+</SELECT>
+<LI>from: <INPUT type="text" name="from" x-value="`:now__90__86400__:mul:sub__y/m/d__:todate`">
+<LI>to: <INPUT type="text" name="to" x-value="`:now__y/m/d__:todate`">
+<LI><INPUT type="submit">
+</FORM>
+
+<!--}-->
+<TD width="33%"><FORM method=POST>
+<UL>
+<LI><SELECT name="check0" x-value="x" size=0>
+	<OPTION value="x">-</OPTION>
+	<OPTION value="">OFF</OPTION>
+	<OPTION value="1">ON</OPTION>
+</SELECT>
+<LI>from: <INPUT type="text" name="from" x-value="`:now__90__86400__:mul:sub__y/m/d__:todate`">
+<LI>to: <INPUT type="text" name="to" x-value="`:now__y/m/d__:todate`">
+<LI><INPUT type="submit">
+</FORM>
+
+
+</TABLE>
+
+<UL>
+	<LI>「INPUT」や「SELECT」に「x-value」を設定すると、POSTでないときはこの値がvalueとみなされます。
+	<LI>POST時は、POSTされた値が使われます。
+</UL>
+
+
+<UL>
+	<LI>上記の「check0」は、例えばSQL部分で「`:bq`check0__:p:dup__x__:seq:andbreak__check0__:sqleq`:bq`」のようにできます。
+	<LI>チェックボックスをフィールドに使っている場合、非チェック時には値が空文字列になりますが、これを検索するのに使うことができます。
+</UL>
+
+
+<UL>
+	<LI>上記の「from」の計算式は、「:now - 90 * 86400」になります。
+	<LI>現在時刻から90日前(1日=86400秒)の日付を取得します。
+</UL>
+
+
+<HR>

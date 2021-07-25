@@ -1,0 +1,96 @@
+<TABLE border width="96%">
+<TR><TH>index.html
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">&lt;FORM method=POST&gt;<br />
+&lt;UL&gt;<br />
+&lt;!--{if `:bq`0__mode__:g:seq`:bq`--&gt;<br />
+<br />
+	&lt;LI&gt;ログイン名 &lt;INPUT type=text name=login&gt;<br />
+	&lt;LI&gt;&lt;INPUT type=submit name=&quot;:login&quot; value=&quot;send mail&quot;&gt;<br />
+	&lt;LI&gt;A mail with password setting URL will be sent.<br />
+	&lt;LI&gt;After sent, login page will be shown. Please wait a mail.<br />
+<br />
+&lt;!--}{elseif `:bq`1__mode__:g:seq`:bq`--&gt;<br />
+<br />
+	&lt;LI&gt;new password &lt;INPUT type=password name=pass&gt;<br />
+	&lt;LI&gt;&lt;INPUT type=submit name=&quot;:login&quot; value=&quot;set password&quot;&gt;<br />
+	&lt;LI&gt;After set, login page will be shown. Please enter your ID and this new password.<br />
+<br />
+&lt;!--}{else--&gt;<br />
+<br />
+	&lt;LI&gt;ログイン名 &lt;INPUT type=text name=login&gt;<br />
+	&lt;LI&gt;パスワード &lt;INPUT type=password name=pass&gt;<br />
+	&lt;LI&gt;&lt;INPUT type=submit name=&quot;:login&quot; value=&quot;ログイン&quot;&gt;<br />
+	&lt;LI&gt;ディフォールトのパスワードは nobody@something.com /  です。<br />
+	&lt;LI&gt;&lt;A href=&quot;?mode=0&quot;&gt;Forget password?&lt;/A&gt;<br />
+<br />
+&lt;!--}--&gt;<br />
+&lt;/UL&gt;<br />
+&lt;/FORM&gt;<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc--><FORM method=POST>
+<UL>
+<!--{if `0__mode__:g:seq`-->
+
+	<LI>ログイン名 <INPUT type=text name=login>
+	<LI><INPUT type=submit name=":login" value="send mail">
+	<LI>A mail with password setting URL will be sent.
+	<LI>After sent, login page will be shown. Please wait a mail.
+
+<!--}{elseif `1__mode__:g:seq`-->
+
+	<LI>new password <INPUT type=password name=pass>
+	<LI><INPUT type=submit name=":login" value="set password">
+	<LI>After set, login page will be shown. Please enter your ID and this new password.
+
+<!--}{else-->
+
+	<LI>ログイン名 <INPUT type=text name=login>
+	<LI>パスワード <INPUT type=password name=pass>
+	<LI><INPUT type=submit name=":login" value="ログイン">
+	<LI>ディフォールトのパスワードは nobody@something.com /  です。
+	<LI><A href="?mode=0">Forget password?</A>
+
+<!--}-->
+</UL>
+</FORM>
+
+<!--}-->
+<TD width="33%"><FORM method=POST>
+<UL>
+<!--{if `0__mode__:g:seq`-->
+
+	<LI>ログイン名 <INPUT type=text name=login>
+	<LI><INPUT type=submit name=":login" value="send mail">
+	<LI>A mail with password setting URL will be sent.
+	<LI>After sent, login page will be shown. Please wait a mail.
+
+<!--}{elseif `1__mode__:g:seq`-->
+
+	<LI>new password <INPUT type=password name=pass>
+	<LI><INPUT type=submit name=":login" value="set password">
+	<LI>After set, login page will be shown. Please enter your ID and this new password.
+
+<!--}{else-->
+
+	<LI>ログイン名 <INPUT type=text name=login>
+	<LI>パスワード <INPUT type=password name=pass>
+	<LI><INPUT type=submit name=":login" value="ログイン">
+	<LI>ディフォールトのパスワードは nobody@something.com /  です。
+	<LI><A href="?mode=0">Forget password?</A>
+
+<!--}-->
+</UL>
+</FORM>
+
+
+</TABLE>
+
+<UL>
+	<LI>これはログインページです。nameはこの通りにしてください。
+	<LI>未ログインの状態では、常にこのページが表示されます。
+	<LI>もちろん、実際にはDOCTYPEやCSSなどを入れます。
+</UL>
+

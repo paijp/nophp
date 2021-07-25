@@ -1,0 +1,195 @@
+<FORM method=POST>
+`login__:loginrecord`さん、いらっしゃいませ。
+<INPUT type=submit name=":logout" value="ログアウト">
+<A href="g9999.html">目次</A>
+</FORM>
+<FORM method=POST>
+<INPUT type=text name=":reportbody" size=60>
+<INPUT type=submit value="send report">
+</FORM>
+<TABLE border width="32%">
+<TR><TH>tables.php
+<TR><TD><PRE>&lt;?php
+
+class	test2_table extends a_table {
+	function	getconfig() {
+		return parent::getconfig().&lt;&lt;&lt;EOO
+
+EOO;
+	}
+}
+new test2_table();
+
+</PRE>
+</TABLE>
+
+<UL>
+	<LI>テスト用のテーブルを定義します。
+	<LI>シンプルテーブルと違い、通常のテーブルは定義が必要です。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0003.html
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">&lt;!--{tableid test2 1--&gt;<br />
+&lt;!--{if `:bq`0__id__:r:ieq`:bq`--&gt;<br />
+<br />
+&lt;FORM method=POST&gt;<br />
+&lt;SPAN style=&quot;color:#ff0000;&quot;&gt;レコードがありません。生成してください。&lt;/SPAN&gt;<br />
+&lt;!--{tableid t0=test2--&gt;<br />
+&lt;INPUT type=hidden name=&quot;100__code__test100__name__:set:set&quot;&gt;<br />
+&lt;!--}--&gt;<br />
+&lt;!--{tableid t1=test2--&gt;<br />
+&lt;INPUT type=hidden name=&quot;200__code__test200__name__:set:set&quot;&gt;<br />
+&lt;!--}--&gt;<br />
+&lt;!--{tableid t2=test2--&gt;<br />
+&lt;INPUT type=hidden name=&quot;300__code__test300__name__:set:set&quot;&gt;<br />
+&lt;!--}--&gt;<br />
+&lt;INPUT type=submit name=&quot;t0__:h_update__t1__:h_update__t2__:h_update:popall:curpage:jump&quot; value=&quot;作成&quot;&gt;<br />
+&lt;/FORM&gt;<br />
+<br />
+&lt;!--}--&gt;<br />
+&lt;!--}--&gt;<br />
+<br />
+&lt;TABLE border&gt;<br />
+&lt;TR&gt;&lt;TH&gt;code	&lt;TH&gt;name	&lt;TH&gt;ID<br />
+&lt;!--{selectrows from test2--&gt;<br />
+&lt;TR&gt;&lt;TD&gt;`:bq`code__:r`:bq`<br />
+	&lt;TD&gt;`:bq`name__:r`:bq`	&lt;TH&gt;`:bq`id__:r`:bq`<br />
+&lt;!--}--&gt;<br />
+&lt;/TABLE&gt;<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc--><!--{tableid test2 1-->
+<!--{if `0__id__:r:ieq`-->
+
+<FORM method=POST>
+<SPAN style="color:#ff0000;">レコードがありません。生成してください。</SPAN>
+<!--{tableid t0=test2-->
+<INPUT type=hidden name="100__code__test100__name__:set:set">
+<!--}-->
+<!--{tableid t1=test2-->
+<INPUT type=hidden name="200__code__test200__name__:set:set">
+<!--}-->
+<!--{tableid t2=test2-->
+<INPUT type=hidden name="300__code__test300__name__:set:set">
+<!--}-->
+<INPUT type=submit name="t0__:h_update__t1__:h_update__t2__:h_update:popall:curpage:jump" value="作成">
+</FORM>
+
+<!--}-->
+<!--}-->
+
+<TABLE border>
+<TR><TH>code	<TH>name	<TH>ID
+<!--{selectrows from test2-->
+<TR><TD>`code__:r`
+	<TD>`name__:r`	<TH>`id__:r`
+<!--}-->
+</TABLE>
+
+<!--}-->
+<TD width="33%"><!--{tableid test2 1-->
+<!--{if `0__id__:r:ieq`-->
+
+<FORM method=POST>
+<SPAN style="color:#ff0000;">レコードがありません。生成してください。</SPAN>
+<!--{tableid t0=test2-->
+<INPUT type=hidden name="100__code__test100__name__:set:set">
+<!--}-->
+<!--{tableid t1=test2-->
+<INPUT type=hidden name="200__code__test200__name__:set:set">
+<!--}-->
+<!--{tableid t2=test2-->
+<INPUT type=hidden name="300__code__test300__name__:set:set">
+<!--}-->
+<INPUT type=submit name="t0__:h_update__t1__:h_update__t2__:h_update:popall:curpage:jump" value="作成">
+</FORM>
+
+<!--}-->
+<!--}-->
+
+<TABLE border>
+<TR><TH>code	<TH>name	<TH>ID
+<!--{selectrows from test2-->
+<TR><TD>`code__:r`
+	<TD>`name__:r`	<TH>`id__:r`
+<!--}-->
+</TABLE>
+
+
+</TABLE>
+
+<UL>
+	<LI>このテーブルを使って説明します。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0003.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">`:bq`2__code__test2__:t_id`:bq`<br />
+`:bq`2__name__test2__:t_id`:bq`<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc-->`2__code__test2__:t_id`
+`2__name__test2__:t_id`
+
+<!--}-->
+<TD width="33%">`2__code__test2__:t_id`
+`2__name__test2__:t_id`
+
+
+</TABLE>
+
+<UL>
+	<LI>「:t_id」は、IDを指定して、指定したフィールドを返します。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0003.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">`:bq`200__code__test2__:t_find`:bq`<br />
+`:bq`test200__name__test2__:t_find`:bq`<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc-->`200__code__test2__:t_find`
+`test200__name__test2__:t_find`
+
+<!--}-->
+<TD width="33%">`200__code__test2__:t_find`
+`test200__name__test2__:t_find`
+
+
+</TABLE>
+
+<UL>
+	<LI>「:t_find」は、文字列を指定して、指定したフィールドにその文字列が格納されているレコードのIDを返します。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0003.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">`:bq`200__code__test2__:t_find__name__test2__:t_id`:bq`<br />
+`:bq`test200__name__test2__:t_find__code__test2__:t_id`:bq`<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc-->`200__code__test2__:t_find__name__test2__:t_id`
+`test200__name__test2__:t_find__code__test2__:t_id`
+
+<!--}-->
+<TD width="33%">`200__code__test2__:t_find__name__test2__:t_id`
+`test200__name__test2__:t_find__code__test2__:t_id`
+
+
+</TABLE>
+
+<UL>
+	<LI>組み合わせて使うこともできます。
+</UL>
+
+
+<HR>

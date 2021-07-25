@@ -1,0 +1,106 @@
+<FORM method=POST>
+`login__:loginrecord`さん、いらっしゃいませ。
+<INPUT type=submit name=":logout" value="ログアウト">
+<A href="g9999.html">目次</A>
+</FORM>
+<FORM method=POST>
+<INPUT type=text name=":reportbody" size=60>
+<INPUT type=submit value="send report">
+</FORM>
+<UL>
+	<LI><A href="g0000.html">前回のtables.php</A>から変更ありません。
+</UL>
+<TABLE border width="96%">
+<TR><TH>g0000c.html
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">&lt;FORM method=POST&gt;<br />
+&lt;!--{tableid message0--&gt;<br />
+記事を投稿する:<br />
+&lt;INPUT type=hidden name=&quot;owner&quot; value=&quot;`:bq`login__:loginrecord`:bq`&quot;&gt;<br />
+&lt;TEXTAREA name=&quot;body&quot; cols=40 rows=10&gt;&lt;/TEXTAREA&gt;<br />
+&lt;INPUT type=submit name=&quot;:curtable:h_update:popall:curpage:jump&quot; value=&quot;投稿&quot;&gt;<br />
+&lt;!--}--&gt;<br />
+&lt;/FORM&gt;<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc--><FORM method=POST>
+<!--{tableid message0-->
+記事を投稿する:
+<INPUT type=hidden name="owner" value="`login__:loginrecord`">
+<TEXTAREA name="body" cols=40 rows=10></TEXTAREA>
+<INPUT type=submit name=":curtable:h_update:popall:curpage:jump" value="投稿">
+<!--}-->
+</FORM>
+
+<!--}-->
+<TD width="33%"><FORM method=POST>
+<!--{tableid message0-->
+記事を投稿する:
+<INPUT type=hidden name="owner" value="`login__:loginrecord`">
+<TEXTAREA name="body" cols=40 rows=10></TEXTAREA>
+<INPUT type=submit name=":curtable:h_update:popall:curpage:jump" value="投稿">
+<!--}-->
+</FORM>
+
+
+</TABLE>
+
+<UL>
+	<LI>INPUTタグでvalue=を設定すると、submit時にそのまま設定されて、データベースに書き込まれます。
+	<LI>ただしこの方法では、IDではなくログイン名を書き込んでいるので、あとでログイン名を変更した場合には追随しません。
+	<LI>解決方法は、次節で説明します。
+</UL>
+
+
+<UL>
+	<LI>なお、ここではhiddenを使ってownerフィールドを設定していますが、この部分はログインできる人なら誰でも偽装できるので、セキュリティが必要な場合は好ましくありません。
+	<LI>このような場合は、コマンドを使って設定すると、この問題を解決できます。
+	<LI>方法については、追って説明します。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0000c.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">&lt;!--{selectrows from message0 order by id desc --&gt;<br />
+&lt;HR&gt;<br />
+&lt;SPAN style=&quot;color:#a0a0a0;&quot;&gt;#`:bq`id__:r`:bq`&lt;/SPAN&gt;<br />
+&lt;B&gt;`:bq`owner__:r`:bq`&lt;/B&gt;<br />
+&lt;SPAN style=&quot;color:#a0a0a0;&quot;&gt;`:bq`created__:r__y/m/d H:i:s__:todate`:bq`&lt;/SPAN&gt;<br />
+&lt;PRE&gt;`:bq`body__:r`:bq`&lt;/PRE&gt;<br />
+&lt;!--}--&gt;<br />
+<br />
+&lt;HR&gt;<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc--><!--{selectrows from message0 order by id desc -->
+<HR>
+<SPAN style="color:#a0a0a0;">#`id__:r`</SPAN>
+<B>`owner__:r`</B>
+<SPAN style="color:#a0a0a0;">`created__:r__y/m/d H:i:s__:todate`</SPAN>
+<PRE>`body__:r`</PRE>
+<!--}-->
+
+<HR>
+
+<!--}-->
+<TD width="33%"><!--{selectrows from message0 order by id desc -->
+<HR>
+<SPAN style="color:#a0a0a0;">#`id__:r`</SPAN>
+<B>`owner__:r`</B>
+<SPAN style="color:#a0a0a0;">`created__:r__y/m/d H:i:s__:todate`</SPAN>
+<PRE>`body__:r`</PRE>
+<!--}-->
+
+<HR>
+
+
+</TABLE>
+
+<UL>
+	<LI>`:bq`owner__:r`:bq`で、ownerフィールドの値を表示しています。
+</UL>
+
+
+<HR>

@@ -1,0 +1,47 @@
+<?php
+
+date_default_timezone_set("Asia/Tokyo");
+
+#
+# In first time, this user will be created.
+#
+
+$sys->defaultuser = "nobody@something.com";
+
+## If you cant use mail(for setting password), use this.
+# $sys->defaultpass = "sample";
+
+#
+# Filesystem settings.
+#
+
+$sys->htmlbase = "./res/";
+$sys->sqlpath = "sqlite:/var/www/db/sample.sq3";
+# $sys->sqlpath = "mysql:dbname=test";
+
+$sys->rootpage = "g9999";
+
+#
+# If you want to use 'index.php?mode=sql', you have to set this basic authentication.
+# $sys->auth_pass = sha1( $sys->auth_salt . $pass );
+#
+
+$sys->auth_user = "admin";
+$sys->auth_salt = "235ba225813f156690b798dc978099e1e76441ee";
+# $sys->auth_pass = "";
+
+#
+# If the password on the login form is empty, a mail with URL will be sent.
+#
+
+$sys->mailcmd = "mail -s 'login URL.' @addr@";
+$sys->mailbody = "@url@";
+
+#
+# You can send a report to slack with debuglog URL.
+#
+
+# $sys->reportjsonurl = "https://hooks.slack.com/services/9999";
+$sys->reportjsonbase = array("text" => "@body@\n<@link@>");
+
+?>

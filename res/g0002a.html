@@ -1,0 +1,107 @@
+<FORM method=POST>
+`login__:loginrecord`さん、いらっしゃいませ。
+<INPUT type=submit name=":logout" value="ログアウト">
+<A href="g9999.html">目次</A>
+</FORM>
+<FORM method=POST>
+<INPUT type=text name=":reportbody" size=60>
+<INPUT type=submit value="send report">
+</FORM>
+<UL>
+	<LI><A href="g0002.html">前回のtables.php</A>から変更ありません。
+</UL>
+<TABLE border width="96%">
+<TR><TH>g0002a.html
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">&lt;FORM method=POST&gt;<br />
+検索キーワード:<br />
+&lt;INPUT type=text name=&quot;0body&quot;&gt;<br />
+&lt;INPUT type=submit value=&quot;検索&quot;&gt;<br />
+&lt;!--{if `:bq`0body__:p:isnull:isnull`:bq`--&gt;<br />
+&lt;!--{selectrows from message2 where 1 order by id desc `:bq`0body__:p__body__:sqllike`:bq` --&gt;<br />
+&lt;HR&gt;<br />
+&lt;SPAN style=&quot;color:#a0a0a0;&quot;&gt;#`:bq`id__:r`:bq`&lt;/SPAN&gt;<br />
+&lt;B&gt;`:bq`owner__:r__login__login__:t_id`:bq`&lt;/B&gt;<br />
+&lt;SPAN style=&quot;color:#a0a0a0;&quot;&gt;`:bq`created__:r__y/m/d H:i:s__:todate`:bq`&lt;/SPAN&gt;<br />
+&lt;PRE&gt;`:bq`body__:r`:bq`&lt;/PRE&gt;<br />
+&lt;!--}--&gt;<br />
+&lt;!--}--&gt;<br />
+&lt;/FORM&gt;<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc--><FORM method=POST>
+検索キーワード:
+<INPUT type=text name="0body">
+<INPUT type=submit value="検索">
+<!--{if `0body__:p:isnull:isnull`-->
+<!--{selectrows from message2 where 1 order by id desc `0body__:p__body__:sqllike` -->
+<HR>
+<SPAN style="color:#a0a0a0;">#`id__:r`</SPAN>
+<B>`owner__:r__login__login__:t_id`</B>
+<SPAN style="color:#a0a0a0;">`created__:r__y/m/d H:i:s__:todate`</SPAN>
+<PRE>`body__:r`</PRE>
+<!--}-->
+<!--}-->
+</FORM>
+
+<!--}-->
+<TD width="33%"><FORM method=POST>
+検索キーワード:
+<INPUT type=text name="0body">
+<INPUT type=submit value="検索">
+<!--{if `0body__:p:isnull:isnull`-->
+<!--{selectrows from message2 where 1 order by id desc `0body__:p__body__:sqllike` -->
+<HR>
+<SPAN style="color:#a0a0a0;">#`id__:r`</SPAN>
+<B>`owner__:r__login__login__:t_id`</B>
+<SPAN style="color:#a0a0a0;">`created__:r__y/m/d H:i:s__:todate`</SPAN>
+<PRE>`body__:r`</PRE>
+<!--}-->
+<!--}-->
+</FORM>
+
+
+</TABLE>
+
+<UL>
+	<LI>「&lt;!--{selectrows」にwhereをつけて、検索をおこなうようにします。
+</UL>
+
+
+<UL>
+	<LI>まず、「&lt;!--{if」で、検索キーワードが入力されていないときは結果を表示しないようにします。
+	<LI>「0body__:p」の部分は、POSTパラメータを取り出します。ちなみに、数字で始まるフィールド名は、「&lt;!--{tableid」などで使用しても、データベースに書き込まれません。
+	<LI>「:isnull」は、空文字列なら「1」が、そうでなければ空文字列が返ります。
+	<LI>2つ繰り返すことで、「0body__:p」が空でない場合のみ、「&lt;!--{if」が処理されるようにします。
+	<LI>わかりにくければelseを使用して、「&lt;!--{if `:bq`0body__:p:isnull`:bq`--&gt;&lt;!--}{else--&gt;」のようにしても結果は同じです。
+</UL>
+
+
+<UL>
+	<LI>「`:bq`0body__:p__body__:sqllike`:bq`」の部分は、最終的には「body like &quot;%キーワード%&quot; and」がwhereの直後に埋め込まれます。SQLのエスケープもおこなわれます。
+	<LI>直後に1がありますので、この方法で条件を並べることで、検索が可能です。
+</UL>
+
+
+<UL>
+	<LI>以下のものは、「&lt;!--{tablegrid」のパラメータ部と「&lt;!--}--」までの区間、そして「&lt;!--{selectrows」のパラメータ部で使用することができます。
+	<LI>sqlisnullは、スタックから文字列を1つ取り出して、フィールド名とみなし、対応するSQL文に「and フィールド名 is null」を追加します。
+	<LI>sqlisnotnullは、スタックから文字列を1つ取り出して、フィールド名とみなし、対応するSQL文に「and フィールド名 is not null」を追加します。
+	<LI>sqlisemptyは、スタックから文字列を1つ取り出して、フィールド名とみなし、対応するSQL文に「and (フィールド名 is null or フィールド名 = &quot;&quot;)」を追加します。
+	<LI>sqlisnotemptyは、スタックから文字列を1つ取り出して、フィールド名とみなし、対応するSQL文に「and フィールド名 is not null and フィールド名 &lt;&gt; &quot;&quot;」を追加します。
+	<LI>sqllikeは、スタックから文字列を2つ取り出して、それぞれを検索文字列とフィールド名とみなし、対応するSQL文に「and フィールド名 like &quot;%検索文字列%&quot;」を追加します。
+	<LI>sqllike2は、スタックから文字列を3つ取り出して、それぞれを検索文字列、フィールド名1、フィールド名2とみなし、対応するSQL文に「and (フィールド名1 like &quot;%検索文字列%&quot; or フィールド名2 like &quot;%検索文字列%&quot;)」を追加します。
+	<LI>sqllike3は、スタックから文字列を4つ取り出して、それぞれを検索文字列、フィールド名1、フィールド名2、フィールド名3とみなし、対応するSQL文に「and (フィールド名1 like &quot;%検索文字列%&quot; or フィールド名2 like &quot;%検索文字列%&quot; or フィールド名3 like &quot;%検索文字列%&quot;)」を追加します。
+	<LI>sqllike4は、スタックから文字列を5つ取り出して、それぞれを検索文字列、フィールド名1、フィールド名2、フィールド名3、フィールド名4とみなし、対応するSQL文に「and (フィールド名1 like &quot;%検索文字列%&quot; or フィールド名2 like &quot;%検索文字列%&quot; or フィールド名3 like &quot;%検索文字列%&quot; or フィールド名4 like &quot;%検索文字列&quot;)」を追加します。
+	<LI>sqlnotlikeは、スタックから文字列を2つ取り出して、それぞれを検索文字列とフィールド名とみなし、対応するSQL文に「and フィールド名 not like &quot;%検索文字列%&quot;」を追加します。
+	<LI>sqleqは、スタックから文字列を2つ取り出して、それぞれを文字列とフィールド名とみなし、対応するSQL文に「and &quot;文字列&quot; = フィールド名」を追加します。
+	<LI>sqlneは、スタックから文字列を2つ取り出して、それぞれを文字列とフィールド名とみなし、対応するSQL文に「and &quot;文字列&quot; &lt;&gt; フィールド名」を追加します。
+	<LI>sqlltは、スタックから文字列を2つ取り出して、それぞれを文字列とフィールド名とみなし、対応するSQL文に「and &quot;文字列&quot; &lt; フィールド名」を追加します。
+	<LI>sqlleは、スタックから文字列を2つ取り出して、それぞれを文字列とフィールド名とみなし、対応するSQL文に「and &quot;文字列&quot; &lt;= フィールド名」を追加します。
+	<LI>sqlgtは、スタックから文字列を2つ取り出して、それぞれを文字列とフィールド名とみなし、対応するSQL文に「and &quot;文字列&quot; &gt; フィールド名」を追加します。
+	<LI>sqlgeは、スタックから文字列を2つ取り出して、それぞれを文字列とフィールド名とみなし、対応するSQL文に「and &quot;文字列&quot; &gt;= フィールド名」を追加します。
+</UL>
+
+
+<HR>

@@ -1,0 +1,141 @@
+<FORM method=POST>
+`login__:loginrecord`さん、いらっしゃいませ。
+<INPUT type=submit name=":logout" value="ログアウト">
+<A href="g9999.html">目次</A>
+</FORM>
+<FORM method=POST>
+<INPUT type=text name=":reportbody" size=60>
+<INPUT type=submit value="send report">
+</FORM>
+<TABLE border width="32%">
+<TR><TH>tables.php
+<TR><TD><PRE>&lt;?php
+
+class	message1_table extends a_table {
+	function	getconfig() {
+		return parent::getconfig().&lt;&lt;&lt;EOO
+
+EOO;
+	}
+	function	tv_mail($par, $s) {
+		if (!preg_match('/@/', $s))
+			return 1;
+		return 0;
+	}
+}
+new message1_table();
+
+</PRE>
+</TABLE>
+
+<UL>
+	<LI>前回と同じテーブルですが、tv_mailメソッドを定義しました。
+	<LI>「@」が入っていないと1を返してエラーを示します。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0001.html
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">&lt;FORM method=POST&gt;<br />
+&lt;!--{tableid message1--&gt;<br />
+メールアドレス:<br />
+&lt;!--{valid mail mail--&gt;<br />
+&lt;SPAN style=&quot;color:#ff0000;&quot;&gt;メールアドレスを入力してください。&lt;/SPAN&gt;<br />
+&lt;!--}--&gt;<br />
+&lt;INPUT type=text name=&quot;mail&quot;&gt;<br />
+記事を投稿する:<br />
+&lt;!--{valid len1- body--&gt;<br />
+&lt;SPAN style=&quot;color:#ff0000;&quot;&gt;空欄なので投稿できません。&lt;/SPAN&gt;<br />
+&lt;!--}--&gt;<br />
+&lt;TEXTAREA name=&quot;body&quot; cols=40 rows=10&gt;&lt;/TEXTAREA&gt;<br />
+&lt;INPUT type=submit name=&quot;:isvalid:orbreak:curtable:h_update:popall:curpage:jump&quot; value=&quot;投稿&quot;&gt;<br />
+&lt;!--}--&gt;<br />
+&lt;/FORM&gt;<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc--><FORM method=POST>
+<!--{tableid message1-->
+メールアドレス:
+<!--{valid mail mail-->
+<SPAN style="color:#ff0000;">メールアドレスを入力してください。</SPAN>
+<!--}-->
+<INPUT type=text name="mail">
+記事を投稿する:
+<!--{valid len1- body-->
+<SPAN style="color:#ff0000;">空欄なので投稿できません。</SPAN>
+<!--}-->
+<TEXTAREA name="body" cols=40 rows=10></TEXTAREA>
+<INPUT type=submit name=":isvalid:orbreak:curtable:h_update:popall:curpage:jump" value="投稿">
+<!--}-->
+</FORM>
+
+<!--}-->
+<TD width="33%"><FORM method=POST>
+<!--{tableid message1-->
+メールアドレス:
+<!--{valid mail mail-->
+<SPAN style="color:#ff0000;">メールアドレスを入力してください。</SPAN>
+<!--}-->
+<INPUT type=text name="mail">
+記事を投稿する:
+<!--{valid len1- body-->
+<SPAN style="color:#ff0000;">空欄なので投稿できません。</SPAN>
+<!--}-->
+<TEXTAREA name="body" cols=40 rows=10></TEXTAREA>
+<INPUT type=submit name=":isvalid:orbreak:curtable:h_update:popall:curpage:jump" value="投稿">
+<!--}-->
+</FORM>
+
+
+</TABLE>
+
+<UL>
+	<LI>メールアドレス欄を追加し、「&lt;!--{valid mail」で、上述のtv_mail()を使うようにしました。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0001.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">&lt;!--{selectrows from message1 order by id desc --&gt;<br />
+&lt;HR&gt;<br />
+&lt;SPAN style=&quot;color:#a0a0a0;&quot;&gt;#`:bq`id__:r`:bq`&lt;/SPAN&gt;<br />
+&lt;B&gt;`:bq`mail__:r`:bq`&lt;/B&gt;<br />
+&lt;SPAN style=&quot;color:#a0a0a0;&quot;&gt;`:bq`created__:r__y/m/d H:i:s__:todate`:bq`&lt;/SPAN&gt;<br />
+&lt;PRE&gt;`:bq`body__:r`:bq`&lt;/PRE&gt;<br />
+&lt;!--}--&gt;<br />
+<br />
+&lt;HR&gt;<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc--><!--{selectrows from message1 order by id desc -->
+<HR>
+<SPAN style="color:#a0a0a0;">#`id__:r`</SPAN>
+<B>`mail__:r`</B>
+<SPAN style="color:#a0a0a0;">`created__:r__y/m/d H:i:s__:todate`</SPAN>
+<PRE>`body__:r`</PRE>
+<!--}-->
+
+<HR>
+
+<!--}-->
+<TD width="33%"><!--{selectrows from message1 order by id desc -->
+<HR>
+<SPAN style="color:#a0a0a0;">#`id__:r`</SPAN>
+<B>`mail__:r`</B>
+<SPAN style="color:#a0a0a0;">`created__:r__y/m/d H:i:s__:todate`</SPAN>
+<PRE>`body__:r`</PRE>
+<!--}-->
+
+<HR>
+
+
+</TABLE>
+
+<UL>
+	<LI>入力されたメールアドレスを表示するようにしました。
+</UL>
+
+
+<HR>
