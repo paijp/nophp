@@ -1,4 +1,4 @@
-# nophp is a light simple web framework on php.
+# 'nophp' is a light simple web framework on php.
 
 - HTML specialists can write many pages without asking PHP specialists.
 - Designed for inhouse single server web application which anyone have to login and read/write database.
