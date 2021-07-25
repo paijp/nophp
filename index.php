@@ -771,6 +771,13 @@ EOO;
 			$random = myhash(microtime());
 		return $random;
 	}
+	function	setmailkey($key) {
+		global	$sys;
+		
+		$this->v_mailkey = myhash($this->v_login.$key);
+		$this->v_mailsent = $sys->now;
+		parent::update();
+	}
 	function	setpassword($newpass, $ignoreerror = 0) {
 		if (function_exists("bq_login"))
 			bq_login("changepass", $this);
@@ -2760,9 +2767,7 @@ if (!function_exists("bq_login")) {
 					log_die("mail interval too short.");
 		
 				$key =$r->getrandom();
-				$r->v_mailkey = myhash($r->v_login.$key);
-				$r->v_mailsent = $sys->now;
-				$r->update();
+				$r->setmailkey($key);
 		
 				$a0 = array("@addr@", "@url@");
 				$a1 = array($login, "{$sys->url}?mode=1login&uid={$uid}&key={$key}");
