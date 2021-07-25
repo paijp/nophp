@@ -733,6 +733,8 @@ class	login_table extends a_table {
 		global	$sys;
 		
 		$s = @$sys->loginconfig;
+# sys->loginconfig must be defined in env.php
+# because getconfig() will be called before include tables.php
 		return parent::getconfig().<<<EOO
 login	text unique not null
 pass	text
@@ -2307,9 +2309,9 @@ class	commandparser_selectrows extends commandparser {
 	function	parsehtmlinner($rh = null, $record = null) {
 		global	$loginrecord;
 		
-		$rh = new recordholder();
-		$sql = "select * ".$rh->parsewithbqinsql($this->par, $record);
-		list($s, $list) = $rh->parsewhere($sql);
+		$rh2 = new recordholder();
+		$sql = "select * ".$rh2->parsewithbqinsql($this->par, $record);
+		list($s, $list) = $rh2->parsewhere($sql);
 		$ret = "";
 		foreach (execsql($s, $list, 0, 1) as $val)
 			$ret .= parent::parsehtmlinner($rh, new selectrecord($val));
