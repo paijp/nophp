@@ -53,7 +53,7 @@
 ```
 
 - New table must be added by PHP specialists, but fields in the table can be add by HTML specialists.
-- And the 'simple table' that holds a data like items for <select><option>, can be add by HTML specialists.
+- And the 'simple table' that holds a data like items for ``<select><option>``, can be add by HTML specialists.
 - New function can be added by the PHP specialists, and HTML specialists can use it.
 
 # File structure.
