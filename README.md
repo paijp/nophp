@@ -59,17 +59,23 @@
 # File structure.
 
 - db/ (any path)
+
 -- master.sq3 (any name)
 
 - html/ (any path)
+
 -- index.php (this framework)
+
 -- env.php (server dependent settings written by PHP specialists)
+
 -- tables.php (table definition and user script written by PHP specialists)
 
 - html/res/ (any path)
+
 -- *.html (written by HTML specialists)
 
 - html/debuglog/ (any path, optional)
+
 -- *.php (automatically created)
 
 # Documents in Japanese is not translated to English yet.
