@@ -730,6 +730,9 @@ new innersimpletable();
 $loginrecord = null;
 class	login_table extends a_table {
 	function	getconfig() {
+		global	$sys;
+		
+		$s = @$sys->loginconfig;
 		return parent::getconfig().<<<EOO
 login	text unique not null
 pass	text
@@ -737,14 +740,16 @@ salt	text
 sessionkey	text
 lastlogin	int
 lastlogout	int
-
+{$s}
 EOO;
 	}
 	function	createtable() {
 		global	$sys;
 		
 		parent::createtable();
-		if (@$sys->defaultuser != "") {
+		if (@$sys->defaultuser == "")
+			;
+		else if (count($this->getrecordidlist()) == 0) {
 			$r = $this->getrecord();
 			$r->v_login = $sys->defaultuser;
 			if (@$sys->defaultpass != "")
