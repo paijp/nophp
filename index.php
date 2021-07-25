@@ -12,6 +12,7 @@ class	sys {
 $sys = new sys();
 
 require("env.php");
+include("pretables.php");
 
 if (!function_exists("myhash")) {
 	function	myhash($s) {
@@ -733,7 +734,7 @@ class	login_table extends a_table {
 		global	$sys;
 		
 		$s = @$sys->loginconfig;
-# sys->loginconfig must be defined in env.php
+# sys->loginconfig must be defined in env.php or pretables.php
 # because getconfig() will be called before include tables.php
 		return parent::getconfig().<<<EOO
 login	text unique not null

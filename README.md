@@ -66,6 +66,7 @@
 	- index.php (this framework)
 	- env.php (server dependent settings written by PHP specialists)
 	- tables.php (table definition and user script written by PHP specialists)
+	- pretables.php (application dependent settings written by PHP specialists, optional)
 
 - html/res/ (any path)
 	- *.html (written by HTML specialists)
