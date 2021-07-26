@@ -338,18 +338,24 @@
 `:bq`:now__y/m/d H:i:s__:todate`:bq`<br />
 `:bq`25__:age2t`:bq`<br />
 `:bq`25__:age2t__y/m/d H:i:s__:todate`:bq`<br />
+`:bq`2000__01__01__:ymd2t`:bq`<br />
+`:bq`2000__01__01__:ymd2t__y/m/d H:i:s__:todate`:bq`<br />
 <br />
 
 <TD width="34%"><!--{htmlsrc-->`:now`
 `:now__y/m/d H:i:s__:todate`
 `25__:age2t`
 `25__:age2t__y/m/d H:i:s__:todate`
+`2000__01__01__:ymd2t`
+`2000__01__01__:ymd2t__y/m/d H:i:s__:todate`
 
 <!--}-->
 <TD width="33%">`:now`
 `:now__y/m/d H:i:s__:todate`
 `25__:age2t`
 `25__:age2t__y/m/d H:i:s__:todate`
+`2000__01__01__:ymd2t`
+`2000__01__01__:ymd2t__y/m/d H:i:s__:todate`
 
 
 </TABLE>
@@ -360,6 +366,7 @@
 	<LI>「:todate」は、指定された値を、指定された書式で、日付の文字列に変換します。
 	<LI>「:age2t」は、現在時刻から指定した年数を引いた時刻を、1970年1月1日09:00JSTからの秒数で返します。
 	<LI>これは、生年月日が入力されたレコードを、年齢で検索するような場合に使われます。
+	<LI>「:ymd2t」は、年・月・日の3つの値から、1970年1月1日09:00JSTからの秒数で返します。
 </UL>
 
 <TABLE border width="96%">

@@ -1,0 +1,32 @@
+<FORM method=POST>
+`login__:loginrecord`さん、いらっしゃいませ。
+<INPUT type=submit name=":logout" value="ログアウト">
+<A href="g9999.html">目次</A>
+</FORM>
+<FORM method=POST>
+<INPUT type=text name=":reportbody" size=60>
+<INPUT type=submit value="send report">
+</FORM>
+<TABLE border width="32%">
+<TR><TH>tables.php
+<TR><TD><PRE>&lt;?php
+
+&lt;ul&gt;
+&lt;!--{dayrows `:now` 10--&gt;
+	&lt;li&gt;`y__:r`/`m__:r`/`d__:r` (`w__:r`)
+&lt;!--}--&gt;
+	&lt;p&gt;
+&lt;!--{dayrows `:now` -5--&gt;
+	&lt;li&gt;`y__:r`/`m__:r`/`d__:r` (`w__:r`)
+&lt;!--}--&gt;
+&lt;/ul&gt;
+
+</PRE>
+</TABLE>
+
+<UL>
+	<LI>daterowsに起点と出力数を指定すると、日付を変化させながら繰り返しができます。
+</UL>
+
+
+<HR>
