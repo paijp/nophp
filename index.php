@@ -1,4 +1,12 @@
 <?php
+#
+#	nophp	https://github.com/paijp/nophp
+#	
+#	Copyright (c) 2021 paijp
+#
+#	This software is released under the MIT License.
+#	http://opensource.org/licenses/mit-license.php
+#
 
 class	sys {
 #	var	$htmlbase = "/html/user/v1/";
