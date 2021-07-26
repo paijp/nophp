@@ -1361,6 +1361,13 @@ EOO;
 						$this->popstack($cmd, "");
 						$this->pushstack(array($sys->now));
 						break;
+					case	"ymd2t":
+## スタックから文字列を3つ取り出し、それぞれ年・月・日とみなして、現在時刻値(1970年1月1日0:00:00GMTからの秒数)をスタックに積みます。
+## 一般的な日時に変換するには、:todateを使います。
+						list($s1, $s2, $s3) = $this->popstack($cmd, "year month day");
+						$t = mktime(0, 0, 0, $s2, $s3, $s1);
+						$this->pushstack(array($t));
+						break;
 					case	"age2t":
 ## スタックから文字列を1つ取り出し、年数とみなして、現在時刻値(1970年1月1日0:00:00GMTからの秒数)から年数を引いた値を、スタックに積みます。
 ## 一般的な日時に変換するには、:todateを使います。
@@ -2314,7 +2321,6 @@ class	commandparser_selectrows extends commandparser {
 # 「<!--{selectrows SQL句-->」の直後から「<!--}-->」までの範囲は、指定したSQL句で得られた検索結果の数だけ繰り返される。
 # 例えば「<!--{selectrows from customer limit 10-->`id__:r`<!--}-->」とすると、「select * from customer limit 10」を実行し、得られた1行1行に「`id__:r`」がおこなわれて出力される。
 # プレイスホルダーでは、検索結果の行が現在レコードとして扱われるが、「:curtable」や「:set」などは、外側の現在レコードがアクセスされる。
-	var	$sql;
 	function	parsehtmlinner($rh = null, $record = null) {
 		global	$loginrecord;
 		
