@@ -2352,8 +2352,9 @@ class	commandparser_stablerows extends commandparser {
 
 class	daterecord extends rootrecord {
 	var	$tablename = "date";
-	function	__construct($t) {
+	function	__construct($t, $s = "") {
 		$this->v_t = $t;
+		$this->v_s = date($s, $t);
 		$this->v_Y = date("Y", $t);	# 2001
 		$this->v_y = date("y", $t);	# 01
 		$this->v_m = date("m", $t);	# 01-12
@@ -2368,19 +2369,19 @@ class	daterecord extends rootrecord {
 
 class	commandparser_dayrows extends commandparser {
 	function	parsehtmlinner($rh = null, $record = null) {
-		$a = explode(" ", $rh->parsewithbqinhtml($this->par, $record));
+		$a = explode(" ", $rh->parsewithbqinhtml($this->par, $record), 3);
 		$t = $a[0] + 0;
 		if (($count = @$a[1]) == 0)
 			$count = 1;
 		
 		$ret = "";
 		while ($count > 0) {
-			$ret .= parent::parsehtmlinner($rh, new daterecord($t));
+			$ret .= parent::parsehtmlinner($rh, new daterecord($t, @$a[2]));
 			$t += 86400;
 			$count--;
 		}
 		while ($count < 0) {
-			$ret .= parent::parsehtmlinner($rh, new daterecord($t));
+			$ret .= parent::parsehtmlinner($rh, new daterecord($t, @$a[2]));
 			$t -= 86400;
 			$count++;
 		}
@@ -2391,7 +2392,7 @@ class	commandparser_dayrows extends commandparser {
 
 class	commandparser_wdayrows extends commandparser {
 	function	parsehtmlinner($rh = null, $record = null) {
-		$a = explode(" ", $rh->parsewithbqinhtml($this->par, $record));
+		$a = explode(" ", $rh->parsewithbqinhtml($this->par, $record), 4);
 		$t = $a[0] + 0;
 		if (($count = @$a[1]) == 0)
 			$count = 1;
@@ -2406,13 +2407,13 @@ class	commandparser_wdayrows extends commandparser {
 		
 		$ret = "";
 		while ($count > 0) {
-			$ret .= parent::parsehtmlinner($rh, new daterecord($t));
+			$ret .= parent::parsehtmlinner($rh, new daterecord($t, @$a[3]));
 			$t += 86400;
 			$count--;
 		}
 		while ($count < 0) {
 			for ($i=0; $i<7; $i++) {
-				$ret .= parent::parsehtmlinner($rh, new daterecord($t));
+				$ret .= parent::parsehtmlinner($rh, new daterecord($t, @$a[3]));
 				$t += 86400;
 				$count++;
 			}

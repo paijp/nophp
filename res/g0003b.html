@@ -19,8 +19,8 @@
 	&lt;li&gt;`:bq`y__:r`:bq`/`:bq`m__:r`:bq`/`:bq`d__:r`:bq` (`:bq`w__:r`:bq`)<br />
 &lt;!--}--&gt;<br />
 	&lt;p&gt;<br />
-&lt;!--{dayrows `:bq`:now`:bq` -5--&gt;<br />
-	&lt;li&gt;`:bq`y__:r`:bq`/`:bq`m__:r`:bq`/`:bq`d__:r`:bq` (`:bq`w__:r`:bq`)<br />
+&lt;!--{dayrows `:bq`:now`:bq` -5 y/m/d (w)--&gt;<br />
+	&lt;li&gt;`:bq`s__:r`:bq`<br />
 &lt;!--}--&gt;<br />
 &lt;/ul&gt;<br />
 <br />
@@ -30,8 +30,8 @@
 	<li>`y__:r`/`m__:r`/`d__:r` (`w__:r`)
 <!--}-->
 	<p>
-<!--{dayrows `:now` -5-->
-	<li>`y__:r`/`m__:r`/`d__:r` (`w__:r`)
+<!--{dayrows `:now` -5 y/m/d (w)-->
+	<li>`s__:r`
 <!--}-->
 </ul>
 
@@ -41,8 +41,8 @@
 	<li>`y__:r`/`m__:r`/`d__:r` (`w__:r`)
 <!--}-->
 	<p>
-<!--{dayrows `:now` -5-->
-	<li>`y__:r`/`m__:r`/`d__:r` (`w__:r`)
+<!--{dayrows `:now` -5 y/m/d (w)-->
+	<li>`s__:r`
 <!--}-->
 </ul>
 
@@ -51,6 +51,21 @@
 
 <UL>
 	<LI>dayrowsに起点と出力数を指定すると、日付を変化させながら繰り返しができます。
+	<LI>使用可能なのは、以下の通りです。
+</UL>
+<UL><UL>
+	<LI>t : (1970年1月1日0:00:00UTCからの秒数)
+	<LI>Y : 2001
+	<LI>y : 01
+	<LI>m : 01-12
+	<LI>n : 1-12
+	<LI>w : 0-6
+	<LI>W : (週番号)
+	<LI>d : 01-31
+	<LI>j : 1-31
+</UL></UL>
+<UL>
+	<LI>また、dayrowsの3番目の引数に、:todate形式の文字列を指定すると、`:bq`s__:r`:bq`で参照できます。
 </UL>
 
 <TABLE border width="96%">
@@ -101,14 +116,14 @@
 <br />
 &lt;table border&gt;<br />
 	&lt;tr&gt;&lt;th&gt;Mon&lt;th&gt;Tue&lt;th&gt;Wed&lt;th&gt;Thu&lt;th&gt;Fri&lt;th&gt;Sat&lt;th&gt;Sun<br />
-&lt;!--{wdayrows `:bq`:now`:bq` -42 1--&gt;<br />
+&lt;!--{wdayrows `:bq`:now`:bq` -42 1 [j]--&gt;<br />
 &lt;!--{if `:bq`1__w__:r:ieq`:bq`--&gt;<br />
 	&lt;tr&gt;<br />
 &lt;!--}--&gt;<br />
 &lt;!--{if `:bq`t__:r:now:ieq`:bq`--&gt;<br />
-	&lt;td&gt;`:bq`j__:r`:bq` today<br />
+	&lt;td&gt;`:bq`s__:r`:bq` today<br />
 &lt;!--}{else--&gt;<br />
-	&lt;td&gt;`:bq`j__:r`:bq`<br />
+	&lt;td&gt;`:bq`s__:r`:bq`<br />
 &lt;!--}--&gt;<br />
 &lt;!--}--&gt;<br />
 &lt;/table&gt;<br />
@@ -158,14 +173,14 @@
 
 <table border>
 	<tr><th>Mon<th>Tue<th>Wed<th>Thu<th>Fri<th>Sat<th>Sun
-<!--{wdayrows `:now` -42 1-->
+<!--{wdayrows `:now` -42 1 [j]-->
 <!--{if `1__w__:r:ieq`-->
 	<tr>
 <!--}-->
 <!--{if `t__:r:now:ieq`-->
-	<td>`j__:r` today
+	<td>`s__:r` today
 <!--}{else-->
-	<td>`j__:r`
+	<td>`s__:r`
 <!--}-->
 <!--}-->
 </table>
@@ -215,14 +230,14 @@
 
 <table border>
 	<tr><th>Mon<th>Tue<th>Wed<th>Thu<th>Fri<th>Sat<th>Sun
-<!--{wdayrows `:now` -42 1-->
+<!--{wdayrows `:now` -42 1 [j]-->
 <!--{if `1__w__:r:ieq`-->
 	<tr>
 <!--}-->
 <!--{if `t__:r:now:ieq`-->
-	<td>`j__:r` today
+	<td>`s__:r` today
 <!--}{else-->
-	<td>`j__:r`
+	<td>`s__:r`
 <!--}-->
 <!--}-->
 </table>
@@ -233,6 +248,7 @@
 <UL>
 	<LI>wdayrowsに起点と出力数と最初の曜日(0-6)を指定すると、日付を変化させながら繰り返しができます。
 	<LI>出力数を負にした場合は、21,22,23,24,25,26,27,14,15,16,17,18,19,20,7,8,9,10,11,12,13のように、1週間単位で逆順に出力します。
+	<LI>また、wdayrowsの4番目の引数に、:todate形式の文字列を指定すると、`:bq`s__:r`:bq`で参照できます。
 </UL>
 
 
