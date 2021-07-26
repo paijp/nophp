@@ -2322,8 +2322,6 @@ class	commandparser_selectrows extends commandparser {
 # 例えば「<!--{selectrows from customer limit 10-->`id__:r`<!--}-->」とすると、「select * from customer limit 10」を実行し、得られた1行1行に「`id__:r`」がおこなわれて出力される。
 # プレイスホルダーでは、検索結果の行が現在レコードとして扱われるが、「:curtable」や「:set」などは、外側の現在レコードがアクセスされる。
 	function	parsehtmlinner($rh = null, $record = null) {
-		global	$loginrecord;
-		
 		$rh2 = new recordholder();
 		$sql = "select * ".$rh2->parsewithbqinsql($this->par, $record);
 		list($s, $list) = $rh2->parsewhere($sql);
@@ -2347,6 +2345,79 @@ class	commandparser_stablerows extends commandparser {
 		$ret = "";
 		foreach ($stable->getrecordidlist() as $recordid)
 			$ret .= parent::parsehtmlinner($rh, $stable->getrecord($recordid));
+		return $ret;
+	}
+}
+
+
+class	daterecord extends rootrecord {
+	var	$tablename = "date";
+	function	__construct($t) {
+		$this->v_t = $t;
+		$this->v_Y = date("Y", $t);	# 2001
+		$this->v_y = date("y", $t);	# 01
+		$this->v_m = date("m", $t);	# 01-12
+		$this->v_n = date("n", $t);	# 1-12
+		$this->v_w = date("w", $t);	# 0-6
+		$this->v_W = date("W", $t);	# (week number)
+		$this->v_d = date("d", $t);	# 01-31
+		$this->v_j = date("j", $t);	# 1-31
+	}
+}
+
+
+class	commandparser_dayrows extends commandparser {
+	function	parsehtmlinner($rh = null, $record = null) {
+		$a = explode(" ", $rh->parsewithbqinhtml($this->par, $record));
+		$t = $a[0] + 0;
+		if (($count = @$a[1]) == 0)
+			$count = 1;
+		
+		$ret = "";
+		while ($count > 0) {
+			$ret .= parent::parsehtmlinner($rh, new daterecord($t));
+			$t += 86400;
+			$count--;
+		}
+		while ($count < 0) {
+			$ret .= parent::parsehtmlinner($rh, new daterecord($t));
+			$t -= 86400;
+			$count++;
+		}
+		return $ret;
+	}
+}
+
+
+class	commandparser_wdayrows extends commandparser {
+	function	parsehtmlinner($rh = null, $record = null) {
+		$a = explode(" ", $rh->parsewithbqinhtml($this->par, $record));
+		$t = $a[0] + 0;
+		if (($count = @$a[1]) == 0)
+			$count = 1;
+		$start = @$a[2] + 0;
+		
+		for ($i=0; $i<7; $i++) {
+			$r = new daterecord($t);
+			if ($r->v_w == $start)
+				break;
+			$t -= 86400;
+		}
+		
+		$ret = "";
+		while ($count > 0) {
+			$ret .= parent::parsehtmlinner($rh, new daterecord($t));
+			$t += 86400;
+			$count--;
+		}
+		while ($count < 0) {
+			for ($i=0; $i<7; $i++) {
+				$ret .= parent::parsehtmlinner($rh, new daterecord($t));
+				$t += 86400;
+				$count++;
+			}
+			$t -= 86400 * 14;
+		}
 		return $ret;
 	}
 }
