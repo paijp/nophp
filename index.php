@@ -446,7 +446,7 @@ EOO;
 			list($fieldname) = preg_split("/[ \t]+/", trim($line), 2);
 			
 			$s = "alter table {$this->tablename} add ".trim($line).";";
-			if ((execsql($s, null, 1, 1)))
+			if ((execsql($s, null, 1, -1)))
 				$updated = 1;
 			
 			if (strpos($line, "/*indexed*/") === FALSE)
