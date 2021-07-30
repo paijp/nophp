@@ -2335,8 +2335,11 @@ class	commandparser_selectrows extends commandparser {
 		$sql = "select * ".$rh2->parsewithbqinsql($this->par, $record);
 		list($s, $list) = $rh2->parsewhere($sql);
 		$ret = "";
-		foreach (execsql($s, $list, 0, 1) as $val)
+		$this->cond = 0;
+		foreach (execsql($s, $list, 0, 1) as $val) {
+			$this->cond = 1;
 			$ret .= parent::parsehtmlinner($rh, new selectrecord($val));
+		}
 		return $ret;
 	}
 }
@@ -2348,12 +2351,15 @@ class	commandparser_stablerows extends commandparser {
 	function	parsehtmlinner($rh = null, $record = null) {
 		global	$tablelist;
 		
+		$this->cond = 0;
 		$stable = @$tablelist["simple"]->gettable(trim($this->par.""));
 		if ($stable === null)
 			return "";
 		$ret = "";
-		foreach ($stable->getrecordidlist() as $recordid)
+		foreach ($stable->getrecordidlist() as $recordid) {
+			$this->cond = 1;
 			$ret .= parent::parsehtmlinner($rh, $stable->getrecord($recordid));
+		}
 		return $ret;
 	}
 }
