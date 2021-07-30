@@ -504,7 +504,7 @@ class	a_table extends table {
 		}
 		return array("");
 	}
-	function	a_set__val__field($rh0, $record, $s1, $s3) {
+	function	h_set__val__field($rh0, $record, $s1, $s3) {
 ## スタックから文字列を3つ取り出して、それぞれフィールド値とフィールド名、テーブル名とみなし、指定したテーブルのカレントレコードに設定します。
 ## テーブル名は、あらかじめ「<!--{tableid」などで宣言されている必要があります。
 ## 例えば`1__id__user__:t_set`は、userテーブルのカレントレコードのIDに1を設定します。
