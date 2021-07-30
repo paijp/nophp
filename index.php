@@ -16,6 +16,7 @@ class	sys {
 	var	$debugmaxlogrecords = 500;
 	var	$mailinterval = 60;
 	var	$mailexpire = 1800;
+	var	$forcelogoutonupdate = 1;
 }
 $sys = new sys();
 
@@ -27,6 +28,8 @@ if (!function_exists("myhash")) {
 		return hash("sha256", $s);
 	}
 }
+if (trim(myhash("")) == "")
+	die("hash not work");
 
 if (@$_SERVER["HTTPS"] == "on")
 	$sys->url = "https://";
@@ -770,13 +773,17 @@ EOO;
 		}
 	}
 	function	update($ignoreerror = 0) {
+		global	$sys;
+		
 		$r = $this->getrecord($this->id);
 		if (($this->v_login != $r->v_login)&& function_exists("bq_login"))
 			bq_login("changelogin", $r);
 		$this->v_salt = $r->v_salt;
 		$this->v_pass = $r->v_pass;
-		$this->v_sessionkey = "";
-		$this->v_mailkey = "";
+		if ((@$sys->forcelogoutonupdate)) {
+			$this->v_sessionkey = "";
+			$this->v_mailkey = "";
+		}
 		parent::update($ignoreerror);
 	}
 	function	getrandom() {
@@ -896,7 +903,9 @@ EOO;
 			if (function_exists("bq_login"))
 				bq_login("logout", $loginrecord);
 			$loginrecord->v_lastlogout = time();
-			$loginrecord->update();		# sessionkey will clear.
+			$loginrecord->v_sessionkey = "";
+			$loginrecord->mailkey = "";
+			$loginrecord->update();
 		}
 		setcookie("sessionid", "", 1, $cookiepath);
 		setcookie("sessionkey", "", 1, $cookiepath);

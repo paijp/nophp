@@ -9,21 +9,35 @@
 </FORM>
 <!--{if `1__id__:loginrecord:ieq`-->
 <P>user list</P>
-<FORM method=POST>
+<!--{if `id__:g:isnull`-->
+
 <UL>
 <!--{selectrows from login -->
 	<LI>`login__:r`
 <!--{if `1__id__:r:ieq`-->
 (admin)
 <!--}-->
+<a href="?id=`id__:r`">edit</a>
 <!--}-->
-<!--{tableid login -->
-<LI><INPUT type="text" name="login" size="40">
-<INPUT type="submit" name=":curtable:h_update:popall:jump" value="add user">
-<!--}-->
+	<LI><a href="?id=0">add user</a>
 </UL>
-</FORM>
+
+<!--}{else-->
+
+<FORM method=POST>
+<!--{tableid login `id__:g`-->
+<LI><INPUT type="text" name="login" size="40">
+<!--{if `id__:g`-->
+<INPUT type="submit" name=":curtable:h_update:popall:curpage:jump" value="modify">
+<!--}{else-->
+<INPUT type="submit" name=":curtable:h_update:popall:curpage:jump" value="add">
 <!--}-->
+<!--}-->
+</FORM>
+
+<!--}-->
+<!--}-->
+
 <UL>
 	<LI><A href="g0000.html">g0000.html 掲示板、tableidとselectrows。</A>
 	<LI><A href="g0000a.html">g0000a.html if/elseと、tableidにIDを指定して編集。</A>
