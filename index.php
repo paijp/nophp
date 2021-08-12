@@ -360,9 +360,9 @@ EOO;
 		if ($this->id < 0)
 			log_die("update called.");
 		if ($this->id <= 0)
-			$this->v_created = $this->v_updated = time();
+			$this->v_created = $this->v_updated = $sys->now;
 		else
-			$this->v_updated = time();
+			$this->v_updated = $sys->now;
 		
 		if ($sys->debugfn !== null)
 			$this->v_debuglogfn = $sys->debugfn;
@@ -524,7 +524,8 @@ class	a_table extends table {
 		return array($s);
 	}
 	function	hs_delete($rh0, $record = null) {
-#		$this->v_deleted = time();
+#		global	$sys;
+#		$this->v_deleted = $sys->now;
 #		$this->update();
 		$this->delete();
 		return array("");
@@ -811,6 +812,7 @@ EOO;
 		parent::update($ignoreerror);
 	}
 	function	login($pass = "") {
+		global	$sys;
 		global	$cookiepath;
 		
 		if (myhash($pass.$this->v_salt) != $this->v_pass) {
@@ -823,7 +825,7 @@ EOO;
 		$key = $this->getrandom();
 		$this->v_sessionkey = myhash($this->v_salt.$key);
 		$this->v_submitkey = $this->getrandom();
-		$this->v_lastlogin = time();
+		$this->v_lastlogin = $sys->now;
 		parent::update();
 		setcookie("sessionid", $this->id, 0, $cookiepath);
 		setcookie("sessionkey", $key, 0, $cookiepath);
@@ -902,7 +904,7 @@ EOO;
 		if ($loginrecord !== null) {
 			if (function_exists("bq_login"))
 				bq_login("logout", $loginrecord);
-			$loginrecord->v_lastlogout = time();
+			$loginrecord->v_lastlogout = $sys->now;
 			$loginrecord->v_sessionkey = "";
 			$loginrecord->mailkey = "";
 			$loginrecord->update();
