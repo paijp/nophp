@@ -74,6 +74,10 @@ function	log_die($message = "")
 	global	$tablelist;
 	global	$debuglog;
 	global	$debugtablelist;
+	global	$loginrecord;
+	
+	if (($loginrecord))
+		execsql("commit;");
 	
 	if (@$sys->debugdir === null)
 		die($message);
@@ -828,7 +832,6 @@ EOO;
 	}
 	function	check_loginform() {
 		global	$sys;
-		global	$loginrecord;
 		
 		header("Location: {$sys->url}");
 		
@@ -886,8 +889,11 @@ EOO;
 			;
 		else if ($loginrecord->v_sessionkey == "")
 			;
-		else if ($loginrecord->v_sessionkey == myhash($loginrecord->v_salt.$key))
+		else if ($loginrecord->v_sessionkey == myhash($loginrecord->v_salt.$key)) {
+			execsql("begin;");
+			$loginrecord = $this->getrecord($sessionid);
 			return 1;
+		}
 		$loginrecord = null;
 		return 0;
 	}
@@ -903,6 +909,7 @@ EOO;
 			$loginrecord->v_sessionkey = "";
 			$loginrecord->mailkey = "";
 			$loginrecord->update();
+			execsql("commit;");
 		}
 		setcookie("sessionid", "", 1, $cookiepath);
 		setcookie("sessionkey", "", 1, $cookiepath);
