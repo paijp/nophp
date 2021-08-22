@@ -741,13 +741,8 @@ new innersimpletable();
 
 
 $loginrecord = null;
-class	login_table extends a_table {
+class	a_login_table extends a_table {
 	function	getconfig() {
-		global	$sys;
-		
-		$s = @$sys->loginconfig;
-# sys->loginconfig must be defined in env.php or pretables.php
-# because getconfig() will be called before include tables.php
 		return parent::getconfig().<<<EOO
 login	text unique not null
 pass	text
@@ -755,7 +750,7 @@ salt	text
 sessionkey	text
 lastlogin	int
 lastlogout	int
-{$s}
+
 EOO;
 	}
 	function	createtable() {
@@ -914,7 +909,6 @@ EOO;
 		header("Location: {$sys->urlbase}/logout/".@$sys->rootpage.".html");
 	}
 }
-new login_table();
 
 
 class	rootrecord {
