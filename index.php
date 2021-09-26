@@ -21,7 +21,6 @@ class	sys {
 $sys = new sys();
 
 require("env.php");
-include("pretables.php");
 
 if (!function_exists("myhash")) {
 	function	myhash($s) {
@@ -826,8 +825,8 @@ EOO;
 		$this->v_submitkey = $this->getrandom();
 		$this->v_lastlogin = $sys->now;
 		parent::update();
-		setcookie("sessionid", $this->id, 0, $cookiepath);
-		setcookie("sessionkey", $key, 0, $cookiepath);
+		setcookie("sessionid", $this->id, 0, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
+		setcookie("sessionkey", $key, 0, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
 		log_die("login success.");
 	}
 	function	check_loginform() {
@@ -911,8 +910,8 @@ EOO;
 			$loginrecord->update();
 			execsql("commit;");
 		}
-		setcookie("sessionid", "", 1, $cookiepath);
-		setcookie("sessionkey", "", 1, $cookiepath);
+		setcookie("sessionid", "", 1, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
+		setcookie("sessionkey", "", 1, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
 		header("Location: {$sys->urlbase}/logout/".@$sys->rootpage.".html");
 	}
 }
@@ -1421,9 +1420,21 @@ EOO;
 						break;
 					case	"rcat":
 ## スタックから、文字列を2つ取り出して、逆順に結合し、それをスタックに積みます。
-## 例えば`a__b__:cat`は「ba」になります。
+## 例えば`a__b__:rcat`は「ba」になります。
 						list($s1, $s2) = $this->popstack($cmd, "s0 s1");
 						$this->pushstack(array($s2.$s1));
+						break;
+					case	"scat":
+## スタックから、文字列を2つ取り出して、結合し、それをスタックに積みます。
+## 例えば`a__b__:scat`は「a b」になります。
+						list($s1, $s2) = $this->popstack($cmd, "s0 s1");
+						$this->pushstack(array("{$s1} {$s2}"));
+						break;
+					case	"rscat":
+## スタックから、文字列を2つ取り出して、逆順に結合し、それをスタックに積みます。
+## 例えば`a__b__:rscat`は「b a」になります。
+						list($s1, $s2) = $this->popstack($cmd, "s0 s1");
+						$this->pushstack(array("{$s2} {$s1}"));
 						break;
 					case	"ismatch":
 ## スタックから、文字列を2つ取り出し、1番目の文字列の中に2番目の文字列があれば「1」を、なければ空文字列をスタックに積みます。
@@ -1522,6 +1533,95 @@ EOO;
 ## `1__01__:seq`や`0__ __:seq`は空文字列になります。
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						$this->pushstack(array(($s1."" === $s2."")? 1 : ""));
+						break;
+					case	"ne":
+						list($s1, $s2) = $this->popstack($cmd, "i j");
+						$this->pushstack(array(($s1 != $s2)? 1 : ""));
+						break;
+					case	"ine":
+## スタックから文字列を2つ取り出し、それぞれを数値とみなして、等しくなければ「1」を、等しければ空文字列をスタックに積みます。
+## 例えば`1__1__:ieq`や`1__01__:ieq`や`0__ __:ieq`や`0x1__1__:ieq`は空文字列になります。
+						list($s1, $s2) = $this->popstack($cmd, "i j");
+						$this->pushstack(array(($s1 + 0 != $s2 + 0)? 1 : ""));
+						break;
+					case	"sne":
+## スタックから文字列を2つ取り出し、それぞれを文字列とみなして、等しくなければ「1」を、等しければ空文字列をスタックに積みます。
+## 例えば`1__1__:seq`は空文字列になります。
+## `1__01__:seq`や`0__ __:seq`は「1」になります。
+						list($s1, $s2) = $this->popstack($cmd, "i j");
+						$this->pushstack(array(($s1."" !== $s2."")? 1 : ""));
+						break;
+					case	"lt":
+						list($s1, $s2) = $this->popstack($cmd, "i j");
+						$this->pushstack(array(($s1 < $s2)? 1 : ""));
+						break;
+					case	"ilt":
+## スタックから文字列を2つ取り出し、それぞれを数値とみなして、2番目が大きければ「1」を、そうでなければ空文字列をスタックに積みます。
+## 例えば`1__2__:ilt`は「1」になります。
+## `1__1__:ilt`や`1__0__:ilt`は空文字列になります。
+						list($s1, $s2) = $this->popstack($cmd, "i j");
+						$this->pushstack(array(($s1 + 0 < $s2 + 0)? 1 : ""));
+						break;
+					case	"slt":
+## スタックから文字列を2つ取り出し、それぞれを文字列とみなして、2番目が大きければ「1」を、そうでなければ空文字列をスタックに積みます。
+## 例えば`1__2__:slt`は「1」になります。
+## `1__1__:slt`や`1__0__:slt`は空文字列になります。
+						list($s1, $s2) = $this->popstack($cmd, "i j");
+						$this->pushstack(array(("_".$s1 < "_".$s2)? 1 : ""));
+						break;
+					case	"gt":
+						list($s1, $s2) = $this->popstack($cmd, "i j");
+						$this->pushstack(array(($s1 > $s2)? 1 : ""));
+						break;
+					case	"igt":
+## スタックから文字列を2つ取り出し、それぞれを数値とみなして、1番目が大きければ「1」を、そうでなければ空文字列をスタックに積みます。
+## 例えば`1__0__:igt`は「1」になります。
+## `1__1__:igt`や`1__2__:igt`は空文字列になります。
+						list($s1, $s2) = $this->popstack($cmd, "i j");
+						$this->pushstack(array(($s1 + 0 > $s2 + 0)? 1 : ""));
+						break;
+					case	"sgt":
+## スタックから文字列を2つ取り出し、それぞれを文字列とみなして、1番目が大きければ「1」を、そうでなければ空文字列をスタックに積みます。
+## 例えば`1__0__:sgt`は「1」になります。
+## `1__1__:sgt`や`1__2__:sgt`は空文字列になります。
+						list($s1, $s2) = $this->popstack($cmd, "i j");
+						$this->pushstack(array(("_".$s1 > "_".$s2)? 1 : ""));
+						break;
+					case	"le":
+						list($s1, $s2) = $this->popstack($cmd, "i j");
+						$this->pushstack(array(($s1 <= $s2)? 1 : ""));
+						break;
+					case	"ile":
+## スタックから文字列を2つ取り出し、それぞれを数値とみなして、等しいか2番目が大きければ「1」を、そうでなければ空文字列をスタックに積みます。
+## 例えば`1__2__:ile`や`1__1__:ile`は「1」になります。
+## `1__0__:ile`は空文字列になります。
+						list($s1, $s2) = $this->popstack($cmd, "i j");
+						$this->pushstack(array(($s1 + 0 <= $s2 + 0)? 1 : ""));
+						break;
+					case	"sle":
+## スタックから文字列を2つ取り出し、それぞれを文字列とみなして、等しいか2番目が大きければ「1」を、そうでなければ空文字列をスタックに積みます。
+## 例えば`1__2__:sle`や`1__1__:sle`は「1」になります。
+## `1__0__:sle`は空文字列になります。
+						list($s1, $s2) = $this->popstack($cmd, "i j");
+						$this->pushstack(array(("_".$s1 <= "_".$s2)? 1 : ""));
+						break;
+					case	"ge":
+						list($s1, $s2) = $this->popstack($cmd, "i j");
+						$this->pushstack(array(($s1 >= $s2)? 1 : ""));
+						break;
+					case	"ige":
+## スタックから文字列を2つ取り出し、それぞれを数値とみなして、等しいか1番目が大きければ「1」を、そうでなければ空文字列をスタックに積みます。
+## 例えば`1__0__:ige`や`1__1__:ige`は「1」になります。
+## `1__2__:ige`は空文字列になります。
+						list($s1, $s2) = $this->popstack($cmd, "i j");
+						$this->pushstack(array(($s1 + 0 >= $s2 + 0)? 1 : ""));
+						break;
+					case	"sge":
+## スタックから文字列を2つ取り出し、それぞれを文字列とみなして、等しいか1番目が大きければ「1」を、そうでなければ空文字列をスタックに積みます。
+## 例えば`1__0__:sge`や`1__1__:sge`は「1」になります。
+## `1__2__:sge`は空文字列になります。
+						list($s1, $s2) = $this->popstack($cmd, "i j");
+						$this->pushstack(array(("_".$s1 >= "_".$s2)? 1 : ""));
 						break;
 					case	"dup":
 ## スタックから文字列を1つ取り出し、同じものを2つスタックに積みます。
@@ -1700,6 +1800,51 @@ EOO;
 							$this->debuglog .= "\nRETURN(".$this->stack[0].")\n";
 							$debuglog .= "<H3>RETURN(".$this->stack[0].")</H3>\n";
 							return $this->stack[0];
+						} else
+							$this->pushstack(array());
+						break;
+					case	"home":
+## 式の評価を終了してルートページにリダイレクトします。
+						list($s1) = $this->popstack($cmd, "");
+						$this->debuglog .= "\nHOME\n";
+						$debuglog .= "<H3>HOME</H3>\n";
+						if (@$sys->debugdir !== null) {
+							file_add_contents("{$sys->debugdir}/{$sys->debugfn}.php", $debuglog);
+							$debuglog = "";
+						}
+						header("Location: {$sys->urlbase}/nofmt/{$sys->rootpage}.html");
+						log_die();
+					case	"andhome":
+## スタックから文字列を1つ取り出し、空文字列か「0」ならばそのまま継続し、そうでなければそこで式の評価を終了してルートページにリダイレクトします。
+## 例えば`0__:andreturn4__a`は「a」になります。
+## 一方、`1__:andreturn4__a`はルートページにリダイレクトします(__a以降は評価されません)。
+						list($s1) = $this->popstack($cmd, "val");
+						if ($s1 != 0) {
+							$this->debuglog .= "\nHOME\n";
+							$debuglog .= "<H3>HOME</H3>\n";
+							if (@$sys->debugdir !== null) {
+								file_add_contents("{$sys->debugdir}/{$sys->debugfn}.php", $debuglog);
+								$debuglog = "";
+							}
+							header("Location: {$sys->urlbase}/nofmt/{$sys->rootpage}.html");
+							log_die();
+						} else
+							$this->pushstack(array());
+						break;
+					case	"orhome":
+## スタックから文字列を1つ取り出し、空文字列か「0」ならばそこで式の評価を終了してルートページにリダイレクトし、そうでなければそのまま継続します。
+## 例えば`1__:orhome__a`は「a」になります。
+## 一方、`0__:orhome__a`はルートページにリダイレクトします(__a以降は評価されません)。
+						list($s1) = $this->popstack($cmd, "val");
+						if ($s1 == 0) {
+							$this->debuglog .= "\nHOME\n";
+							$debuglog .= "<H3>HOME</H3>\n";
+							if (@$sys->debugdir !== null) {
+								file_add_contents("{$sys->debugdir}/{$sys->debugfn}.php", $debuglog);
+								$debuglog = "";
+							}
+							header("Location: {$sys->urlbase}/nofmt/{$sys->rootpage}.html");
+							log_die();
 						} else
 							$this->pushstack(array());
 						break;

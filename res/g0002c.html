@@ -379,6 +379,8 @@
 `:bq`123__abc__:cat__ABC__:cat`:bq`<br />
 `:bq`123__abc__:rcat`:bq`<br />
 `:bq`data__(__:rcat__)__:cat`:bq`<br />
+`:bq`123__abc__:scat`:bq`<br />
+`:bq`123__abc__:rscat`:bq`<br />
 <br />
 
 <TD width="34%"><!--{htmlsrc-->`123__abc__:cat`
@@ -387,6 +389,8 @@
 `123__abc__:cat__ABC__:cat`
 `123__abc__:rcat`
 `data__(__:rcat__)__:cat`
+`123__abc__:scat`
+`123__abc__:rscat`
 
 <!--}-->
 <TD width="33%">`123__abc__:cat`
@@ -395,6 +399,8 @@
 `123__abc__:cat__ABC__:cat`
 `123__abc__:rcat`
 `data__(__:rcat__)__:cat`
+`123__abc__:scat`
+`123__abc__:rscat`
 
 
 </TABLE>
@@ -403,6 +409,12 @@
 	<LI>「:cat」は、指定された2つの文字列を結合します。
 	<LI>「:rcat」は、指定された2つの文字列を、逆順に結合します。
 	<LI>例えばレコードから得た値を括弧で囲むには「data__:r__(__:rcat__)__:cat」のようにします。
+</UL>
+
+
+<UL>
+	<LI>「:scat」は、指定された2つの文字列を結合します。
+	<LI>「:rscat」は、指定された2つの文字列を、逆順に結合します。
 </UL>
 
 <TABLE border width="96%">
@@ -509,6 +521,63 @@
 `:bq`1__1__:seq`:bq`<br />
 `:bq`01__1__:seq`:bq`<br />
 <br />
+`:bq`1__2__:ine`:bq`<br />
+`:bq`1__1__:ine`:bq`<br />
+`:bq`01__1__:ine`:bq`<br />
+<br />
+`:bq`1__2__:sne`:bq`<br />
+`:bq`1__1__:sne`:bq`<br />
+`:bq`01__1__:sne`:bq`<br />
+<br />
+`:bq`1__2__:ilt`:bq`<br />
+`:bq`1__1__:ilt`:bq`<br />
+`:bq`1__0__:ilt`:bq`<br />
+`:bq`01__1__:ilt`:bq`<br />
+`:bq`02__1__:ilt`:bq`<br />
+<br />
+`:bq`1__2__:slt`:bq`<br />
+`:bq`1__1__:slt`:bq`<br />
+`:bq`1__0__:slt`:bq`<br />
+`:bq`01__1__:slt`:bq`<br />
+`:bq`02__1__:slt`:bq`<br />
+<br />
+`:bq`1__2__:igt`:bq`<br />
+`:bq`1__1__:igt`:bq`<br />
+`:bq`1__0__:igt`:bq`<br />
+`:bq`01__1__:igt`:bq`<br />
+`:bq`02__1__:igt`:bq`<br />
+<br />
+`:bq`1__2__:sgt`:bq`<br />
+`:bq`1__1__:sgt`:bq`<br />
+`:bq`1__0__:sgt`:bq`<br />
+`:bq`01__1__:sgt`:bq`<br />
+`:bq`02__1__:sgt`:bq`<br />
+<br />
+`:bq`1__2__:ile`:bq`<br />
+`:bq`1__1__:ile`:bq`<br />
+`:bq`1__0__:ile`:bq`<br />
+`:bq`01__1__:ile`:bq`<br />
+`:bq`02__1__:ile`:bq`<br />
+<br />
+`:bq`1__2__:sle`:bq`<br />
+`:bq`1__1__:sle`:bq`<br />
+`:bq`1__0__:sle`:bq`<br />
+`:bq`01__1__:sle`:bq`<br />
+`:bq`02__1__:sle`:bq`<br />
+<br />
+`:bq`1__2__:ige`:bq`<br />
+`:bq`1__1__:ige`:bq`<br />
+`:bq`1__0__:ige`:bq`<br />
+`:bq`01__1__:ige`:bq`<br />
+`:bq`02__1__:ige`:bq`<br />
+<br />
+`:bq`1__2__:sge`:bq`<br />
+`:bq`1__1__:sge`:bq`<br />
+`:bq`1__0__:sge`:bq`<br />
+`:bq`01__1__:sge`:bq`<br />
+`:bq`02__1__:sge`:bq`<br />
+<br />
+<br />
 
 <TD width="34%"><!--{htmlsrc-->`1__2__:ieq`
 `1__1__:ieq`
@@ -517,6 +586,63 @@
 `1__2__:seq`
 `1__1__:seq`
 `01__1__:seq`
+
+`1__2__:ine`
+`1__1__:ine`
+`01__1__:ine`
+
+`1__2__:sne`
+`1__1__:sne`
+`01__1__:sne`
+
+`1__2__:ilt`
+`1__1__:ilt`
+`1__0__:ilt`
+`01__1__:ilt`
+`02__1__:ilt`
+
+`1__2__:slt`
+`1__1__:slt`
+`1__0__:slt`
+`01__1__:slt`
+`02__1__:slt`
+
+`1__2__:igt`
+`1__1__:igt`
+`1__0__:igt`
+`01__1__:igt`
+`02__1__:igt`
+
+`1__2__:sgt`
+`1__1__:sgt`
+`1__0__:sgt`
+`01__1__:sgt`
+`02__1__:sgt`
+
+`1__2__:ile`
+`1__1__:ile`
+`1__0__:ile`
+`01__1__:ile`
+`02__1__:ile`
+
+`1__2__:sle`
+`1__1__:sle`
+`1__0__:sle`
+`01__1__:sle`
+`02__1__:sle`
+
+`1__2__:ige`
+`1__1__:ige`
+`1__0__:ige`
+`01__1__:ige`
+`02__1__:ige`
+
+`1__2__:sge`
+`1__1__:sge`
+`1__0__:sge`
+`01__1__:sge`
+`02__1__:sge`
+
 
 <!--}-->
 <TD width="33%">`1__2__:ieq`
@@ -527,6 +653,63 @@
 `1__1__:seq`
 `01__1__:seq`
 
+`1__2__:ine`
+`1__1__:ine`
+`01__1__:ine`
+
+`1__2__:sne`
+`1__1__:sne`
+`01__1__:sne`
+
+`1__2__:ilt`
+`1__1__:ilt`
+`1__0__:ilt`
+`01__1__:ilt`
+`02__1__:ilt`
+
+`1__2__:slt`
+`1__1__:slt`
+`1__0__:slt`
+`01__1__:slt`
+`02__1__:slt`
+
+`1__2__:igt`
+`1__1__:igt`
+`1__0__:igt`
+`01__1__:igt`
+`02__1__:igt`
+
+`1__2__:sgt`
+`1__1__:sgt`
+`1__0__:sgt`
+`01__1__:sgt`
+`02__1__:sgt`
+
+`1__2__:ile`
+`1__1__:ile`
+`1__0__:ile`
+`01__1__:ile`
+`02__1__:ile`
+
+`1__2__:sle`
+`1__1__:sle`
+`1__0__:sle`
+`01__1__:sle`
+`02__1__:sle`
+
+`1__2__:ige`
+`1__1__:ige`
+`1__0__:ige`
+`01__1__:ige`
+`02__1__:ige`
+
+`1__2__:sge`
+`1__1__:sge`
+`1__0__:sge`
+`01__1__:sge`
+`02__1__:sge`
+
+
 
 </TABLE>
 
@@ -535,5 +718,40 @@
 	<LI>「:seq」は、2つの文字列が、等しければ「1」を、等しくなければ空文字列を返します。
 </UL>
 
+
+<UL>
+	<LI>「:ine」は、2つの文字列を数値とみなして、等しくなければ「1」を、等しければ空文字列を返します。
+	<LI>「:sne」は、2つの文字列が、等しくなければ「1」を、等しければ空文字列を返します。
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0002c.html (続き)
+<TH>ブラウザに送られるHTML
+<TH>ブラウザでの表示(操作できます)
+<TR><TD width="33%">&lt;form method=&quot;POST&quot;&gt;<br />
+&lt;input type=&quot;checkbox&quot; name=&quot;hometest&quot; value=&quot;1&quot;&gt;val<br />
+&lt;input type=&quot;submit&quot; name=&quot;hometest__:p__:home&quot; value=&quot;:home&quot;&gt;<br />
+&lt;input type=&quot;submit&quot; name=&quot;hometest__:p__:andhome&quot; value=&quot;:andhome&quot;&gt;<br />
+&lt;input type=&quot;submit&quot; name=&quot;hometest__:p__:orhome&quot; value=&quot;:orhome&quot;&gt;<br />
+&lt;/form&gt;<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc--><form method="POST">
+<input type="checkbox" name="hometest" value="1">val
+<input type="submit" name="hometest__:p__:home" value=":home">
+<input type="submit" name="hometest__:p__:andhome" value=":andhome">
+<input type="submit" name="hometest__:p__:orhome" value=":orhome">
+</form>
+
+<!--}-->
+<TD width="33%"><form method="POST">
+<input type="checkbox" name="hometest" value="1">val
+<input type="submit" name="hometest__:p__:home" value=":home">
+<input type="submit" name="hometest__:p__:andhome" value=":andhome">
+<input type="submit" name="hometest__:p__:orhome" value=":orhome">
+</form>
+
+
+</TABLE>
 
 <HR>
