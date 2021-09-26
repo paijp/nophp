@@ -1,44 +1,44 @@
 <FORM method=POST>
-`login__:loginrecord`さん、いらっしゃいませ。
-<INPUT type=submit name=":logout" value="ログアウト">
-<A href="g9999.html">目次</A>
+Welcome `login__:loginrecord`!
+<INPUT type=submit name=":logout" value="logout">
+<A href="g9999.html">index</A>
 </FORM>
 <FORM method=POST>
 <INPUT type=text name=":reportbody" size=60>
 <INPUT type=submit value="send report">
 </FORM>
 <UL>
-	<LI><A href="g0002.html">前回のtables.php</A>から変更ありません。
+	<LI>No change from <A href="g0002.html">tables.php before</A>.
 </UL>
 <TABLE border width="96%">
 <TR><TH>g0002c.html
-<TH>ブラウザに送られるHTML
-<TH>ブラウザでの表示(操作できます)
-<TR><TD width="33%">ドット `:bq`:dot`:bq`<br />
-コロン `:bq`:col`:bq`<br />
-空白 `:bq`:sp`:bq`<br />
-バッククォート `:bq`:bq`:bq`<br />
-空文字列 `:bq`:null`:bq`<br />
-文字コード `:bq`404142__:hex`:bq`<br />
-結合サンプル `:bq`abc__:sp__123__:cat:cat`:bq`<br />
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
+<TR><TD width="33%">period `:bq`:dot`:bq`<br />
+colon `:bq`:col`:bq`<br />
+space `:bq`:sp`:bq`<br />
+backticks(back quote) `:bq`:bq`:bq`<br />
+null character `:bq`:null`:bq`<br />
+character code `:bq`404142__:hex`:bq`<br />
+concat sample `:bq`abc__:sp__123__:cat:cat`:bq`<br />
 <br />
 
-<TD width="34%"><!--{htmlsrc-->ドット `:dot`
-コロン `:col`
-空白 `:sp`
-バッククォート `:bq`
-空文字列 `:null`
-文字コード `404142__:hex`
-結合サンプル `abc__:sp__123__:cat:cat`
+<TD width="34%"><!--{htmlsrc-->period `:dot`
+colon `:col`
+space `:sp`
+backticks(back quote) `:bq`
+null character `:null`
+character code `404142__:hex`
+concat sample `abc__:sp__123__:cat:cat`
 
 <!--}-->
-<TD width="33%">ドット `:dot`
-コロン `:col`
-空白 `:sp`
-バッククォート `:bq`
-空文字列 `:null`
-文字コード `404142__:hex`
-結合サンプル `abc__:sp__123__:cat:cat`
+<TD width="33%">period `:dot`
+colon `:col`
+space `:sp`
+backticks(back quote) `:bq`
+null character `:null`
+character code `404142__:hex`
+concat sample `abc__:sp__123__:cat:cat`
 
 
 </TABLE>
@@ -49,41 +49,41 @@
 </UL>
 
 <TABLE border width="96%">
-<TR><TH>g0002c.html (続き)
-<TH>ブラウザに送られるHTML
-<TH>ブラウザでの表示(操作できます)
+<TR><TH>g0002c.html (continued)
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
 <TR><TD width="33%">&lt;!--{tableid message_aliias=message2--&gt;<br />
-現在レコードID `:bq`:curid`:bq`<br />
-現在テーブル名 `:bq`:curtable`:bq`<br />
+current record ID `:bq`:curid`:bq`<br />
+current table name `:bq`:curtable`:bq`<br />
 &lt;!--}--&gt;<br />
-現在ページ名 `:bq`:curpage`:bq`<br />
+current page name `:bq`:curpage`:bq`<br />
 <br />
 
 <TD width="34%"><!--{htmlsrc--><!--{tableid message_aliias=message2-->
-現在レコードID `:curid`
-現在テーブル名 `:curtable`
+current record ID `:curid`
+current table name `:curtable`
 <!--}-->
-現在ページ名 `:curpage`
+current page name `:curpage`
 
 <!--}-->
 <TD width="33%"><!--{tableid message_aliias=message2-->
-現在レコードID `:curid`
-現在テーブル名 `:curtable`
+current record ID `:curid`
+current table name `:curtable`
 <!--}-->
-現在ページ名 `:curpage`
+current page name `:curpage`
 
 
 </TABLE>
 
 <UL>
-	<LI>現在の状態を返します。
+	<LI>return current status.
 	<LI>コピーしたときに、コピー先に合わせて変える必要がなくなります。
 </UL>
 
 <TABLE border width="96%">
-<TR><TH>g0002c.html (続き)
-<TH>ブラウザに送られるHTML
-<TH>ブラウザでの表示(操作できます)
+<TR><TH>g0002c.html (continued)
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
 <TR><TD width="33%">&lt;FORM method=POST&gt;<br />
 `:bq`:ispost`:bq`<br />
 &lt;INPUT type=submit value=&quot;POST&quot;&gt;<br />
@@ -105,14 +105,14 @@
 </TABLE>
 
 <UL>
-	<LI>「:ispost」は、POST(submit)なら「1」、そうでなければ空文字列を返します。
-	<LI>POSTであっても、submitkeyが合っていない場合(他サイトからのPOSTなど)は空文字列を返します。
+	<LI>&quot;:ispost&quot; returns &quot;1&quot; when request type is POST(submit). It returns &quot;&quot; when others.
+	<LI>It returns &quot;&quot; when submitkey is not match (like POST from other host) even if it is POST request.
 </UL>
 
 <TABLE border width="96%">
-<TR><TH>g0002c.html (続き)
-<TH>ブラウザに送られるHTML
-<TH>ブラウザでの表示(操作できます)
+<TR><TH>g0002c.html (continued)
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
 <TR><TD width="33%">`:bq`:isvalid`:bq`<br />
 <br />
 
@@ -125,14 +125,14 @@
 </TABLE>
 
 <UL>
-	<LI>「:isvalid」は、「&lt;!--{valid」を使っている場合で、エラーがなかった場合は「1」を、エラーがあった場合は空文字列を返します。
-	<LI>「&lt;!--{valid」を使っていない場合は「1」を返します。
+	<LI>&quot;:isvalid&quot; returns &quot;1&quot; when there is no error when using &quot;&lt;!--{valid&quot;. It returns &quot;&quot; when error exist. 
+	<LI>It return &quot;1&quot; when no &quot;&lt;!--{valid&quot; uses.
 </UL>
 
 <TABLE border width="96%">
-<TR><TH>g0002c.html (続き)
-<TH>ブラウザに送られるHTML
-<TH>ブラウザでの表示(操作できます)
+<TR><TH>g0002c.html (continued)
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
 <TR><TD width="33%">`:bq`test0__:g`:bq`&lt;BR&gt;<br />
 &lt;A href=&quot;?test0=100&quot;&gt;100&lt;/A&gt;&lt;BR&gt;<br />
 &lt;A href=&quot;?test0=200&quot;&gt;200&lt;/A&gt;&lt;BR&gt;<br />
@@ -156,27 +156,27 @@
 </UL>
 
 <TABLE border width="96%">
-<TR><TH>g0002c.html (続き)
-<TH>ブラウザに送られるHTML
-<TH>ブラウザでの表示(操作できます)
+<TR><TH>g0002c.html (continued)
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
 <TR><TD width="33%">&lt;FORM method=POST&gt;<br />
 `:bq`test0__:p`:bq`<br />
 &lt;INPUT type=text name=&quot;test0&quot;&gt;<br />
-&lt;INPUT type=submit value=&quot;送信&quot;&gt;<br />
+&lt;INPUT type=submit value=&quot;send&quot;&gt;<br />
 &lt;/FORM&gt;<br />
 <br />
 
 <TD width="34%"><!--{htmlsrc--><FORM method=POST>
 `test0__:p`
 <INPUT type=text name="test0">
-<INPUT type=submit value="送信">
+<INPUT type=submit value="send">
 </FORM>
 
 <!--}-->
 <TD width="33%"><FORM method=POST>
 `test0__:p`
 <INPUT type=text name="test0">
-<INPUT type=submit value="送信">
+<INPUT type=submit value="send">
 </FORM>
 
 
@@ -194,9 +194,9 @@
 </UL>
 
 <TABLE border width="96%">
-<TR><TH>g0002c.html (続き)
-<TH>ブラウザに送られるHTML
-<TH>ブラウザでの表示(操作できます)
+<TR><TH>g0002c.html (continued)
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
 <TR><TD width="33%">&lt;!--{selectrows from message2--&gt;<br />
 `:bq`id__:r`:bq`<br />
 &lt;!--}--&gt;<br />
@@ -219,9 +219,9 @@
 </UL>
 
 <TABLE border width="96%">
-<TR><TH>g0002c.html (続き)
-<TH>ブラウザに送られるHTML
-<TH>ブラウザでの表示(操作できます)
+<TR><TH>g0002c.html (continued)
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
 <TR><TD width="33%">`:bq`0__:int`:bq`<br />
 `:bq`1__:int`:bq`<br />
 `:bq`1.5__:int`:bq`<br />
@@ -247,9 +247,9 @@
 </UL>
 
 <TABLE border width="96%">
-<TR><TH>g0002c.html (続き)
-<TH>ブラウザに送られるHTML
-<TH>ブラウザでの表示(操作できます)
+<TR><TH>g0002c.html (continued)
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
 <TR><TD width="33%">`:bq`__:isnull`:bq`<br />
 `:bq`__:isnull:isnull`:bq`<br />
 `:bq`0__:isnull`:bq`<br />
@@ -288,9 +288,9 @@
 </UL>
 
 <TABLE border width="96%">
-<TR><TH>g0002c.html (続き)
-<TH>ブラウザに送られるHTML
-<TH>ブラウザでの表示(操作できます)
+<TR><TH>g0002c.html (continued)
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
 <TR><TD width="33%">`:bq`abcあいうＡＢＣ__:h2z`:bq`<br />
 `:bq`abcあいうＡＢＣ__:z2h`:bq`<br />
 <br />
@@ -312,9 +312,9 @@
 </UL>
 
 <TABLE border width="96%">
-<TR><TH>g0002c.html (続き)
-<TH>ブラウザに送られるHTML
-<TH>ブラウザでの表示(操作できます)
+<TR><TH>g0002c.html (continued)
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
 <TR><TD width="33%">`:bq`rootpage__:sys`:bq`<br />
 <br />
 
@@ -331,9 +331,9 @@
 </UL>
 
 <TABLE border width="96%">
-<TR><TH>g0002c.html (続き)
-<TH>ブラウザに送られるHTML
-<TH>ブラウザでの表示(操作できます)
+<TR><TH>g0002c.html (continued)
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
 <TR><TD width="33%">`:bq`:now`:bq`<br />
 `:bq`:now__y/m/d H:i:s__:todate`:bq`<br />
 `:bq`25__:age2t`:bq`<br />
@@ -370,9 +370,9 @@
 </UL>
 
 <TABLE border width="96%">
-<TR><TH>g0002c.html (続き)
-<TH>ブラウザに送られるHTML
-<TH>ブラウザでの表示(操作できます)
+<TR><TH>g0002c.html (continued)
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
 <TR><TD width="33%">`:bq`123__abc__:cat`:bq`<br />
 `:bq`123__abc__ABC__:cat:cat`:bq`<br />
 `:bq`123__abcABC__:cat`:bq`<br />
@@ -418,9 +418,9 @@
 </UL>
 
 <TABLE border width="96%">
-<TR><TH>g0002c.html (続き)
-<TH>ブラウザに送られるHTML
-<TH>ブラウザでの表示(操作できます)
+<TR><TH>g0002c.html (continued)
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
 <TR><TD width="33%">`:bq`abc__b__:ismatch`:bq`<br />
 `:bq`abc__d__:ismatch`:bq`<br />
 <br />
@@ -440,9 +440,9 @@
 </UL>
 
 <TABLE border width="96%">
-<TR><TH>g0002c.html (続き)
-<TH>ブラウザに送られるHTML
-<TH>ブラウザでの表示(操作できます)
+<TR><TH>g0002c.html (continued)
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
 <TR><TD width="33%">`:bq`123__6__:addzero`:bq`<br />
 <br />
 
@@ -459,9 +459,9 @@
 </UL>
 
 <TABLE border width="96%">
-<TR><TH>g0002c.html (続き)
-<TH>ブラウザに送られるHTML
-<TH>ブラウザでの表示(操作できます)
+<TR><TH>g0002c.html (continued)
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
 <TR><TD width="33%">`:bq`1__2__:add`:bq`<br />
 `:bq`1__2__:sub`:bq`<br />
 `:bq`1__2__:rsub`:bq`<br />
@@ -510,9 +510,9 @@
 </UL>
 
 <TABLE border width="96%">
-<TR><TH>g0002c.html (続き)
-<TH>ブラウザに送られるHTML
-<TH>ブラウザでの表示(操作できます)
+<TR><TH>g0002c.html (continued)
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
 <TR><TD width="33%">`:bq`1__2__:ieq`:bq`<br />
 `:bq`1__1__:ieq`:bq`<br />
 `:bq`01__1__:ieq`:bq`<br />
@@ -725,9 +725,9 @@
 </UL>
 
 <TABLE border width="96%">
-<TR><TH>g0002c.html (続き)
-<TH>ブラウザに送られるHTML
-<TH>ブラウザでの表示(操作できます)
+<TR><TH>g0002c.html (continued)
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
 <TR><TD width="33%">&lt;form method=&quot;POST&quot;&gt;<br />
 &lt;input type=&quot;checkbox&quot; name=&quot;hometest&quot; value=&quot;1&quot;&gt;val<br />
 &lt;input type=&quot;submit&quot; name=&quot;hometest__:p__:home&quot; value=&quot;:home&quot;&gt;<br />

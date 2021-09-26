@@ -1,7 +1,7 @@
 <FORM method=POST>
-`login__:loginrecord`さん、いらっしゃいませ。
-<INPUT type=submit name=":logout" value="ログアウト">
-<A href="g9999.html">目次</A>
+Welcome `login__:loginrecord`!
+<INPUT type=submit name=":logout" value="logout">
+<A href="g9999.html">index</A>
 </FORM>
 <FORM method=POST>
 <INPUT type=text name=":reportbody" size=60>
@@ -11,21 +11,289 @@
 <TR><TH>tables.php
 <TR><TD><PRE>&lt;?php
 
-&lt;ul&gt;
-&lt;!--{dayrows `:now` 10--&gt;
-	&lt;li&gt;`y__:r`/`m__:r`/`d__:r` (`w__:r`)
-&lt;!--}--&gt;
-	&lt;p&gt;
-&lt;!--{dayrows `:now` -5--&gt;
-	&lt;li&gt;`y__:r`/`m__:r`/`d__:r` (`w__:r`)
-&lt;!--}--&gt;
-&lt;/ul&gt;
+class	master0_table extends a_table {
+	function	getconfig() {
+		return parent::getconfig().&lt;&lt;&lt;EOO
+
+
+EOO;
+	}
+}
+new master0_table();
+$sys-&gt;mid = &quot;master0&quot;;
+
+class	test3_table extends a_table {
+	function	getconfig() {
+		return parent::getconfig().&lt;&lt;&lt;EOO
+
+EOO;
+	}
+}
+new test3_table();
 
 </PRE>
 </TABLE>
 
 <UL>
-	<LI>daterowsに起点と出力数を指定すると、日付を変化させながら繰り返しができます。
+	<LI>'$sys-&gt;mid = &quot;master0&quot;;' is important.
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0004.html
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
+<TR><TD width="33%">&lt;!--{tableid master0 1--&gt;<br />
+&lt;!--{if `:bq`0__id__:r:ieq`:bq`--&gt;<br />
+<br />
+&lt;FORM method=POST&gt;<br />
+&lt;SPAN style=&quot;color:#ff0000;&quot;&gt;There is no record. Please add records.&lt;/SPAN&gt;<br />
+&lt;!--{tableid m0=master0--&gt;<br />
+&lt;INPUT type=hidden name=&quot;100__code__test100__name__:set:set&quot;&gt;<br />
+&lt;!--}--&gt;<br />
+&lt;!--{tableid m1=master0--&gt;<br />
+&lt;INPUT type=hidden name=&quot;200__code__test200__name__:set:set&quot;&gt;<br />
+&lt;!--}--&gt;<br />
+&lt;!--{tableid m2=master0--&gt;<br />
+&lt;INPUT type=hidden name=&quot;300__code__test300__name__:set:set&quot;&gt;<br />
+&lt;!--}--&gt;<br />
+&lt;INPUT type=submit name=&quot;m2__:h_update__m1__:h_update__m0__:h_update:popall:curpage:jump&quot; value=&quot;create&quot;&gt;<br />
+&lt;/FORM&gt;<br />
+<br />
+&lt;!--}--&gt;<br />
+&lt;!--}--&gt;<br />
+<br />
+&lt;TABLE border&gt;<br />
+&lt;TR&gt;&lt;TH colspan=&quot;3&quot;&gt;table: master0<br />
+&lt;TR&gt;&lt;TH&gt;code	&lt;TH&gt;name	&lt;TH&gt;ID<br />
+&lt;!--{selectrows from master0--&gt;<br />
+&lt;TR&gt;&lt;TD&gt;`:bq`code__:r`:bq`<br />
+	&lt;TD&gt;`:bq`name__:r`:bq`	&lt;TH&gt;`:bq`id__:r`:bq`<br />
+&lt;!--}--&gt;<br />
+&lt;/TABLE&gt;<br />
+<br />
+&lt;!--{tableid test3 1--&gt;<br />
+&lt;!--{if `:bq`0__id__:r:ieq`:bq`--&gt;<br />
+<br />
+&lt;FORM method=POST&gt;<br />
+&lt;SPAN style=&quot;color:#ff0000;&quot;&gt;There is no record. Please add records.&lt;/SPAN&gt;<br />
+&lt;!--{tableid t0=test3--&gt;<br />
+&lt;INPUT type=hidden name=&quot;2__mid__:set&quot;&gt;<br />
+&lt;!--}--&gt;<br />
+&lt;!--{tableid t1=test3--&gt;<br />
+&lt;INPUT type=hidden name=&quot;3__mid__:set&quot;&gt;<br />
+&lt;!--}--&gt;<br />
+&lt;!--{tableid t2=test3--&gt;<br />
+&lt;INPUT type=hidden name=&quot;1__mid__:set&quot;&gt;<br />
+&lt;!--}--&gt;<br />
+&lt;INPUT type=submit name=&quot;t0__:h_update__t1__:h_update__t2__:h_update:popall:curpage:jump&quot; value=&quot;create&quot;&gt;<br />
+&lt;/FORM&gt;<br />
+<br />
+&lt;!--}--&gt;<br />
+&lt;!--}--&gt;<br />
+<br />
+&lt;TABLE border&gt;<br />
+&lt;TR&gt;&lt;TH colspan=&quot;4&quot;&gt;table: test3<br />
+&lt;TR&gt;&lt;TH&gt;mid	&lt;TH&gt;r__:mid:r_code	&lt;TH&gt;r__:mid:r_name	&lt;TH&gt;ID<br />
+&lt;!--{selectrows from test3--&gt;<br />
+&lt;TR&gt;&lt;TD&gt;`:bq`mid__:r`:bq`<br />
+	&lt;TD&gt;`:bq`r__:mid:r_code`:bq`	<br />
+		&lt;TD&gt;`:bq`r__:mid:r_name`:bq`	<br />
+			&lt;TH&gt;`:bq`id__:r`:bq`<br />
+&lt;!--}--&gt;<br />
+&lt;/TABLE&gt;<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc--><!--{tableid master0 1-->
+<!--{if `0__id__:r:ieq`-->
+
+<FORM method=POST>
+<SPAN style="color:#ff0000;">There is no record. Please add records.</SPAN>
+<!--{tableid m0=master0-->
+<INPUT type=hidden name="100__code__test100__name__:set:set">
+<!--}-->
+<!--{tableid m1=master0-->
+<INPUT type=hidden name="200__code__test200__name__:set:set">
+<!--}-->
+<!--{tableid m2=master0-->
+<INPUT type=hidden name="300__code__test300__name__:set:set">
+<!--}-->
+<INPUT type=submit name="m2__:h_update__m1__:h_update__m0__:h_update:popall:curpage:jump" value="create">
+</FORM>
+
+<!--}-->
+<!--}-->
+
+<TABLE border>
+<TR><TH colspan="3">table: master0
+<TR><TH>code	<TH>name	<TH>ID
+<!--{selectrows from master0-->
+<TR><TD>`code__:r`
+	<TD>`name__:r`	<TH>`id__:r`
+<!--}-->
+</TABLE>
+
+<!--{tableid test3 1-->
+<!--{if `0__id__:r:ieq`-->
+
+<FORM method=POST>
+<SPAN style="color:#ff0000;">There is no record. Please add records.</SPAN>
+<!--{tableid t0=test3-->
+<INPUT type=hidden name="2__mid__:set">
+<!--}-->
+<!--{tableid t1=test3-->
+<INPUT type=hidden name="3__mid__:set">
+<!--}-->
+<!--{tableid t2=test3-->
+<INPUT type=hidden name="1__mid__:set">
+<!--}-->
+<INPUT type=submit name="t0__:h_update__t1__:h_update__t2__:h_update:popall:curpage:jump" value="create">
+</FORM>
+
+<!--}-->
+<!--}-->
+
+<TABLE border>
+<TR><TH colspan="4">table: test3
+<TR><TH>mid	<TH>r__:mid:r_code	<TH>r__:mid:r_name	<TH>ID
+<!--{selectrows from test3-->
+<TR><TD>`mid__:r`
+	<TD>`r__:mid:r_code`	
+		<TD>`r__:mid:r_name`	
+			<TH>`id__:r`
+<!--}-->
+</TABLE>
+
+<!--}-->
+<TD width="33%"><!--{tableid master0 1-->
+<!--{if `0__id__:r:ieq`-->
+
+<FORM method=POST>
+<SPAN style="color:#ff0000;">There is no record. Please add records.</SPAN>
+<!--{tableid m0=master0-->
+<INPUT type=hidden name="100__code__test100__name__:set:set">
+<!--}-->
+<!--{tableid m1=master0-->
+<INPUT type=hidden name="200__code__test200__name__:set:set">
+<!--}-->
+<!--{tableid m2=master0-->
+<INPUT type=hidden name="300__code__test300__name__:set:set">
+<!--}-->
+<INPUT type=submit name="m2__:h_update__m1__:h_update__m0__:h_update:popall:curpage:jump" value="create">
+</FORM>
+
+<!--}-->
+<!--}-->
+
+<TABLE border>
+<TR><TH colspan="3">table: master0
+<TR><TH>code	<TH>name	<TH>ID
+<!--{selectrows from master0-->
+<TR><TD>`code__:r`
+	<TD>`name__:r`	<TH>`id__:r`
+<!--}-->
+</TABLE>
+
+<!--{tableid test3 1-->
+<!--{if `0__id__:r:ieq`-->
+
+<FORM method=POST>
+<SPAN style="color:#ff0000;">There is no record. Please add records.</SPAN>
+<!--{tableid t0=test3-->
+<INPUT type=hidden name="2__mid__:set">
+<!--}-->
+<!--{tableid t1=test3-->
+<INPUT type=hidden name="3__mid__:set">
+<!--}-->
+<!--{tableid t2=test3-->
+<INPUT type=hidden name="1__mid__:set">
+<!--}-->
+<INPUT type=submit name="t0__:h_update__t1__:h_update__t2__:h_update:popall:curpage:jump" value="create">
+</FORM>
+
+<!--}-->
+<!--}-->
+
+<TABLE border>
+<TR><TH colspan="4">table: test3
+<TR><TH>mid	<TH>r__:mid:r_code	<TH>r__:mid:r_name	<TH>ID
+<!--{selectrows from test3-->
+<TR><TD>`mid__:r`
+	<TD>`r__:mid:r_code`	
+		<TD>`r__:mid:r_name`	
+			<TH>`id__:r`
+<!--}-->
+</TABLE>
+
+
+</TABLE>
+
+<UL>
+	<LI>&quot;1__test3__:mid&quot; will be &quot;2__master0&quot;.
+	<LI>&quot;2__master0__:r_code&quot; will be &quot;test200&quot;.
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0004.html (continued)
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
+<TR><TD width="33%">&lt;form&gt;<br />
+ID: &lt;input type=&quot;text&quot; name=&quot;mid&quot;&gt;<br />
+code : `:bq`g__:midz__:r_code`:bq`<br />
+name : `:bq`g__:midz__:r_name`:bq`<br />
+&lt;input type=&quot;submit&quot; value=&quot;send&quot;&gt;<br />
+&lt;/form&gt;<br />
+<br />
+&lt;form method=&quot;POST&quot;&gt;<br />
+ID: &lt;input type=&quot;text&quot; name=&quot;mid&quot;&gt;<br />
+code : `:bq`p__:midz__:r_code`:bq`<br />
+name : `:bq`p__:midz__:r_name`:bq`<br />
+&lt;input type=&quot;submit&quot; value=&quot;send&quot;&gt;<br />
+&lt;/form&gt;<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc--><form>
+ID: <input type="text" name="mid">
+code : `g__:midz__:r_code`
+name : `g__:midz__:r_name`
+<input type="submit" value="send">
+</form>
+
+<form method="POST">
+ID: <input type="text" name="mid">
+code : `p__:midz__:r_code`
+name : `p__:midz__:r_name`
+<input type="submit" value="send">
+</form>
+
+<!--}-->
+<TD width="33%"><form>
+ID: <input type="text" name="mid">
+code : `g__:midz__:r_code`
+name : `g__:midz__:r_name`
+<input type="submit" value="send">
+</form>
+
+<form method="POST">
+ID: <input type="text" name="mid">
+code : `p__:midz__:r_code`
+name : `p__:midz__:r_name`
+<input type="submit" value="send">
+</form>
+
+
+</TABLE>
+
+<UL>
+	<LI>&quot;g__:mid&quot; will be &quot;2__master0&quot; when &quot;?mid=2&quot;.
+	<LI>&quot;p__:mid&quot; will be &quot;2__master0&quot; when POST request with &quot;mid=2&quot;.
+	<LI>&quot;r__:mid&quot; will be &quot;2__master0&quot; when &quot;mid&quot; in current record is &quot;2&quot;.
+	<LI>&quot;l__:mid&quot; will be &quot;2__master0&quot; when &quot;mid&quot; in login record is &quot;2&quot;.
+</UL>
+
+
+<UL>
+	<LI>If the record ID is &quot;&quot; or &quot;0&quot;, an error will occur and jump to home. 
+	<LI>If you use &quot;:midz&quot; instead of &quot;:mid&quot;, you will not get an error even if the record ID is &quot;&quot; or &quot;0&quot;.
 </UL>
 
 

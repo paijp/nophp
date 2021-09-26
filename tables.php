@@ -55,3 +55,23 @@ EOO;
 }
 new test2_table();
 
+class	master0_table extends a_table {
+	function	getconfig() {
+		return parent::getconfig().<<<EOO
+
+
+EOO;
+	}
+}
+new master0_table();
+$sys->mid = "master0";
+
+class	test3_table extends a_table {
+	function	getconfig() {
+		return parent::getconfig().<<<EOO
+
+EOO;
+	}
+}
+new test3_table();
+

@@ -1208,8 +1208,71 @@ EOO;
 							$this->callfuncstable($cmd, $record, $issubmit);
 							break;
 						}
+						if (preg_match('/^([a-z]id)(z)?$/', $cmd, $a)) {
+							$s = $a[1];
+							if (($tablename2 = @$sys->$s) === null) {
+								$this->debuglog .= "\not registed({$cmd})\n\n";
+								$debuglog .= "<H3>not registed(".htmlspecialchars($cmd, ENT_QUOTES)." in ".get_class($this).")</H3>\n";
+								if (@$a[2] == "z")
+									break;
+								if (@$sys->debugdir !== null) {
+									file_add_contents("{$sys->debugdir}/{$sys->debugfn}.php", $debuglog);
+									$debuglog = "";
+								}
+								header("Location: {$sys->urlbase}/nofmt/{$sys->rootpage}.html");
+								log_die();
+							}
+							list($tablename) = $this->popstack($cmd, "table");
+							$id2 = 0;
+							switch ($tablename) {
+								default:
+									list($id) = $this->popstack($cmd, "id");
+									if (($t = @$tablelist[$tablename]) !== null) {
+										$r = $t->getrecord($id);
+										$id2 = $r->getfield($a[1]);
+									}
+									break;
+								case	"r":
+									$id2 = $record->getfield($a[1]);
+									break;
+								case	"g":
+									$id2 = @$_GET[$a[1]];
+									break;
+								case	"p":
+									$id2 = @$_POST[$a[1]];
+									break;
+								case	"l":
+									if ($loginrecord !== null)
+										$id2 = $loginrecord->getfield($a[1]);
+									break;
+							}
+							$id2 = round($id2 + 0);
+							if ((@$a[2] == "")&&($id2 <= 0)) {
+								$this->debuglog .= "\nID is zero.\n";
+								$debuglog .= "<H3>ID is zero.</H3>\n";
+								if (@$sys->debugdir !== null) {
+									file_add_contents("{$sys->debugdir}/{$sys->debugfn}.php", $debuglog);
+									$debuglog = "";
+								}
+								header("Location: {$sys->urlbase}/nofmt/{$sys->rootpage}.html");
+								log_die();
+							}
+							$this->pushstack(array($id2, $tablename2));
+							break;
+						}
+						if (preg_match('/^r_([_0-9A-Za-z]+)$/', $cmd, $a)) {
+							list($id, $tablename) = $this->popstack($cmd, "id table");
+							$s = "";
+							if (($t = @$tablelist[$tablename]) !== null) {
+								$r = $t->getrecord($id);
+								$s = $r->getfield($a[1])."";
+							}
+							$this->pushstack(array($s));
+							break;
+						}
 						if (@$funclist === null) {
 							$a = get_defined_functions();
+							$funclist = array();
 							foreach ($a["user"] as $s) {
 								if (!preg_match('/^bq_/', $s))
 									continue;
@@ -1224,7 +1287,7 @@ EOO;
 						}
 						$a = explode("__", $s);
 						array_shift($a);
-						$a0 = $this->popstack($cmds, implode(" ", $a));
+						$a0 = $this->popstack($cmd, implode(" ", $a));
 						$a = call_user_func_array($s, $a0);
 						if (!is_array($a))
 							return $a;		# avoid debuglog
