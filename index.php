@@ -3023,7 +3023,8 @@ if (($s = @$_POST[":reportbody"]) !== null) {
 		$a = array(
 			"http" => array(
 				"method" => "POST", 
-				"header" => "Content-Type: application/json\r\n", 
+				"protocol_version" => 1.1, 
+				"header" => "Content-Type: application/json\r\nConnection: close\r\n", 
 				"content" => json_encode($list)
 			)
 		);
