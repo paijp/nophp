@@ -3012,9 +3012,9 @@ if (($s = @$_POST[":reportbody"]) !== null) {
 	$link = "";
 	if (@$sys->debugdir !== null)
 		$link = $a[2]."/{$sys->debugdir}/{$orgdebugfn}.php";
-	if ($reportjsonurl != "") {
+	if (@$sys->reportjsonurl != "") {
 		$list = array();
-		foreach ($reportjsonbase as $key => $s) {
+		foreach (@$sys->reportjsonbase as $key => $s) {
 			$s = str_replace("@body@", $body, $s);
 			$s = str_replace("@link@", $link, $s);
 			$list[$key] = $s;
@@ -3028,7 +3028,7 @@ if (($s = @$_POST[":reportbody"]) !== null) {
 				"content" => json_encode($list)
 			)
 		);
-		file_get_contents($reportjsonurl, FALSE, stream_context_create($a));
+		file_get_contents(@$sys->reportjsonurl, FALSE, stream_context_create($a));
 		print <<<EOO
 <HEAD><META http-equiv=refresh content="2; {$sys->url}"></HEAD>
 <H2>Report sent! Thank you!</H2>
