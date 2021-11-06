@@ -5,7 +5,6 @@ class	login_table	extends	a_login_table {
 new login_table();
 
 
-$htmlsrcflag = -1;		# for sample page.
 class	commandparser_htmlsrc	extends	commandparser {
 	function	parsehtml($tableholder = null, $record = null) {
 		return nl2br(htmlspecialchars(parent::parsehtml($tableholder, $record), ENT_QUOTES));
