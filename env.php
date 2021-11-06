@@ -1,6 +1,7 @@
 <?php
 
 date_default_timezone_set("Asia/Tokyo");
+putenv("LANG=ja_JP.UTF-8");		# for sendmail.php
 
 #
 # In first time, this user will be created.

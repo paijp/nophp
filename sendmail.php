@@ -18,7 +18,7 @@ class	recordholder_sendmail extends recordholder {
 			else if (preg_match('/^BCC:(.*)/', $line, $a))
 				$option .= " -b ".escapeshellarg(trim($a[1]));
 			else if (preg_match('/^SUB:(.*)/', $line, $a))
-				$option .= " -s ".escapeshellarg(trim($a[1]));
+				$option .= " -s '".str_replace(array('"', "'", "\\"), " ", trim($a[1]))."'";
 			else if (preg_match('/^FROM:(.*)/', $line, $a))
 				$option .= " -r ".escapeshellarg(trim($a[1]));
 			else {
