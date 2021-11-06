@@ -16,8 +16,8 @@ $sys->defaultuser = "nobody@something.com";
 #
 
 $sys->htmlbase = "./res/";
-$sys->sqlpath = "sqlite:/var/www/db/sample.sq3";
-# $sys->sqlpath = "mysql:dbname=test";
+$sys->sqlpath = "sqlite:/var/www/db/nophp.sq3";
+# $sys->sqlpath = "mysql:dbname=test";		# sorry, not tested.
 
 $sys->rootpage = "g9999";
 

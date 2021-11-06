@@ -1868,7 +1868,7 @@ EOO;
 						break;
 					case	"home":
 ## 式の評価を終了してルートページにリダイレクトします。
-						list($s1) = $this->popstack($cmd, "");
+						$this->popstack($cmd, "");
 						$this->debuglog .= "\nHOME\n";
 						$debuglog .= "<H3>HOME</H3>\n";
 						if (@$sys->debugdir !== null) {
