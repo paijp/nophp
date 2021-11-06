@@ -1,0 +1,86 @@
+<FORM method=POST>
+Welcome `login__:loginrecord`!
+<INPUT type=submit name=":logout" value="logout">
+<A href="g9999.html">index</A>
+</FORM>
+<FORM method=POST>
+<INPUT type=text name=":reportbody" size=60>
+<INPUT type=submit value="send report">
+</FORM>
+<UL>
+	<LI>No change from <A href="g0004.html">tables.php before</A>.
+</UL>
+<TABLE border width="96%">
+<TR><TH>g0004a.html
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
+<TR><TD width="33%">&lt;!--{sendmail m0--&gt;<br />
+TO:`:bq`t0__:p`:bq`<br />
+SUB:`:bq`s0__:p`:bq`<br />
+this is test mail.<br />
+2nd. line.<br />
+<br />
+&lt;!--}--&gt;<br />
+<br />
+&lt;form method=&quot;post&quot;&gt;<br />
+&lt;ul&gt;<br />
+	&lt;li&gt;to: &lt;input type=&quot;text&quot; name=&quot;t0&quot; size=&quot;40&quot;&gt;<br />
+	&lt;li&gt;subject: &lt;input type=&quot;text&quot; name=&quot;s0&quot; size=&quot;40&quot;&gt;<br />
+	&lt;li&gt;&lt;input type=&quot;submit&quot; name=&quot;m0__:h_sendmail:popall:curpage:jump&quot;&gt;<br />
+&lt;/ul&gt;<br />
+&lt;/form&gt;<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc--><!--{sendmail m0-->
+TO:`t0__:p`
+SUB:`s0__:p`
+this is test mail.
+2nd. line.
+
+<!--}-->
+
+<form method="post">
+<ul>
+	<li>to: <input type="text" name="t0" size="40">
+	<li>subject: <input type="text" name="s0" size="40">
+	<li><input type="submit" name="m0__:h_sendmail:popall:curpage:jump">
+</ul>
+</form>
+
+<!--}-->
+<TD width="33%"><!--{sendmail m0-->
+TO:`t0__:p`
+SUB:`s0__:p`
+this is test mail.
+2nd. line.
+
+<!--}-->
+
+<form method="post">
+<ul>
+	<li>to: <input type="text" name="t0" size="40">
+	<li>subject: <input type="text" name="s0" size="40">
+	<li><input type="submit" name="m0__:h_sendmail:popall:curpage:jump">
+</ul>
+</form>
+
+
+</TABLE>
+
+<UL>
+	<LI>&lt;!--{sendmail name--&gt; block will not send to HTML, but mail.
+	<LI>command:
+</UL>
+<UL><UL>
+	<LI>TO: to-address
+	<LI>TO: 2nd. to-address
+	<LI>CC: cc-address
+	<LI>CC: 2nd. cc-address
+	<LI>BCC: bcc-address
+	<LI>BCC: 2nd. bcc-address
+	<LI>SUB: subject
+	<LI>FROM: from-address
+</UL></UL>
+
+
+<HR>

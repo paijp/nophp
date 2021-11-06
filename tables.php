@@ -1,5 +1,7 @@
 <?php
 
+@include("sendmail.php");
+
 class	login_table	extends	a_login_table {
 }
 new login_table();

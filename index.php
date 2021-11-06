@@ -919,6 +919,7 @@ EOO;
 
 class	rootrecord {
 	var	$tablename = "root";
+	var	$methodlist = null;
 	function	getfield($s) {
 		if ($s != "id")
 			$s = "v_{$s}";
