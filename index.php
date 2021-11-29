@@ -1262,11 +1262,23 @@ EOO;
 							break;
 						}
 						if (preg_match('/^r_([_0-9A-Za-z]+)$/', $cmd, $a)) {
-							list($id, $tablename) = $this->popstack($cmd, "id table");
+							list($tablename) = $this->popstack($cmd, "table");
 							$s = "";
-							if (($t = @$tablelist[$tablename]) !== null) {
-								$r = $t->getrecord($id);
-								$s = $r->getfield($a[1])."";
+							switch ($tablename) {
+								default:
+									list($id) = $this->popstack($cmd, "id");
+									if (($t = @$tablelist[$tablename]) !== null) {
+										$r = $t->getrecord($id);
+										$s = $r->getfield($a[1]);
+									}
+									break;
+								case	"r":
+									$s = $record->getfield($a[1]);
+									break;
+								case	"l":
+									if ($loginrecord !== null)
+										$s = $loginrecord->getfield($a[1]);
+									break;
 							}
 							$this->pushstack(array($s));
 							break;
@@ -1706,6 +1718,21 @@ EOO;
 							$debuglog .= "<H3>BREAK</H3>\n";
 							return "";
 						}
+						$this->pushstack(array());
+						break;
+					case	"iandbreak":
+## スタックの文字列が、空文字列か「0」ならばそのまま継続し、そうでなければそこで式の評価を終了して空文字列を返します。
+## 例えば`0__:iandbreak`は「0」になります。
+## 一方、`1__:iandbreak`は空文字列になります(以降は評価されません)。
+## これは例えば、`id__:g:dup:isnull:andbreak__table__field__:tableid`のような使い方で、「id__:g」が空文字列であったら、そこで評価を終了するのに使われます。
+						list($s1) = $this->popstack($cmd, "val");
+						$this->pushstack(array());
+						if ($s1 != 0) {
+							$this->debuglog .= "\nBREAK.\n";
+							$debuglog .= "<H3>BREAK</H3>\n";
+							return "";
+						}
+						$this->pushstack(array($s1));
 						break;
 					case	"orbreak":
 ## スタックから文字列を1つ取り出し、空文字列か「0」ならばそこで式の評価を終了して空文字列を返し、そうでなければそのまま継続します。
@@ -1719,6 +1746,21 @@ EOO;
 							$debuglog .= "<H3>BREAK</H3>\n";
 							return "";
 						}
+						$this->pushstack(array());
+						break;
+					case	"iorbreak":
+## スタックの文字列が、空文字列か「0」ならばそこで式の評価を終了して空文字列を返し、そうでなければそのまま継続します。
+## 例えば`1__:iorbreak`は「1」になります。
+## 一方、`0__:iorbreak`は空文字列になります(以降は評価されません)。
+## これは例えば、`id__:g:int:dup:orbreak__id__:set`のような使い方で、「id__:g:int」が0か空文字列であったら、そこで評価を終了するのに使われます。
+						list($s1) = $this->popstack($cmd, "val");
+						$this->pushstack(array());
+						if ($s1 == 0) {
+							$this->debuglog .= "\nBREAK.\n";
+							$debuglog .= "<H3>BREAK</H3>\n";
+							return "";
+						}
+						$this->pushstack(array($s1));
 						break;
 					case	"break":
 ## そこで式の評価を終了して空文字列を返します。
@@ -1880,8 +1922,8 @@ EOO;
 						log_die();
 					case	"andhome":
 ## スタックから文字列を1つ取り出し、空文字列か「0」ならばそのまま継続し、そうでなければそこで式の評価を終了してルートページにリダイレクトします。
-## 例えば`0__:andreturn4__a`は「a」になります。
-## 一方、`1__:andreturn4__a`はルートページにリダイレクトします(__a以降は評価されません)。
+## 例えば`0__:andhome__a`は「a」になります。
+## 一方、`1__:andhome__a`はルートページにリダイレクトします(__a以降は評価されません)。
 						list($s1) = $this->popstack($cmd, "val");
 						if ($s1 != 0) {
 							$this->debuglog .= "\nHOME\n";
@@ -1894,6 +1936,23 @@ EOO;
 							log_die();
 						} else
 							$this->pushstack(array());
+						break;
+					case	"iandhome":
+## スタックの文字列が、空文字列か「0」ならばそのまま継続し、そうでなければそこで式の評価を終了してルートページにリダイレクトします。
+## 例えば`0__:iandhome`は「0」になります。
+## 一方、`1__:iandhome`はルートページにリダイレクトします(以降は評価されません)。
+						list($s1) = $this->popstack($cmd, "val");
+						if ($s1 != 0) {
+							$this->debuglog .= "\nHOME\n";
+							$debuglog .= "<H3>HOME</H3>\n";
+							if (@$sys->debugdir !== null) {
+								file_add_contents("{$sys->debugdir}/{$sys->debugfn}.php", $debuglog);
+								$debuglog = "";
+							}
+							header("Location: {$sys->urlbase}/nofmt/{$sys->rootpage}.html");
+							log_die();
+						} else
+							$this->pushstack(array($s1));
 						break;
 					case	"orhome":
 ## スタックから文字列を1つ取り出し、空文字列か「0」ならばそこで式の評価を終了してルートページにリダイレクトし、そうでなければそのまま継続します。
@@ -1911,6 +1970,23 @@ EOO;
 							log_die();
 						} else
 							$this->pushstack(array());
+						break;
+					case	"iorhome":
+## スタックの文字列が、空文字列か「0」ならばそこで式の評価を終了してルートページにリダイレクトし、そうでなければそのまま継続します。
+## 例えば`1__:iorhome`は「1」になります。
+## 一方、`0__:iorhome`はルートページにリダイレクトします(以降は評価されません)。
+						list($s1) = $this->popstack($cmd, "val");
+						if ($s1 == 0) {
+							$this->debuglog .= "\nHOME\n";
+							$debuglog .= "<H3>HOME</H3>\n";
+							if (@$sys->debugdir !== null) {
+								file_add_contents("{$sys->debugdir}/{$sys->debugfn}.php", $debuglog);
+								$debuglog = "";
+							}
+							header("Location: {$sys->urlbase}/nofmt/{$sys->rootpage}.html");
+							log_die();
+						} else
+							$this->pushstack(array($s1));
 						break;
 					case	"pop":
 ## スタックから文字列を1つ取り出して、捨てます。
@@ -2316,7 +2392,7 @@ class	recordholder_tableid extends recordholder {
 		
 		if (($t = @$tablelist[$tablename]) === null)
 			return;
-		$this->record = $t->getrecord($rh->parsewithbqinsql($par, $record) + 0);
+		$this->record = $t->getrecord($par + 0);
 		$this->record->dumpfields();
 	}
 }
@@ -2333,7 +2409,7 @@ class	recordholder_stableid extends recordholder {
 		parent::__construct($rh, $record, $tablename, $prefix, $par);
 		
 		$t = @$tablelist["simple"]->gettable($tablename);
-		$this->record = $t->getrecord($rh->parsewithbqinsql($par, $record) + 0);
+		$this->record = $t->getrecord($par + 0);
 		$this->record->dumpfields();
 	}
 }
@@ -2395,35 +2471,44 @@ class	commandparser {		# volatile object
 			return "";
 		$ret = "";
 		if ($this->parent === null) {
-			$ret .= '<UL style="background:#c0c0ff">';
+			$ret .= '<ul style="background:#c0c0ff">';
 			foreach ($this->children as $child)
 				$ret .= $child->gettree($index);
-			$ret .= "</UL>\n";
+			$ret .= "</ul>\n";
 			return $ret;
 		}
+		$cond = "";
+		$p = $this;
+		while ($p !== null) {
+			if ($p->cond <= 0) {
+				$cond = "text-decoration: line-through;";
+				break;
+			}
+			$p = $p->parent;
+		}
 		if ($this->name != "")
-			$ret .= "<LI>".$this->name." ".$this->par;
+			$ret .= '<li style="'.$cond.'">'.$this->name." ".$this->par;
 		if ($index == $this->index) {
 			if ($ret == "")
-				return "<LI>...";
+				return '<li>...';
 			return $ret;
 		}
 		
 		if (count($this->children) > 0) {
-			$ret .= "<UL>\n";
+			$ret .= "<ul>\n";
 			foreach ($this->children as $child)
 				$ret .= $child->gettree($index);
-			$ret .= "</UL>\n";
+			$ret .= "</ul>\n";
 		}
 		return $ret;
 	}
 	function	getdebuglog($s = "") {
 		if ($this->parent === null)
-			return '<UL style="background:#c0c0ff"><LI>root'.$s."</UL>\n";
+			return '<ul style="background:#c0c0ff"><li>root'.$s."</ul>\n";
 		$a = preg_split('/_+/', get_class($this), 2);
 		if ($this->before !== null)
-			return $this->before->getdebuglog("<LI>".@$a[1]." ".$this->par."\n{$s}");
-		return $this->parent->getdebuglog("<UL><LI>".@$a[1]." ".$this->par."\n{$s}</UL>\n");
+			return $this->before->getdebuglog("<li>".@$a[1]." ".$this->par."\n{$s}");
+		return $this->parent->getdebuglog("<ul><li>".@$a[1]." ".$this->par."\n{$s}</ul>\n");
 	}
 	function	parsehtml($rh = null, $record = null) {
 		global	$debuglog;
@@ -2475,7 +2560,9 @@ class	commandparserrecordholder extends commandparser {
 	function	parsehtmlinner($rh = null, $record = null) {
 		global	$recordholderlist;
 		
-		$a = explode(" ", trim($this->par), 2);
+#		$a = explode(" ", trim($rh->parsewithbqinsql($this->par, $record)), 2);
+		$a = explode(" ", trim($rh->parsewithbq($this->par, $record)), 2);
+		
 		if (count($a2 = explode("=", $a[0], 2)) == 1) {
 			$tablename = $alias = $a[0];
 			$prefix = "";
@@ -3208,6 +3295,35 @@ function	debugbq($s)
 
 $recordholderlist = array();
 $actionrecordholder = null;
+
+if (@$sys->debugdir !== null) {
+	$debuglog .= "<h1>* source</h1>";
+	foreach (preg_split("/\r\n|\r|\n/", $targethtml) as $line) {
+		$debuglog .= '<p style="margin:0; background:#c0c0c0;">';
+		foreach (explode("<!--{", $line) as $k0 => $v0) {
+			if ($k0 > 0)
+				$debuglog .= '<b style="color:#0000ff;">&lt;!--{';
+			foreach (explode("<!--}", $v0) as $k1 => $v1) {
+				if ($k1 > 0)
+					$debuglog .= '<b style="color:#0000ff;">&lt;!--}';
+				foreach (explode("-->", $v1, 2) as $k2 => $v2) {
+					if ($k2 > 0)
+						$debuglog .= "--&gt;</b>";
+					foreach (explode('`', $v2) as $k3 => $v3) {
+						if ($k3 > 0)
+							$debuglog .= '<b style="color:#ff0000;">`</b>';
+						if (($k3 & 1))
+							$debuglog .= '<b style="color:#ff0000;">';
+						$debuglog .= htmlspecialchars($v3);
+						if (($k3 & 1))
+							$debuglog .= "</b>";
+					}
+				}
+			}
+		}
+		$debuglog .= "</p>\n";
+	}
+}
 
 for ($phase=0; $phase<2; $phase++) {
 	$beforename = "";

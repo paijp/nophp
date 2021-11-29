@@ -436,7 +436,7 @@ current page name `:curpage`
 </TABLE>
 
 <UL>
-	<LI>「:ismatch」は、1つ目の文字列の中に、2つ目の文字列が含まれていれば「1」を、なければ空文字列を返します。
+	<LI>&quot;:ismatch&quot; returns &quot;1&quot; when the second value is found in the first value. It returns &quot;&quot; when it is not found.
 </UL>
 
 <TABLE border width="96%">
@@ -455,7 +455,7 @@ current page name `:curpage`
 </TABLE>
 
 <UL>
-	<LI>「:addzero」は、1つ目の文字列の前に「0」を追加して、2つ目の文字列で指定された長さに伸ばした文字列を返します。
+	<LI>&quot;:addzero&quot; adds &quot;0&quot; before the first value to extends its length up to second value, and returns it.
 </UL>
 
 <TABLE border width="96%">
@@ -498,15 +498,15 @@ current page name `:curpage`
 </TABLE>
 
 <UL>
-	<LI>「:add」は、2つの文字列を数値とみなして、加算した結果を返します。
-	<LI>「:sub」は、2つの文字列を数値とみなして、減算した結果を返します。
-	<LI>「:rsub」は、2つの文字列を数値とみなして、逆順に減算した結果を返します。
-	<LI>「:mul」は、2つの文字列を数値とみなして、乗算した結果を返します。
-	<LI>「:div」は、2つの文字列を数値とみなして、除算して切り捨てた結果を返します。
-	<LI>「:rdiv」は、2つの文字列を数値とみなして、逆順に除算して切り捨てた結果を返します。
-	<LI>「:mod」は、2つの文字列を数値とみなして、除算した剰余を返します。
-	<LI>「:rmod」は、2つの文字列を数値とみなして、逆順に除算した剰余を返します。
-	<LI>いずれも、除数が0の場合は、0が返ります。
+	<LI>&quot;:add&quot; adds the 2 values, and returns it.
+	<LI>&quot;:sub&quot; subtracts the 2 values, and returns it.
+	<LI>&quot;:rsub&quot; subtracts the 2 values in reverse order, and returns it.
+	<LI>&quot;:mul&quot; multipris the 2 values, and returns it.
+	<LI>&quot;:div&quot; divides the 2 values, and returns it.
+	<LI>&quot;:rdiv&quot; divides the 2 values in reverse order, and returns it.
+	<LI>&quot;:mod&quot; divides the 2 values, and returns its surplus.
+	<LI>&quot;:rmod&quot; divides the 2 values in reverse order, and returns its surplus.
+	<LI>If the divisor is zero, it returns &quot;0&quot;.
 </UL>
 
 <TABLE border width="96%">
@@ -714,14 +714,14 @@ current page name `:curpage`
 </TABLE>
 
 <UL>
-	<LI>「:ieq」は、2つの文字列を数値とみなして、等しければ「1」を、等しくなければ空文字列を返します。
-	<LI>「:seq」は、2つの文字列が、等しければ「1」を、等しくなければ空文字列を返します。
+	<LI>&quot;:ieq&quot; returns &quot;1&quot; when the 2 values are same in numbers. It returns &quot;&quot; when they are not same.
+	<LI>&quot;:seq&quot; returns &quot;1&quot; when the 2 values are same in strings. It returns &quot;&quot; when they are not same.
 </UL>
 
 
 <UL>
-	<LI>「:ine」は、2つの文字列を数値とみなして、等しくなければ「1」を、等しければ空文字列を返します。
-	<LI>「:sne」は、2つの文字列が、等しくなければ「1」を、等しければ空文字列を返します。
+	<LI>&quot;:ine&quot; returns &quot;1&quot; when the 2 values are NOT same in numbers. It returns &quot;&quot; when they are same.
+	<LI>&quot;:sne&quot; returns &quot;1&quot; when the 2 values are NOT same in strings. It returns &quot;&quot; when they are same.
 </UL>
 
 <TABLE border width="96%">
@@ -733,6 +733,8 @@ current page name `:curpage`
 &lt;input type=&quot;submit&quot; name=&quot;hometest__:p__:home&quot; value=&quot;:home&quot;&gt;<br />
 &lt;input type=&quot;submit&quot; name=&quot;hometest__:p__:andhome&quot; value=&quot;:andhome&quot;&gt;<br />
 &lt;input type=&quot;submit&quot; name=&quot;hometest__:p__:orhome&quot; value=&quot;:orhome&quot;&gt;<br />
+&lt;input type=&quot;submit&quot; name=&quot;hometest__:p__:iandhome&quot; value=&quot;:iandhome&quot;&gt;<br />
+&lt;input type=&quot;submit&quot; name=&quot;hometest__:p__:iorhome&quot; value=&quot;:iorhome&quot;&gt;<br />
 &lt;/form&gt;<br />
 <br />
 
@@ -741,6 +743,8 @@ current page name `:curpage`
 <input type="submit" name="hometest__:p__:home" value=":home">
 <input type="submit" name="hometest__:p__:andhome" value=":andhome">
 <input type="submit" name="hometest__:p__:orhome" value=":orhome">
+<input type="submit" name="hometest__:p__:iandhome" value=":iandhome">
+<input type="submit" name="hometest__:p__:iorhome" value=":iorhome">
 </form>
 
 <!--}-->
@@ -749,9 +753,28 @@ current page name `:curpage`
 <input type="submit" name="hometest__:p__:home" value=":home">
 <input type="submit" name="hometest__:p__:andhome" value=":andhome">
 <input type="submit" name="hometest__:p__:orhome" value=":orhome">
+<input type="submit" name="hometest__:p__:iandhome" value=":iandhome">
+<input type="submit" name="hometest__:p__:iorhome" value=":iorhome">
 </form>
 
 
 </TABLE>
+
+<UL>
+	<LI>&quot;:home&quot; will jump to root page when evaluated.
+	<LI>&quot;:andhome&quot; will jump to root page when the value is true(not &quot;&quot; and &quot;0&quot;). The value will be popped.
+	<LI>&quot;:orhome&quot; will jump to root page when the value is false(&quot;&quot; or &quot;0&quot;). The value will be popped.
+	<LI>&quot;:iandhome&quot; will jump to rootpage when the value is true(not &quot;&quot; and &quot;0&quot;). The value will NOT be popped.
+	<LI>&quot;:iorhome&quot; will jump to rootpage when the value is false(&quot;&quot; or &quot;0&quot;). The value will NOT be popped.
+</UL>
+
+
+<UL>
+	<LI>&quot;:andbreak&quot; will jump to root page when the value is true(not &quot;&quot; and &quot;0&quot;). The value will be popped.
+	<LI>&quot;:orbreak&quot; will jump to root page when the value is false(&quot;&quot; or &quot;0&quot;). The value will be popped.
+	<LI>&quot;:iandbreak&quot; will jump to rootpage when the value is true(not &quot;&quot; and &quot;0&quot;). The value will NOT be popped.
+	<LI>&quot;:iorbreak&quot; will jump to rootpage when the value is false(&quot;&quot; or &quot;0&quot;). The value will NOT be popped.
+</UL>
+
 
 <HR>

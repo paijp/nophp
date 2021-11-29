@@ -93,14 +93,17 @@ new test3_table();
 <br />
 &lt;TABLE border&gt;<br />
 &lt;TR&gt;&lt;TH colspan=&quot;4&quot;&gt;table: test3<br />
-&lt;TR&gt;&lt;TH&gt;mid	&lt;TH&gt;r__:mid:r_code	&lt;TH&gt;r__:mid:r_name	&lt;TH&gt;ID<br />
+&lt;TR&gt;&lt;TH&gt;mid__:r	&lt;TH&gt;r__:r_mid	&lt;TH&gt;r__:mid:r_code	&lt;TH&gt;r__:mid:r_name	&lt;TH&gt;ID<br />
 &lt;!--{selectrows from test3--&gt;<br />
 &lt;TR&gt;&lt;TD&gt;`:bq`mid__:r`:bq`<br />
-	&lt;TD&gt;`:bq`r__:mid:r_code`:bq`	<br />
-		&lt;TD&gt;`:bq`r__:mid:r_name`:bq`	<br />
-			&lt;TH&gt;`:bq`id__:r`:bq`<br />
+	&lt;TD&gt;`:bq`r__:r_mid`:bq`<br />
+		&lt;TD&gt;`:bq`r__:mid:r_code`:bq`	<br />
+			&lt;TD&gt;`:bq`r__:mid:r_name`:bq`	<br />
+				&lt;TH&gt;`:bq`id__:r`:bq`<br />
 &lt;!--}--&gt;<br />
 &lt;/TABLE&gt;<br />
+<br />
+`:bq`l__:r_login`:bq`<br />
 <br />
 
 <TD width="34%"><!--{htmlsrc--><!--{tableid master0 1-->
@@ -154,14 +157,17 @@ new test3_table();
 
 <TABLE border>
 <TR><TH colspan="4">table: test3
-<TR><TH>mid	<TH>r__:mid:r_code	<TH>r__:mid:r_name	<TH>ID
+<TR><TH>mid__:r	<TH>r__:r_mid	<TH>r__:mid:r_code	<TH>r__:mid:r_name	<TH>ID
 <!--{selectrows from test3-->
 <TR><TD>`mid__:r`
-	<TD>`r__:mid:r_code`	
-		<TD>`r__:mid:r_name`	
-			<TH>`id__:r`
+	<TD>`r__:r_mid`
+		<TD>`r__:mid:r_code`	
+			<TD>`r__:mid:r_name`	
+				<TH>`id__:r`
 <!--}-->
 </TABLE>
+
+`l__:r_login`
 
 <!--}-->
 <TD width="33%"><!--{tableid master0 1-->
@@ -215,14 +221,17 @@ new test3_table();
 
 <TABLE border>
 <TR><TH colspan="4">table: test3
-<TR><TH>mid	<TH>r__:mid:r_code	<TH>r__:mid:r_name	<TH>ID
+<TR><TH>mid__:r	<TH>r__:r_mid	<TH>r__:mid:r_code	<TH>r__:mid:r_name	<TH>ID
 <!--{selectrows from test3-->
 <TR><TD>`mid__:r`
-	<TD>`r__:mid:r_code`	
-		<TD>`r__:mid:r_name`	
-			<TH>`id__:r`
+	<TD>`r__:r_mid`
+		<TD>`r__:mid:r_code`	
+			<TD>`r__:mid:r_name`	
+				<TH>`id__:r`
 <!--}-->
 </TABLE>
+
+`l__:r_login`
 
 
 </TABLE>
@@ -230,6 +239,12 @@ new test3_table();
 <UL>
 	<LI>&quot;1__test3__:mid&quot; will be &quot;2__master0&quot;.
 	<LI>&quot;2__master0__:r_code&quot; will be &quot;test200&quot;.
+</UL>
+
+
+<UL>
+	<LI>&quot;r__:r_mid&quot; is same to &quot;mid__:r&quot;.
+	<LI>&quot;l__:r_login&quot; is same to &quot;login__:loginrecord&quot;
 </UL>
 
 <TABLE border width="96%">
@@ -286,8 +301,8 @@ name : `p__:midz__:r_name`
 <UL>
 	<LI>&quot;g__:mid&quot; will be &quot;2__master0&quot; when &quot;?mid=2&quot;.
 	<LI>&quot;p__:mid&quot; will be &quot;2__master0&quot; when POST request with &quot;mid=2&quot;.
-	<LI>&quot;r__:mid&quot; will be &quot;2__master0&quot; when &quot;mid&quot; in current record is &quot;2&quot;.
-	<LI>&quot;l__:mid&quot; will be &quot;2__master0&quot; when &quot;mid&quot; in login record is &quot;2&quot;.
+	<LI>&quot;r__:mid&quot; will be &quot;2__master0&quot; when &quot;mid&quot; field in current record is &quot;2&quot;.
+	<LI>&quot;l__:mid&quot; will be &quot;2__master0&quot; when &quot;mid&quot; field in login record is &quot;2&quot;.
 </UL>
 
 
@@ -296,5 +311,58 @@ name : `p__:midz__:r_name`
 	<LI>If you use &quot;:midz&quot; instead of &quot;:mid&quot;, you will not get an error even if the record ID is &quot;&quot; or &quot;0&quot;.
 </UL>
 
+<TABLE border width="96%">
+<TR><TH>g0004.html (continued)
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
+<TR><TD width="33%">&lt;ul&gt;<br />
+&lt;!--{selectrows from master0--&gt;<br />
+	&lt;li&gt;&lt;a href=&quot;?mid=`:bq`id__:r`:bq`&quot;&gt;`:bq`id__:r`:bq`&lt;/a&gt;<br />
+&lt;!--}--&gt;<br />
+&lt;!--{tableid tb=`:bq`g__:midz:rscat`:bq`--&gt;<br />
+&lt;ul&gt;<br />
+	&lt;li&gt;id: `:bq`id__:r`:bq`<br />
+	&lt;li&gt;code: `:bq`code__:r`:bq`<br />
+	&lt;li&gt;name: `:bq`name__:r`:bq`<br />
+&lt;/ul&gt;<br />
+&lt;!--}--&gt;<br />
+&lt;/ul&gt;<br />
+<br />
+<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc--><ul>
+<!--{selectrows from master0-->
+	<li><a href="?mid=`id__:r`">`id__:r`</a>
+<!--}-->
+<!--{tableid tb=`g__:midz:rscat`-->
+<ul>
+	<li>id: `id__:r`
+	<li>code: `code__:r`
+	<li>name: `name__:r`
+</ul>
+<!--}-->
+</ul>
+
+
+
+<!--}-->
+<TD width="33%"><ul>
+<!--{selectrows from master0-->
+	<li><a href="?mid=`id__:r`">`id__:r`</a>
+<!--}-->
+<!--{tableid tb=`g__:midz:rscat`-->
+<ul>
+	<li>id: `id__:r`
+	<li>code: `code__:r`
+	<li>name: `name__:r`
+</ul>
+<!--}-->
+</ul>
+
+
+
+
+</TABLE>
 
 <HR>
