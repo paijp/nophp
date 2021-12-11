@@ -1209,19 +1209,12 @@ EOO;
 							$this->callfuncstable($cmd, $record, $issubmit);
 							break;
 						}
-						if (preg_match('/^([a-z]id)(z)?$/', $cmd, $a)) {
+						if (preg_match('/^([a-z]id)([_0-9A-Za-z]*)$/', $cmd, $a)) {
 							$s = $a[1];
 							if (($tablename2 = @$sys->$s) === null) {
 								$this->debuglog .= "\not registed({$cmd})\n\n";
 								$debuglog .= "<H3>not registed(".htmlspecialchars($cmd, ENT_QUOTES)." in ".get_class($this).")</H3>\n";
-								if (@$a[2] == "z")
-									break;
-								if (@$sys->debugdir !== null) {
-									file_add_contents("{$sys->debugdir}/{$sys->debugfn}.php", $debuglog);
-									$debuglog = "";
-								}
-								header("Location: {$sys->urlbase}/nofmt/{$sys->rootpage}.html");
-								log_die();
+								break;
 							}
 							list($tablename) = $this->popstack($cmd, "table");
 							$id2 = 0;
@@ -1230,34 +1223,24 @@ EOO;
 									list($id) = $this->popstack($cmd, "id");
 									if (($t = @$tablelist[$tablename]) !== null) {
 										$r = $t->getrecord($id);
-										$id2 = $r->getfield($a[1]);
+										$id2 = $r->getfield($cmd);
 									}
 									break;
 								case	"r":
-									$id2 = $record->getfield($a[1]);
+									$id2 = $record->getfield($cmd);
 									break;
 								case	"g":
-									$id2 = @$_GET[$a[1]];
+									$id2 = @$_GET[$cmd];
 									break;
 								case	"p":
-									$id2 = @$_POST[$a[1]];
+									$id2 = @$_POST[$cmd];
 									break;
 								case	"l":
 									if ($loginrecord !== null)
-										$id2 = $loginrecord->getfield($a[1]);
+										$id2 = $loginrecord->getfield($cmd);
 									break;
 							}
 							$id2 = round($id2 + 0);
-							if ((@$a[2] == "")&&($id2 <= 0)) {
-								$this->debuglog .= "\nID is zero.\n";
-								$debuglog .= "<H3>ID is zero.</H3>\n";
-								if (@$sys->debugdir !== null) {
-									file_add_contents("{$sys->debugdir}/{$sys->debugfn}.php", $debuglog);
-									$debuglog = "";
-								}
-								header("Location: {$sys->urlbase}/nofmt/{$sys->rootpage}.html");
-								log_die();
-							}
 							$this->pushstack(array($id2, $tablename2));
 							break;
 						}

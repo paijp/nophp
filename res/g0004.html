@@ -253,45 +253,45 @@ new test3_table();
 <TH>Display on the browser(can be operated)
 <TR><TD width="33%">&lt;form&gt;<br />
 ID: &lt;input type=&quot;text&quot; name=&quot;mid&quot;&gt;<br />
-code : `:bq`g__:midz__:r_code`:bq`<br />
-name : `:bq`g__:midz__:r_name`:bq`<br />
+code : `:bq`g__:mid__:r_code`:bq`<br />
+name : `:bq`g__:mid__:r_name`:bq`<br />
 &lt;input type=&quot;submit&quot; value=&quot;send&quot;&gt;<br />
 &lt;/form&gt;<br />
 <br />
 &lt;form method=&quot;POST&quot;&gt;<br />
 ID: &lt;input type=&quot;text&quot; name=&quot;mid&quot;&gt;<br />
-code : `:bq`p__:midz__:r_code`:bq`<br />
-name : `:bq`p__:midz__:r_name`:bq`<br />
+code : `:bq`p__:mid__:r_code`:bq`<br />
+name : `:bq`p__:mid__:r_name`:bq`<br />
 &lt;input type=&quot;submit&quot; value=&quot;send&quot;&gt;<br />
 &lt;/form&gt;<br />
 <br />
 
 <TD width="34%"><!--{htmlsrc--><form>
 ID: <input type="text" name="mid">
-code : `g__:midz__:r_code`
-name : `g__:midz__:r_name`
+code : `g__:mid__:r_code`
+name : `g__:mid__:r_name`
 <input type="submit" value="send">
 </form>
 
 <form method="POST">
 ID: <input type="text" name="mid">
-code : `p__:midz__:r_code`
-name : `p__:midz__:r_name`
+code : `p__:mid__:r_code`
+name : `p__:mid__:r_name`
 <input type="submit" value="send">
 </form>
 
 <!--}-->
 <TD width="33%"><form>
 ID: <input type="text" name="mid">
-code : `g__:midz__:r_code`
-name : `g__:midz__:r_name`
+code : `g__:mid__:r_code`
+name : `g__:mid__:r_name`
 <input type="submit" value="send">
 </form>
 
 <form method="POST">
 ID: <input type="text" name="mid">
-code : `p__:midz__:r_code`
-name : `p__:midz__:r_name`
+code : `p__:mid__:r_code`
+name : `p__:mid__:r_name`
 <input type="submit" value="send">
 </form>
 
@@ -307,8 +307,7 @@ name : `p__:midz__:r_name`
 
 
 <UL>
-	<LI>If the record ID is &quot;&quot; or &quot;0&quot;, an error will occur and jump to home. 
-	<LI>If you use &quot;:midz&quot; instead of &quot;:mid&quot;, you will not get an error even if the record ID is &quot;&quot; or &quot;0&quot;.
+	<LI>If the record ID is &quot;&quot; or &quot;0&quot;, or the field is not exist, it will be &quot;0&quot;.
 </UL>
 
 <TABLE border width="96%">
@@ -319,7 +318,7 @@ name : `p__:midz__:r_name`
 &lt;!--{selectrows from master0--&gt;<br />
 	&lt;li&gt;&lt;a href=&quot;?mid=`:bq`id__:r`:bq`&quot;&gt;`:bq`id__:r`:bq`&lt;/a&gt;<br />
 &lt;!--}--&gt;<br />
-&lt;!--{tableid tb=`:bq`g__:midz:rscat`:bq`--&gt;<br />
+&lt;!--{tableid tb=`:bq`g__:mid:rscat`:bq`--&gt;<br />
 &lt;ul&gt;<br />
 	&lt;li&gt;id: `:bq`id__:r`:bq`<br />
 	&lt;li&gt;code: `:bq`code__:r`:bq`<br />
@@ -328,14 +327,12 @@ name : `p__:midz__:r_name`
 &lt;!--}--&gt;<br />
 &lt;/ul&gt;<br />
 <br />
-<br />
-<br />
 
 <TD width="34%"><!--{htmlsrc--><ul>
 <!--{selectrows from master0-->
 	<li><a href="?mid=`id__:r`">`id__:r`</a>
 <!--}-->
-<!--{tableid tb=`g__:midz:rscat`-->
+<!--{tableid tb=`g__:mid:rscat`-->
 <ul>
 	<li>id: `id__:r`
 	<li>code: `code__:r`
@@ -343,15 +340,13 @@ name : `p__:midz__:r_name`
 </ul>
 <!--}-->
 </ul>
-
-
 
 <!--}-->
 <TD width="33%"><ul>
 <!--{selectrows from master0-->
 	<li><a href="?mid=`id__:r`">`id__:r`</a>
 <!--}-->
-<!--{tableid tb=`g__:midz:rscat`-->
+<!--{tableid tb=`g__:mid:rscat`-->
 <ul>
 	<li>id: `id__:r`
 	<li>code: `code__:r`
@@ -361,8 +356,45 @@ name : `p__:midz__:r_name`
 </ul>
 
 
+</TABLE>
+
+<UL>
+	<LI>&quot;&lt;!--{tableid `:bq`1__tablename__:rscat`:bq`--&gt;&quot; (:rscat is Reverse Space conCAT) will be &quot;&lt;!--{tableid tablename 1--&gt;&quot;.
+</UL>
+
+<TABLE border width="96%">
+<TR><TH>g0004.html (continued)
+<TH>HTML sent to the browser
+<TH>Display on the browser(can be operated)
+<TR><TD width="33%">&lt;form&gt;<br />
+ID: &lt;input type=&quot;text&quot; name=&quot;mida0&quot;&gt;<br />
+code : `:bq`g__:mida0__:r_code`:bq`<br />
+name : `:bq`g__:mida0__:r_name`:bq`<br />
+&lt;input type=&quot;submit&quot; value=&quot;send&quot;&gt;<br />
+&lt;/form&gt;<br />
+<br />
+
+<TD width="34%"><!--{htmlsrc--><form>
+ID: <input type="text" name="mida0">
+code : `g__:mida0__:r_code`
+name : `g__:mida0__:r_name`
+<input type="submit" value="send">
+</form>
+
+<!--}-->
+<TD width="33%"><form>
+ID: <input type="text" name="mida0">
+code : `g__:mida0__:r_code`
+name : `g__:mida0__:r_name`
+<input type="submit" value="send">
+</form>
 
 
 </TABLE>
+
+<UL>
+	<LI>&quot;:mida0&quot; means field 'mida0' to the table &quot;master0&quot;.
+</UL>
+
 
 <HR>
