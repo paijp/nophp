@@ -17,6 +17,7 @@ class	sys {
 	var	$mailinterval = 60;
 	var	$mailexpire = 1800;
 	var	$forcelogoutonupdate = 1;
+	var	$noredirectonlogin = 0;		# 1: don't redirect from index.html to rootpage on login status.
 }
 $sys = new sys();
 
@@ -3188,6 +3189,8 @@ if (!function_exists("bq_login")) {
 
 if ($tablelist["login"]->is_login() <= 0)
 	$sys->target = "index";
+else if ((@$sys->noredirectonlogin))
+	;
 else if (@$sys->target == "index") {
 	header("Location: {$sys->urlbase}/index/".@$sys->rootpage.".html");
 	log_die();
