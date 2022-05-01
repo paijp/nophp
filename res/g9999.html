@@ -9,33 +9,34 @@ Welcome `login__:loginrecord`!
 </FORM>
 <!--{if `1__id__:loginrecord:ieq`-->
 <P>user list</P>
-<!--{if `id__:g:isnull`-->
+ <!--{if `id__:g:isnull`-->
 
 <UL>
-<!--{selectrows from login -->
+  <!--{selectrows from login -->
 	<LI>`login__:r`
-<!--{if `1__id__:r:ieq`-->
+   <!--{if `1__id__:r:ieq`-->
 (admin)
-<!--}-->
+   <!--}-->
 <a href="?id=`id__:r`">edit</a>
-<!--}-->
+  <!--}-->
 	<LI><a href="?id=0">add user</a>
 </UL>
 
-<!--}{else-->
+ <!--}{else-->
 
 <FORM method=POST>
-<!--{tableid login `id__:g`-->
+  <!--{tableid login `id__:g`-->
 <LI><INPUT type="text" name="login" size="40">
-<!--{if `id__:g`-->
+<LI><LABEL><INPUT type="checkbox" name="ismaillogin" value="1">mail login(no password)</LABEL>
+   <!--{if `id__:g`-->
 <INPUT type="submit" name=":curtable:h_update:popall:curpage:jump" value="modify">
-<!--}{else-->
+   <!--}{else-->
 <INPUT type="submit" name=":curtable:h_update:popall:curpage:jump" value="add">
-<!--}-->
-<!--}-->
+   <!--}-->
+  <!--}-->
 </FORM>
 
-<!--}-->
+ <!--}-->
 <!--}-->
 
 <UL>

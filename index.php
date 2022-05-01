@@ -754,6 +754,7 @@ salt	text
 sessionkey	text
 lastlogin	int
 lastlogout	int
+ismaillogin	int
 
 EOO;
 	}
@@ -810,11 +811,16 @@ EOO;
 		$this->v_mailkey = "";
 		parent::update($ignoreerror);
 	}
-	function	login($pass = "") {
+	function	login($pass = "", $ismaillogin = 0) {
 		global	$sys;
 		global	$cookiepath;
 		
-		if (myhash($pass.$this->v_salt) != $this->v_pass) {
+		if (($ismaillogin)) {
+			if (@$this->v_ismaillogin == 0)
+				log_die("ismaillogin but not v_ismaillogin");
+		} else if ((@$this->v_ismaillogin))
+			log_die("v_ismaillogin but not ismaillogin");
+		else if (myhash($pass.$this->v_salt) != $this->v_pass) {
 			if (function_exists("bq_login"))
 				bq_login("badlogin", $this);
 			log_die("login fail.");
@@ -825,6 +831,10 @@ EOO;
 		$this->v_sessionkey = myhash($this->v_salt.$key);
 		$this->v_submitkey = $this->getrandom();
 		$this->v_lastlogin = $sys->now;
+		if (($ismaillogin)) {
+			$this->v_mailkey = "";
+			$this->v_pass = "";
+		}
 		parent::update();
 		setcookie("sessionid", $this->id, 0, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
 		setcookie("sessionkey", $key, 0, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
@@ -840,6 +850,8 @@ EOO;
 			$key = @$_GET["key"]."";
 			
 			$r = $this->getrecord($uid);
+			if (@$r->v_ismaillogin != 0)
+				log_die("ismaillogin.");
 			if (@$r->v_mailkey == "")
 				log_die("mailkey empty.");
 			if (@$sys->mailexpire <= 0)
@@ -875,6 +887,30 @@ EOO;
 		$r = $this->getrecord($list[0]);
 		$r->login($pass);
 		log_die("login fail.");
+	}
+	function	check_maillogin() {
+		global	$sys;
+		
+		if (@$_GET["mode"] != "1login")
+			return 0;
+		$uid = @$_GET["uid"] + 0;
+		$key = @$_GET["key"]."";
+		
+		$r = $this->getrecord($uid);
+		if (@$r->v_ismaillogin == 0)
+			return 0;
+		
+		header("Location: {$sys->url}");
+		
+		if (@$r->v_mailkey == "")
+			log_die("mailkey empty.");
+		if (@$sys->mailexpire <= 0)
+			;
+		else if (@$r->v_mailsent < $sys->now - $sys->mailexpire)
+			log_die("mailexpire.");
+		if (myhash($r->v_login.$key) == $r->v_mailkey)
+			$r->login("", 1);
+		log_die("maillogin fail.");
 	}
 	function	is_login() {
 		global	$loginrecord;
@@ -2288,7 +2324,9 @@ EOO;
 				if ((ispost())&&(@$_POST[$postkey] !== null)) {
 					$actionrecordholder = $this;
 					$this->actioncommand = $a[1];
-				} else if (($loginrecord === null)&&($a[1] == ":login")&&(@$_POST[":login"] !== null)) {
+				} else if (($loginrecord === null)&&($a[1] == ":login")&&(@$_POST[":login"] === null))
+					$tablelist["login"]->check_maillogin();
+				else if (($loginrecord === null)&&($a[1] == ":login")) {
 					if (@$_POST["pass"] == "")
 						bq_login(0);
 					else
