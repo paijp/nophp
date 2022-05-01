@@ -3163,7 +3163,7 @@ if (!function_exists("bq_login")) {
 				$r->setmailkey($key);
 		
 				$a0 = array("@addr@", "@url@");
-				$a1 = array($login, "{$sys->url}?mode=1login&uid={$uid}&key={$key}");
+				$a1 = array($login, "{$sys->url}?mode=1login&uid={$uid}&key={$key}&");
 				$mailcmd = str_replace($a0, $a1, $mailcmd);
 				$mailbody = str_replace($a0, $a1, $mailbody);
 				if (($fp = popen($mailcmd, "w")) === null)
