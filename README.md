@@ -73,6 +73,5 @@
 - html/debuglog/ (any path, optional)
 	- *.php (automatically created)
 
-# Documents in Japanese is not translated to English yet.
+# Samples in English are now ready.
 
-- Please wait.
