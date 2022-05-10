@@ -56,20 +56,20 @@ Welcome `login__:loginrecord`!
 </TABLE>
 
 <UL>
-	<LI>「INPUT」や「SELECT」に「x-value」を設定すると、POSTでないときはこの値がvalueとみなされます。
-	<LI>POST時は、POSTされた値が使われます。
+	<LI>If &quot;x-value&quot; is set for &quot;INPUT&quot; or &quot;SELECT&quot;, this value is assumed to be the value if it is not a POST.
+	<LI>During POST, the POSTed value is used.
 </UL>
 
 
 <UL>
-	<LI>上記の「check0」は、例えばSQL部分で「`:bq`check0__:p:dup__x__:seq:andbreak__check0__:sqleq`:bq`」のようにできます。
-	<LI>チェックボックスをフィールドに使っている場合、非チェック時には値が空文字列になりますが、これを検索するのに使うことができます。
+	<LI>The above &quot;check0&quot; can be done, for example, in the SQL portion as &quot;`:bq`check0__:p:dup__x__:seq:andbreak__check0__:sqleq`:bq`&quot;.
+	<LI>If you are using a checkbox as a field, the value will be an empty string when unchecked, which can be used to search for it.
 </UL>
 
 
 <UL>
-	<LI>上記の「from」の計算式は、「:now - 90 * 86400」になります。
-	<LI>現在時刻から90日前(1日=86400秒)の日付を取得します。
+	<LI>The formula for &quot;from&quot; above is: :now - 90 * 86400.
+	<LI>Obtains the date 90 days (1 day = 86400 seconds) before the current time.
 </UL>
 
 

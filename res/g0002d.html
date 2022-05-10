@@ -41,12 +41,12 @@ var b = `abc__:js`;
 </TABLE>
 
 <UL>
-	<LI>バッククォートで囲まれた箇所は、通常はHTMLエスケープされます。
-	<LI>しかしJavascriptなどで使う場合は、別のエスケープを選ぶこともでます。
-	<LI>「:html」は、HTMLエスケープします。省略時はこれが選択されます。
-	<LI>「:url」は、URLエンコードします。
-	<LI>「:js」は、Javascript用に、エンコードの必要があればURLエンコードとデコード関数、必要がなければ単にダブルクォートで囲って出力します。
-	<LI>「:raw」は、エスケープせずに出力します。
+	<LI>Back-quoted sections are usually HTML-escaped.
+	<LI>However, if you are using Javascript, for example, you can choose a different escaping method.
+	<LI>The &quot;:html&quot; is HTML escaping. When omitted, this is selected.
+	<LI>The &quot;:url&quot; is URL encoded.
+	<LI>The &quot;:js&quot; is output for Javascript with URL encoding and decoding functions if encoding is required, or simply enclosed in double quotes if not required.
+	<LI>The &quot;:raw&quot; is output without escaping.
 </UL>
 
 

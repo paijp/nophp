@@ -44,8 +44,8 @@ concat sample `abc__:sp__123__:cat:cat`
 </TABLE>
 
 <UL>
-	<LI>「name=」内などで、入力できない文字を入力するためのエスケープです。
-	<LI>`:bq`abc__:sp__123__:cat:cat`:bq`のようにして、他の文字列と結合することができます。
+	<LI>This is an escape for characters that cannot be entered, such as in &quot;name=&quot;.
+	<LI>It can be concatenated with other strings like `:bq`abc__:sp__123__:cat:cat`:bq`.
 </UL>
 
 <TABLE border width="96%">
@@ -77,7 +77,7 @@ current page name `:curpage`
 
 <UL>
 	<LI>return current status.
-	<LI>コピーしたときに、コピー先に合わせて変える必要がなくなります。
+	<LI>When copied, it is no longer necessary to change it to match the destination.
 </UL>
 
 <TABLE border width="96%">
@@ -151,8 +151,8 @@ current page name `:curpage`
 </TABLE>
 
 <UL>
-	<LI>「:g」は、GETパラメータを取得して、コンマと数字以外を取り除いたものを返します。
-	<LI>GETパラメータは外部サイトから渡される可能性があるため、リスクを減らすためにこのような処理をおこなっています。
+	<LI>The &quot;:g&quot; takes a GET parameter and returns it with all but commas and numbers stripped.
+	<LI>Since GET parameters may be passed from external sites, this is done to reduce risk.
 </UL>
 
 <TABLE border width="96%">
@@ -183,14 +183,14 @@ current page name `:curpage`
 </TABLE>
 
 <UL>
-	<LI>「:p」は、POSTパラメータを取得します。
-	<LI>POSTであっても、submitkeyが合っていない場合(他サイトからのPOSTなど)は空文字列を返します。
+	<LI>The &quot;:p&quot; retrieves the POST parameter.
+	<LI>Even if it is a POST, if the submitkey does not match (e.g., POST from another site), an empty string is returned.
 </UL>
 
 
 <UL>
-	<LI>「&lt;!--{selectrows」など、SQL中で使う場合は、バッククォートで囲まれた部分は、コンマと数字以外は取り除かれます。
-	<LI>このような場合は、「:sqllike」「:sqleq」を利用してください。
+	<LI>When used in SQL, such as &quot;&lt;!--{selectrows&quot;, etc. When used in SQL, the parts enclosed in backquotes are stripped except for commas and numbers.
+	<LI>In such cases, use &quot;:sqllike&quot; and &quot;:sqleq&quot;.
 </UL>
 
 <TABLE border width="96%">
@@ -215,7 +215,7 @@ current page name `:curpage`
 </TABLE>
 
 <UL>
-	<LI>「:r」は、現在レコードから、指定したフィールドを取得します。
+	<LI>The &quot;:r&quot; retrieves the specified field from the current record.
 </UL>
 
 <TABLE border width="96%">
@@ -243,7 +243,7 @@ current page name `:curpage`
 </TABLE>
 
 <UL>
-	<LI>「:int」は、文字列を数値とみなして、整数に変換したものを返します。
+	<LI>The &quot;:int&quot; returns a string that has been converted to an integer by assuming it to be a number.
 </UL>
 
 <TABLE border width="96%">
@@ -283,32 +283,32 @@ current page name `:curpage`
 </TABLE>
 
 <UL>
-	<LI>「:isnull」は、指定された値が空文字列であれば「1」を、そうでなければ空文字列を返します。
-	<LI>「:isvalid:isnull」のようにして、他の返り値を反転させるのに使うこともできます。
+	<LI>The &quot;:isnull&quot; returns &quot;1&quot; if the specified value is an empty string, otherwise it returns an empty string.
+	<LI>It can also be used to invert other return values, as in &quot;:isvalid:isnull&quot;.
 </UL>
 
 <TABLE border width="96%">
 <TR><TH>g0002c.html (continued)
 <TH>HTML sent to the browser
 <TH>Display on the browser(can be operated)
-<TR><TD width="33%">`:bq`abcあいうＡＢＣ__:h2z`:bq`<br />
-`:bq`abcあいうＡＢＣ__:z2h`:bq`<br />
+<TR><TD width="33%">`:bq`abcABC__:h2z`:bq`<br />
+`:bq`abcABC__:z2h`:bq`<br />
 <br />
 
-<TD width="34%"><!--{htmlsrc-->`abcあいうＡＢＣ__:h2z`
-`abcあいうＡＢＣ__:z2h`
+<TD width="34%"><!--{htmlsrc-->`abcABC__:h2z`
+`abcABC__:z2h`
 
 <!--}-->
-<TD width="33%">`abcあいうＡＢＣ__:h2z`
-`abcあいうＡＢＣ__:z2h`
+<TD width="33%">`abcABC__:h2z`
+`abcABC__:z2h`
 
 
 </TABLE>
 
 <UL>
-	<LI>「:h2z」は、指定された値の中の半角文字を、全角文字に変換します。
-	<LI>半角カナは全角カナにし、そのとき濁点・半濁点が結合できるときは結合します。
-	<LI>「:z2h」は、指定された値の中の全角の英数記号を、半角文字に変換します。
+	<LI>The &quot;:h2z&quot; converts half-width characters in the specified value to full-width characters.
+	<LI>Half-width kana is converted to full-width kana, and if it is possible to merge the voiced and half-width characters at that time, they are merged.
+	<LI>The &quot;:z2h&quot; converts full-width alphanumeric symbols in the specified value to half-width characters.
 </UL>
 
 <TABLE border width="96%">
@@ -327,7 +327,7 @@ current page name `:curpage`
 </TABLE>
 
 <UL>
-	<LI>「:sys」は、通常、env.phpで定義される、$sys変数の内容を返します。
+	<LI>The &quot;:sys&quot; returns the contents of the $sys variable, usually defined in env.php.
 </UL>
 
 <TABLE border width="96%">
@@ -361,12 +361,12 @@ current page name `:curpage`
 </TABLE>
 
 <UL>
-	<LI>「:now」は、現在時刻を、1970年1月1日09:00JSTからの秒数で返します。
-	<LI>このサンプルでは取得しているだけですが、「:now__time__:set」のようにしてデータベースに保存することもできます。
-	<LI>「:todate」は、指定された値を、指定された書式で、日付の文字列に変換します。
-	<LI>「:age2t」は、現在時刻から指定した年数を引いた時刻を、1970年1月1日09:00JSTからの秒数で返します。
-	<LI>これは、生年月日が入力されたレコードを、年齢で検索するような場合に使われます。
-	<LI>「:ymd2t」は、年・月・日の3つの値から、1970年1月1日09:00JSTからの秒数で返します。
+	<LI>The &quot;:now&quot; returns the current time in seconds since January 1, 1970 09:00 JST.
+	<LI>This sample only retrieves the data, but it can also be stored in the database by using &quot;:now__time__:set&quot;.
+	<LI>The &quot;:todate&quot; converts the given value to a date string in the specified format.
+	<LI>The &quot;:age2t&quot; returns the current time minus the specified number of years, in seconds since January 1, 1970, 09:00 JST.
+	<LI>This is used when a record with a date of birth is to be searched by age.
+	<LI>The &quot;:ymd2t&quot; returns the year, month, and day in seconds since January 1, 1970 at 09:00 JST.
 </UL>
 
 <TABLE border width="96%">
@@ -406,15 +406,15 @@ current page name `:curpage`
 </TABLE>
 
 <UL>
-	<LI>「:cat」は、指定された2つの文字列を結合します。
-	<LI>「:rcat」は、指定された2つの文字列を、逆順に結合します。
-	<LI>例えばレコードから得た値を括弧で囲むには「data__:r__(__:rcat__)__:cat」のようにします。
+	<LI>The &quot;:cat&quot; concatenates the two specified strings.
+	<LI>The &quot;:rcat&quot; concatenates the two specified strings in reverse order.
+	<LI>For example, to enclose the values obtained from a record in parentheses, use &quot;data__:r__(__:rcat__)__:cat&quot;.
 </UL>
 
 
 <UL>
-	<LI>「:scat」は、指定された2つの文字列を結合します。
-	<LI>「:rscat」は、指定された2つの文字列を、逆順に結合します。
+	<LI>The &quot;:scat&quot; concatenates the two specified strings.
+	<LI>The &quot;:rscat&quot; concatenates the two specified strings in reverse order.
 </UL>
 
 <TABLE border width="96%">

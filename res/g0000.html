@@ -24,9 +24,9 @@ new message0_table();
 </TABLE>
 
 <UL>
-	<LI>何もないテーブル「message0」を作っています。
-	<LI>テーブル名のクラスは英数字_tableとし、直後にnewをおこなってください。
-	<LI>コンストラクタ内で、グローバル変数に登録しています。
+	<LI>The table &quot;message0&quot; is created with nothing.
+	<LI>The class of the table name should be alphanumeric_table and new should be used immediately after the table name.
+	<LI>The new object is registered to a global variable in the constructor.
 </UL>
 
 <TABLE border width="96%">
@@ -34,42 +34,42 @@ new message0_table();
 <TH>HTML sent to the browser
 <TH>Display on the browser(can be operated)
 <TR><TD width="33%">&lt;FORM method=POST&gt;<br />
-`:bq`login__:loginrecord`:bq`さん、いらっしゃいませ。<br />
-&lt;INPUT type=submit name=&quot;:logout&quot; value=&quot;ログアウト&quot;&gt;<br />
+logged in: `:bq`login__:loginrecord`:bq`<br />
+&lt;INPUT type=submit name=&quot;:logout&quot; value=&quot;logout&quot;&gt;<br />
 &lt;/FORM&gt;<br />
 <br />
 
 <TD width="34%"><!--{htmlsrc--><FORM method=POST>
-`login__:loginrecord`さん、いらっしゃいませ。
-<INPUT type=submit name=":logout" value="ログアウト">
+logged in: `login__:loginrecord`
+<INPUT type=submit name=":logout" value="logout">
 </FORM>
 
 <!--}-->
 <TD width="33%"><FORM method=POST>
-`login__:loginrecord`さん、いらっしゃいませ。
-<INPUT type=submit name=":logout" value="ログアウト">
+logged in: `login__:loginrecord`
+<INPUT type=submit name=":logout" value="logout">
 </FORM>
 
 
 </TABLE>
 
 <UL>
-	<LI>こちらが、ログインすると表示されるページです。
-	<LI>ファイル名は、 /^[a-z]+[0-9]+[a-z]*[.]html$/ を受け付けます。
+	<LI>This is the page you will see when you log in.
+	<LI>The file name is /^[a-z]+[0-9]+[a-z]*[.] html$/ is accepted.
 </UL>
 
 
 <UL>
-	<LI>「`:bq`login__:loginrecord`:bq`」という部分は、実際にはログインユーザー名になります。
-	<LI>この、バッククォートで囲まれた部分にコマンドを書くことで、コンテンツを表示します。
-	<LI>FORMタグを一度閉じていますが、これは後半にあるテキストボックスでEnterを押したときに、前半のログアウトボタンが押されてしまうのを避けるためです。
+	<LI>The &quot;`:bq`login__:loginrecord`:bq`&quot; part is actually the login user name.
+	<LI>The content is displayed by writing commands in this back-quoted area.
+	<LI>The FORM tag is closed once, to avoid the logout button in the first half being pressed when Enter is pressed in the text box in the second half.
 </UL>
 
 
 <UL>
-	<LI>また、&lt;/FORM&gt;の直前に、submitkeyが自動で挿入されています。
-	<LI>これは、外部からのフォームアクセスを防止するためのものです。
-	<LI>ログインするたびに、submitkeyは自動でランダムに変化し、システムの最新の値と一致しないとsubmitは受け付けられません。
+	<LI>Also, the submitkey is automatically inserted just before the &lt;/FORM&gt;.
+	<LI>This is to prevent form access from outside.
+	<LI>Each time you log in, the submitkey changes automatically and randomly, and the submit will not be accepted unless it matches the latest value in the system.
 </UL>
 
 <TABLE border width="96%">
@@ -78,27 +78,27 @@ new message0_table();
 <TH>Display on the browser(can be operated)
 <TR><TD width="33%">&lt;FORM method=POST&gt;<br />
 &lt;!--{tableid message0--&gt;<br />
-記事を投稿する:<br />
+Submit an article:<br />
 &lt;TEXTAREA name=&quot;body&quot; cols=40 rows=10&gt;&lt;/TEXTAREA&gt;<br />
-&lt;INPUT type=submit name=&quot;:curtable:h_update:popall:curpage:jump&quot; value=&quot;投稿&quot;&gt;<br />
+&lt;INPUT type=submit name=&quot;:curtable:h_update:popall:curpage:jump&quot; value=&quot;Submit an article&quot;&gt;<br />
 &lt;!--}--&gt;<br />
 &lt;/FORM&gt;<br />
 <br />
 
 <TD width="34%"><!--{htmlsrc--><FORM method=POST>
 <!--{tableid message0-->
-記事を投稿する:
+Submit an article:
 <TEXTAREA name="body" cols=40 rows=10></TEXTAREA>
-<INPUT type=submit name=":curtable:h_update:popall:curpage:jump" value="投稿">
+<INPUT type=submit name=":curtable:h_update:popall:curpage:jump" value="Submit an article">
 <!--}-->
 </FORM>
 
 <!--}-->
 <TD width="33%"><FORM method=POST>
 <!--{tableid message0-->
-記事を投稿する:
+Submit an article:
 <TEXTAREA name="body" cols=40 rows=10></TEXTAREA>
-<INPUT type=submit name=":curtable:h_update:popall:curpage:jump" value="投稿">
+<INPUT type=submit name=":curtable:h_update:popall:curpage:jump" value="Submit an article">
 <!--}-->
 </FORM>
 
@@ -106,11 +106,11 @@ new message0_table();
 </TABLE>
 
 <UL>
-	<LI>「&lt;!--{tableid message0--&gt;」の部分は、HTMLコメントですので表示されません。
-	<LI>この部分に、制御構造を書きます。
-	<LI>「&lt;!--{tableid message0--&gt;」から「&lt;!--}--&gt;」の範囲は、message0テーブルに新規レコードを登録するための記述であることを示します。
-	<LI>この区間にINPUTタグを置くと、nameに対応したフィールドをデータベースに書き込めます。
-	<LI>なお、数字で始まるnameはデータベースに出力されません。検索用や、javascriptで他のhidden項目に出力するために、利用することができます。
+	<LI>The &quot;&lt;!--{tableid message0--&gt;&quot; is an HTML comment and will not be displayed.
+	<LI>Write the control structure in this section.
+	<LI>From &quot;&lt;!--{tableid message0--&gt;&quot; to &quot;&lt;!--}--&gt;&quot; indicates that the description is for registering a new record in the message0 table.
+	<LI>Placing an INPUT tag in this section will write the field corresponding to name to the database.
+	<LI>Note that names beginning with a number are not output to the database. It can be used for searching or in javascript to output to other hidden fields.
 </UL>
 
 <TABLE border width="96%">
@@ -144,62 +144,62 @@ new message0_table();
 </TABLE>
 
 <UL>
-	<LI>これは、上記でPOSTされたものを表示する部分です。
-	<LI>「&lt;!--{selectrows」には、SQLのselect文のfromやorderやwhereやlimitやoffsetを書くことができます。
-	<LI>「&lt;!--{selectrows」から「&lt;!--}--&gt;」までのあいだが、レコードの数だけ繰り返され、それぞれのレコードについて処理をおこなうことができます。
+	<LI>This is the part that displays what was POSTed above.
+	<LI>The &quot;&lt;!--{selectrows&quot; can be used to write from, order, where, limit, and offset for SQL select statements.
+	<LI>From &quot;&lt;!--{selectrows&quot; to &quot;&lt;!--}--&gt;&quot; are repeated as many times as there are records, and each record can be processed.
 </UL>
 
 
 <UL>
-	<LI>さきほどの箇所で、type=submitのnameが「:curtable:h_update:popall:curpage:jump」となっています。
-	<LI>これは、バッククォートの記述と共通になっています。
-	<LI>nameに使えるのが英数字と「_」「:」「.」「 」だけで、「.」「 」はphpによって「_」に置き換えられてしまうため、以下のようにしています。
+	<LI>In the previous section, the name of type=submit is &quot;:curtable:h_update:popall:curpage:jump&quot;.
+	<LI>This is in common with the description of backquotes.
+	<LI>You can use alphanumeric characters and &quot;_&quot;, &quot;:&quot;, &quot;. &quot; &quot; can be used for name, and &quot;. &quot;&quot; are replaced by &quot;_&quot; by php, so the following is used.
 </UL>
 <UL><UL>
-	<LI>「__」で項目を区切ります。
-	<LI>「:」で始まる項目はコマンド、そうでない項目は文字列です。
-	<LI>ただし、コマンドどうしは「__」で区切らずに続けて書くことができます。
+	<LI>Separate items with &quot;__&quot;.
+	<LI>Items beginning with &quot;:&quot; are commands, and those not beginning with &quot;:&quot; are strings.
+	<LI>However, commands can be written consecutively without separating them with &quot;__&quot;.
 </UL></UL>
 
 
 <UL>
-	<LI>例えば、前述の「login__:loginrecord」は、以下の意味になります。
+	<LI>For example, the aforementioned &quot;login__:loginrecord&quot; means the following
 </UL>
 <UL><UL>
-	<LI>文字列「login」。
-	<LI>コマンド「:loginrecord」。
+	<LI>String &quot;login&quot;.
+	<LI>Command &quot;:loginrecord&quot;.
 </UL></UL>
 
 
 <UL>
-	<LI>上記の「:curtable:h_update:popall:curpage:jump」は、以下のようになります。
+	<LI>The above &quot;:curtable:h_update:popall:curpage:jump&quot; would look like this
 </UL>
 <UL><UL>
-	<LI>コマンド「:curtable」「:h_update」「:popall」「:curpage」「:jump」。
+	<LI>Commands &quot;:curtable&quot;, &quot;:h_update&quot;, &quot;:popall&quot;, &quot;:curpage&quot;, &quot;:jump&quot;.
 </UL></UL>
 
 
 <UL>
-	<LI>コマンド「:curtable」は、現在のテーブル、つまり「&lt;!--{tableid」で宣言された「message0」を返します。
-	<LI>コマンド「:h_update」は、指定されたテーブルを更新します。今回は新規レコードの登録ですので、実際にはinsertされ、そのレコードIDを返します。
-	<LI>このときのフィールドには、「&lt;!--{tableid」から「&lt;!--}--&gt;」の範囲にあるINPUTタグが使用されます。
-	<LI>なお、「:h_update」のコマンドは、INPUT type=submitのname中に書いたものしか効果がありません。例えば、バッククォート中に書いても、データベースを更新することはできません。
-	<LI>コマンド「:popall」は、返り値を捨てます。
-	<LI>コマンド「:curpage」は、現在のページ名(index.php/g0000.htmlならg0000)を返します。
-	<LI>コマンド「:jump」は、指定されたページにジャンプ(302によるリダイレクト)します。この場合は、直前の「g0000」つまり、自分自身にジャンプします。
-	<LI>これは、method=POSTのフォームは、ブラウザでリロードをおこなうと再度POSTされてしまい不便なので、リダイレクトして履歴を上書きする目的で使用しています。
+	<LI>The command &quot;:curtable&quot; returns the current table, i.e., &quot;&lt;!--{tableid message0&quot;, it returns &quot;message0&quot;.
+	<LI>The command &quot;:h_update&quot; updates the specified table. In this case, since we are registering a new record, it actually inserts it and returns its record ID.
+	<LI>The fields at this time include &quot;&lt;!--{tableid&quot; to &quot;&lt;!--}--&gt;&quot; range, the INPUT tag is used.
+	<LI>Note that the command &quot;:h_update&quot; is only effective if written within the name of INPUT type=submit. For example, writing it in backquotes will not update the database.
+	<LI>The command &quot;:popall&quot; discards the return value.
+	<LI>The command &quot;:curpage&quot; returns the current page name (g0000 for index.php/g0000.html).
+	<LI>The command &quot;:jump&quot; jumps to the specified page (redirect by 302). In this case, it jumps to the previous &quot;g0000&quot;, i.e., to itself.
+	<LI>This is used to redirect and overwrite the history of forms with method=POST, as it is inconvenient to reload the form in the browser and it will be POSTed again.
 </UL>
 
 
 <UL>
-	<LI>ところで、前述のtables.phpでのテーブル定義では、何もフィールドを登録していませんでした。
-	<LI>このフレームワークでは、テーブルを生成すると自動的に、id、mixed、created、modified、deletedのフィールドが作られます。
-	<LI>そして、テーブルに登録されていないフィールドにアクセスすると、自動的にmixedというフィールドの中にエスケープして保存されます。
+	<LI>By the way, in the table definition in tables.php mentioned above, I did not register any fields.
+	<LI>The framework automatically creates the fields id, mixed, created, modified, and deleted when the table is generated.
+	<LI>And if you access a field that is not registered in the table, it is automatically escaped and stored in a field called MIXED.
 </UL>
 
 
 <UL>
-	<LI>「`:bq`body__:r`:bq`」で、現在レコードの、つまりselectrowsが現在処理しているレコードの、bodyフィールドを取得します。
+	<LI>With &quot;`:bq`body__:r`:bq`&quot;, get the body field of the current record, i.e., the record that selectrows is currently processing.
 </UL>
 
 

@@ -16,36 +16,36 @@ Welcome `login__:loginrecord`!
 <TH>Display on the browser(can be operated)
 <TR><TD width="33%">&lt;FORM method=POST&gt;<br />
 &lt;!--{tableid message0--&gt;<br />
-記事を投稿する:<br />
+Submit an article:<br />
 &lt;!--{valid len1- body--&gt;<br />
-&lt;SPAN style=&quot;color:#ff0000;&quot;&gt;空欄なので投稿できません。&lt;/SPAN&gt;<br />
+&lt;SPAN style=&quot;color:#ff0000;&quot;&gt;Cannot post because it is blank.&lt;/SPAN&gt;<br />
 &lt;!--}--&gt;<br />
 &lt;TEXTAREA name=&quot;body&quot; cols=40 rows=10&gt;&lt;/TEXTAREA&gt;<br />
-&lt;INPUT type=submit name=&quot;:isvalid:orbreak:curtable:h_update:popall:curpage:jump&quot; value=&quot;投稿&quot;&gt;<br />
+&lt;INPUT type=submit name=&quot;:isvalid:orbreak:curtable:h_update:popall:curpage:jump&quot; value=&quot;Submit an article&quot;&gt;<br />
 &lt;!--}--&gt;<br />
 &lt;/FORM&gt;<br />
 <br />
 
 <TD width="34%"><!--{htmlsrc--><FORM method=POST>
 <!--{tableid message0-->
-記事を投稿する:
+Submit an article:
 <!--{valid len1- body-->
-<SPAN style="color:#ff0000;">空欄なので投稿できません。</SPAN>
+<SPAN style="color:#ff0000;">Cannot post because it is blank.</SPAN>
 <!--}-->
 <TEXTAREA name="body" cols=40 rows=10></TEXTAREA>
-<INPUT type=submit name=":isvalid:orbreak:curtable:h_update:popall:curpage:jump" value="投稿">
+<INPUT type=submit name=":isvalid:orbreak:curtable:h_update:popall:curpage:jump" value="Submit an article">
 <!--}-->
 </FORM>
 
 <!--}-->
 <TD width="33%"><FORM method=POST>
 <!--{tableid message0-->
-記事を投稿する:
+Submit an article:
 <!--{valid len1- body-->
-<SPAN style="color:#ff0000;">空欄なので投稿できません。</SPAN>
+<SPAN style="color:#ff0000;">Cannot post because it is blank.</SPAN>
 <!--}-->
 <TEXTAREA name="body" cols=40 rows=10></TEXTAREA>
-<INPUT type=submit name=":isvalid:orbreak:curtable:h_update:popall:curpage:jump" value="投稿">
+<INPUT type=submit name=":isvalid:orbreak:curtable:h_update:popall:curpage:jump" value="Submit an article">
 <!--}-->
 </FORM>
 
@@ -53,14 +53,14 @@ Welcome `login__:loginrecord`!
 </TABLE>
 
 <UL>
-	<LI>空欄では投稿できないようにしました。
+	<LI>We have made it so that you cannot submit a blank entry.
 </UL>
 
 
 <UL>
-	<LI>&lt;!--valid len1- body--&gt;から&lt;!--}--&gt;までは、submit時に、現在レコードのbodyの長さが1以上でない場合に表示されます。
-	<LI>submitの方でも、「:isvalid:orbreak」をつけることで、「&lt;!--valid」が表示されていたらbreakし、データベースを更新しないようします。
-	<LI>この場合は、POSTされた値がそのまま表示されます。
+	<LI>&lt;!--valid len1- body--&gt; to &lt;!--}--&gt; are displayed if the length of body of the current record is not more than 1 at submit.
+	<LI>The submit can also add &quot;:isvalid:orbreak&quot; so that if &quot;&lt;!--valid&quot; is displayed, break and do not update the database.
+	<LI>In this case, the POSTed value is displayed as is.
 </UL>
 
 <TABLE border width="96%">
@@ -97,7 +97,7 @@ Welcome `login__:loginrecord`!
 </TABLE>
 
 <UL>
-	<LI>こちらは変更ありません。
+	<LI>No change here.
 </UL>
 
 

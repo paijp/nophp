@@ -6,7 +6,7 @@
 &lt;UL&gt;<br />
 &lt;!--{if `:bq`0__mode__:g:seq`:bq`--&gt;<br />
 <br />
-	&lt;LI&gt;ログイン名 &lt;INPUT type=text name=login&gt;<br />
+	&lt;LI&gt;login name &lt;INPUT type=text name=login&gt;<br />
 	&lt;LI&gt;&lt;INPUT type=submit name=&quot;:login&quot; value=&quot;send mail&quot;&gt;<br />
 	&lt;LI&gt;A mail with password setting URL will be sent.<br />
 	&lt;LI&gt;After sent, login page will be shown. Please wait a mail.<br />
@@ -19,10 +19,10 @@
 <br />
 &lt;!--}{else--&gt;<br />
 <br />
-	&lt;LI&gt;ログイン名 &lt;INPUT type=text name=login&gt;<br />
-	&lt;LI&gt;パスワード &lt;INPUT type=password name=pass&gt;<br />
-	&lt;LI&gt;&lt;INPUT type=submit name=&quot;:login&quot; value=&quot;ログイン&quot;&gt;<br />
-	&lt;LI&gt;ディフォールトのパスワードは nobody@something.com /  です。<br />
+	&lt;LI&gt;login name &lt;INPUT type=text name=login&gt;<br />
+	&lt;LI&gt;password &lt;INPUT type=password name=pass&gt;<br />
+	&lt;LI&gt;&lt;INPUT type=submit name=&quot;:login&quot; value=&quot;Login&quot;&gt;<br />
+	&lt;LI&gt;Default password: nobody@something.com / <br />
 	&lt;LI&gt;&lt;A href=&quot;?mode=0&quot;&gt;Forget password?&lt;/A&gt;<br />
 <br />
 &lt;!--}--&gt;<br />
@@ -34,7 +34,7 @@
 <UL>
 <!--{if `0__mode__:g:seq`-->
 
-	<LI>ログイン名 <INPUT type=text name=login>
+	<LI>login name <INPUT type=text name=login>
 	<LI><INPUT type=submit name=":login" value="send mail">
 	<LI>A mail with password setting URL will be sent.
 	<LI>After sent, login page will be shown. Please wait a mail.
@@ -47,10 +47,10 @@
 
 <!--}{else-->
 
-	<LI>ログイン名 <INPUT type=text name=login>
-	<LI>パスワード <INPUT type=password name=pass>
-	<LI><INPUT type=submit name=":login" value="ログイン">
-	<LI>ディフォールトのパスワードは nobody@something.com /  です。
+	<LI>login name <INPUT type=text name=login>
+	<LI>password <INPUT type=password name=pass>
+	<LI><INPUT type=submit name=":login" value="Login">
+	<LI>Default password: nobody@something.com / 
 	<LI><A href="?mode=0">Forget password?</A>
 
 <!--}-->
@@ -62,7 +62,7 @@
 <UL>
 <!--{if `0__mode__:g:seq`-->
 
-	<LI>ログイン名 <INPUT type=text name=login>
+	<LI>login name <INPUT type=text name=login>
 	<LI><INPUT type=submit name=":login" value="send mail">
 	<LI>A mail with password setting URL will be sent.
 	<LI>After sent, login page will be shown. Please wait a mail.
@@ -75,10 +75,10 @@
 
 <!--}{else-->
 
-	<LI>ログイン名 <INPUT type=text name=login>
-	<LI>パスワード <INPUT type=password name=pass>
-	<LI><INPUT type=submit name=":login" value="ログイン">
-	<LI>ディフォールトのパスワードは nobody@something.com /  です。
+	<LI>login name <INPUT type=text name=login>
+	<LI>password <INPUT type=password name=pass>
+	<LI><INPUT type=submit name=":login" value="Login">
+	<LI>Default password: nobody@something.com / 
 	<LI><A href="?mode=0">Forget password?</A>
 
 <!--}-->
@@ -89,8 +89,8 @@
 </TABLE>
 
 <UL>
-	<LI>これはログインページです。nameはこの通りにしてください。
-	<LI>未ログインの状態では、常にこのページが表示されます。
-	<LI>もちろん、実際にはDOCTYPEやCSSなどを入れます。
+	<LI>This is the login page. name should be as shown.
+	<LI>This page is always displayed when you are not logged in.
+	<LI>Of course, you can actually include DOCTYPE, CSS, etc.
 </UL>
 

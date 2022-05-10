@@ -15,13 +15,13 @@ Welcome `login__:loginrecord`!
 <TH>HTML sent to the browser
 <TH>Display on the browser(can be operated)
 <TR><TD width="33%">&lt;FORM method=POST&gt;<br />
-&lt;!-- 動作チェック:`:bq`id__:g`:bq` --&gt;<br />
+&lt;!-- operation check:`:bq`id__:g`:bq` --&gt;<br />
 &lt;!--{if `:bq`id__:g`:bq`--&gt;<br />
 <br />
 &lt;!--{tableid message0 `:bq`id__:g`:bq`--&gt;<br />
 &lt;TEXTAREA name=&quot;body&quot; cols=40 rows=10&gt;&lt;/TEXTAREA&gt;<br />
-&lt;A href=&quot;?&quot;&gt;キャンセル&lt;/A&gt;<br />
-&lt;INPUT type=submit name=&quot;:curtable:h_update:popall:curpage:jump&quot; value=&quot;修正&quot;&gt;<br />
+&lt;A href=&quot;?&quot;&gt;cancel&lt;/A&gt;<br />
+&lt;INPUT type=submit name=&quot;:curtable:h_update:popall:curpage:jump&quot; value=&quot;Overwrite an article&quot;&gt;<br />
 &lt;!--}--&gt;<br />
 <br />
 &lt;!--}{else--&gt;<br />
@@ -36,13 +36,13 @@ Welcome `login__:loginrecord`!
 <br />
 
 <TD width="34%"><!--{htmlsrc--><FORM method=POST>
-<!-- 動作チェック:`id__:g` -->
+<!-- operation check:`id__:g` -->
 <!--{if `id__:g`-->
 
 <!--{tableid message0 `id__:g`-->
 <TEXTAREA name="body" cols=40 rows=10></TEXTAREA>
-<A href="?">キャンセル</A>
-<INPUT type=submit name=":curtable:h_update:popall:curpage:jump" value="修正">
+<A href="?">cancel</A>
+<INPUT type=submit name=":curtable:h_update:popall:curpage:jump" value="Overwrite an article">
 <!--}-->
 
 <!--}{else-->
@@ -57,13 +57,13 @@ Welcome `login__:loginrecord`!
 
 <!--}-->
 <TD width="33%"><FORM method=POST>
-<!-- 動作チェック:`id__:g` -->
+<!-- operation check:`id__:g` -->
 <!--{if `id__:g`-->
 
 <!--{tableid message0 `id__:g`-->
 <TEXTAREA name="body" cols=40 rows=10></TEXTAREA>
-<A href="?">キャンセル</A>
-<INPUT type=submit name=":curtable:h_update:popall:curpage:jump" value="修正">
+<A href="?">cancel</A>
+<INPUT type=submit name=":curtable:h_update:popall:curpage:jump" value="Overwrite an article">
 <!--}-->
 
 <!--}{else-->
@@ -80,13 +80,13 @@ Welcome `login__:loginrecord`!
 </TABLE>
 
 <UL>
-	<LI>一覧から選択して、修正するサンプルです。
-	<LI>「`:bq`id__:g`:bq`」は、文字列「id」と、コマンド「:g」になります。
-	<LI>コマンド「:g」は、指定された文字列のGETパラメータ(URLの?id=の部分)を受け取って数字にします。
-	<LI>従って、「?id=」が指定されていないと空文字列になり、「&lt;!--{if--&gt;」「&lt;!--}{else--&gt;」「&lt;!--}--&gt;」の後半が実行され、一覧か表示されます。
-	<LI>「?id=」が指定されていると前半が有効になり、内容を修正する画面になります。
-	<LI>このとき、「&lt;!--{tableid message0 `:bq`id__:g`:bq`--&gt;」とすることで、レコードIDを指定しています。
-	<LI>TEXTAREAタグは、nameを見て、自動的に指定されたIDのレコードに入っていたbodyフィールドが展開されます。
+	<LI>This is a sample to be selected from the list and modified.
+	<LI>The &quot;`:bq`id__:g`:bq`&quot; is the string &quot;id&quot; and the command &quot;:g&quot;.
+	<LI>The command &quot;:g&quot; takes a GET parameter (the ?id= part of the URL) of the specified string and turns it into a number.
+	<LI>Therefore, if &quot;?id=&quot; is not specified, it will be an empty string, and &quot;&lt;!--{if--&gt;&quot;, &quot;&lt;!--}{else--&gt;&quot; and &quot;&lt;!--}--&gt;&quot; will be executed and the second half of the string will be listed or displayed.
+	<LI>If &quot;?id=&quot; is specified, the first half is enabled and you will be taken to a screen where you can modify the contents.
+	<LI>In this case, &quot;&lt;!--{tableid message0 `:bq`id__:g`:bq`--&gt;&quot; to specify the record ID.
+	<LI>The TEXTAREA tag looks at name and automatically expands the body field that was in the record with the specified ID.
 </UL>
 
 

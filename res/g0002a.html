@@ -15,9 +15,9 @@ Welcome `login__:loginrecord`!
 <TH>HTML sent to the browser
 <TH>Display on the browser(can be operated)
 <TR><TD width="33%">&lt;FORM method=POST&gt;<br />
-検索キーワード:<br />
+search keyword:<br />
 &lt;INPUT type=text name=&quot;0body&quot;&gt;<br />
-&lt;INPUT type=submit value=&quot;検索&quot;&gt;<br />
+&lt;INPUT type=submit value=&quot;searching for&quot;&gt;<br />
 &lt;!--{if `:bq`0body__:p:isnull:isnull`:bq`--&gt;<br />
 &lt;!--{selectrows from message2 where 1 order by id desc `:bq`0body__:p__body__:sqllike`:bq` --&gt;<br />
 &lt;HR&gt;<br />
@@ -31,9 +31,9 @@ Welcome `login__:loginrecord`!
 <br />
 
 <TD width="34%"><!--{htmlsrc--><FORM method=POST>
-検索キーワード:
+search keyword:
 <INPUT type=text name="0body">
-<INPUT type=submit value="検索">
+<INPUT type=submit value="searching for">
 <!--{if `0body__:p:isnull:isnull`-->
 <!--{selectrows from message2 where 1 order by id desc `0body__:p__body__:sqllike` -->
 <HR>
@@ -47,9 +47,9 @@ Welcome `login__:loginrecord`!
 
 <!--}-->
 <TD width="33%"><FORM method=POST>
-検索キーワード:
+search keyword:
 <INPUT type=text name="0body">
-<INPUT type=submit value="検索">
+<INPUT type=submit value="searching for">
 <!--{if `0body__:p:isnull:isnull`-->
 <!--{selectrows from message2 where 1 order by id desc `0body__:p__body__:sqllike` -->
 <HR>
@@ -65,42 +65,42 @@ Welcome `login__:loginrecord`!
 </TABLE>
 
 <UL>
-	<LI>「&lt;!--{selectrows」にwhereをつけて、検索をおこなうようにします。
+	<LI>&lt;!--{selectrows&quot; with &quot;where&quot; to perform the search.
 </UL>
 
 
 <UL>
-	<LI>まず、「&lt;!--{if」で、検索キーワードが入力されていないときは結果を表示しないようにします。
-	<LI>「0body__:p」の部分は、POSTパラメータを取り出します。ちなみに、数字で始まるフィールド名は、「&lt;!--{tableid」などで使用しても、データベースに書き込まれません。
-	<LI>「:isnull」は、空文字列なら「1」が、そうでなければ空文字列が返ります。
-	<LI>2つ繰り返すことで、「0body__:p」が空でない場合のみ、「&lt;!--{if」が処理されるようにします。
-	<LI>わかりにくければelseを使用して、「&lt;!--{if `:bq`0body__:p:isnull`:bq`--&gt;&lt;!--}{else--&gt;」のようにしても結果は同じです。
+	<LI>First, you can use &quot;&lt;!--{if&quot; to not display results when no search keywords are entered.
+	<LI>The &quot;0body__:p&quot; part takes out the POST parameter. Note that field names that begin with a number, such as &quot;&lt;!--{tableid&quot;, etc., will not be written to the database.
+	<LI>The &quot;:isnull&quot; returns &quot;1&quot; if the string is empty, otherwise it returns an empty string.
+	<LI>By repeating the two, only if &quot;0body__:p&quot; is non-empty, &quot;&lt;!--{if&quot; is processed.
+	<LI>If it's hard to understand, use else, and then &quot;&lt;!--{if `:bq`0body__:p:isnull`:bq`--&gt;&lt;!--}{else--&gt;&quot; will give the same result.
 </UL>
 
 
 <UL>
-	<LI>「`:bq`0body__:p__body__:sqllike`:bq`」の部分は、最終的には「body like &quot;%キーワード%&quot; and」がwhereの直後に埋め込まれます。SQLのエスケープもおこなわれます。
-	<LI>直後に1がありますので、この方法で条件を並べることで、検索が可能です。
+	<LI>The &quot;`:bq`0body__:p__body__:sqllike`:bq`&quot; part will eventually embed &quot;body like &quot;%keyword%&quot; and&quot; immediately after the where. SQL escaping is also performed.
+	<LI>Since there is a 1 immediately after, the search can be done by arranging the criteria in this way.
 </UL>
 
 
 <UL>
-	<LI>以下のものは、「&lt;!--{tablegrid」のパラメータ部と「&lt;!--}--」までの区間、そして「&lt;!--{selectrows」のパラメータ部で使用することができます。
-	<LI>sqlisnullは、スタックから文字列を1つ取り出して、フィールド名とみなし、対応するSQL文に「and フィールド名 is null」を追加します。
-	<LI>sqlisnotnullは、スタックから文字列を1つ取り出して、フィールド名とみなし、対応するSQL文に「and フィールド名 is not null」を追加します。
-	<LI>sqlisemptyは、スタックから文字列を1つ取り出して、フィールド名とみなし、対応するSQL文に「and (フィールド名 is null or フィールド名 = &quot;&quot;)」を追加します。
-	<LI>sqlisnotemptyは、スタックから文字列を1つ取り出して、フィールド名とみなし、対応するSQL文に「and フィールド名 is not null and フィールド名 &lt;&gt; &quot;&quot;」を追加します。
-	<LI>sqllikeは、スタックから文字列を2つ取り出して、それぞれを検索文字列とフィールド名とみなし、対応するSQL文に「and フィールド名 like &quot;%検索文字列%&quot;」を追加します。
-	<LI>sqllike2は、スタックから文字列を3つ取り出して、それぞれを検索文字列、フィールド名1、フィールド名2とみなし、対応するSQL文に「and (フィールド名1 like &quot;%検索文字列%&quot; or フィールド名2 like &quot;%検索文字列%&quot;)」を追加します。
-	<LI>sqllike3は、スタックから文字列を4つ取り出して、それぞれを検索文字列、フィールド名1、フィールド名2、フィールド名3とみなし、対応するSQL文に「and (フィールド名1 like &quot;%検索文字列%&quot; or フィールド名2 like &quot;%検索文字列%&quot; or フィールド名3 like &quot;%検索文字列%&quot;)」を追加します。
-	<LI>sqllike4は、スタックから文字列を5つ取り出して、それぞれを検索文字列、フィールド名1、フィールド名2、フィールド名3、フィールド名4とみなし、対応するSQL文に「and (フィールド名1 like &quot;%検索文字列%&quot; or フィールド名2 like &quot;%検索文字列%&quot; or フィールド名3 like &quot;%検索文字列%&quot; or フィールド名4 like &quot;%検索文字列&quot;)」を追加します。
-	<LI>sqlnotlikeは、スタックから文字列を2つ取り出して、それぞれを検索文字列とフィールド名とみなし、対応するSQL文に「and フィールド名 not like &quot;%検索文字列%&quot;」を追加します。
-	<LI>sqleqは、スタックから文字列を2つ取り出して、それぞれを文字列とフィールド名とみなし、対応するSQL文に「and &quot;文字列&quot; = フィールド名」を追加します。
-	<LI>sqlneは、スタックから文字列を2つ取り出して、それぞれを文字列とフィールド名とみなし、対応するSQL文に「and &quot;文字列&quot; &lt;&gt; フィールド名」を追加します。
-	<LI>sqlltは、スタックから文字列を2つ取り出して、それぞれを文字列とフィールド名とみなし、対応するSQL文に「and &quot;文字列&quot; &lt; フィールド名」を追加します。
-	<LI>sqlleは、スタックから文字列を2つ取り出して、それぞれを文字列とフィールド名とみなし、対応するSQL文に「and &quot;文字列&quot; &lt;= フィールド名」を追加します。
-	<LI>sqlgtは、スタックから文字列を2つ取り出して、それぞれを文字列とフィールド名とみなし、対応するSQL文に「and &quot;文字列&quot; &gt; フィールド名」を追加します。
-	<LI>sqlgeは、スタックから文字列を2つ取り出して、それぞれを文字列とフィールド名とみなし、対応するSQL文に「and &quot;文字列&quot; &gt;= フィールド名」を追加します。
+	<LI>The following is a list of the &quot;&lt;!--{tablegrid&quot; parameter section and &quot;&lt;!--}--&quot; up to and including &quot;&lt;!--{selectrows&quot; parameter section.
+	<LI>sqlisnull takes one string from the stack, considers it a field name, and adds &quot;and field name is null&quot; to the corresponding SQL statement.
+	<LI>sqlisnotnull takes one string from the stack, considers it a field name, and adds &quot;and field name is not null&quot; to the corresponding SQL statement.
+	<LI>sqlisempty takes one string from the stack, considers it a field name, and adds &quot;and (field name is null or field name = &quot;&quot;)&quot; to the corresponding SQL statement.
+	<LI>sqlisnotempty takes one string from the stack, considers it a field name, and adds &quot;and field name is not null and field name &lt;&gt; &quot;&quot; to the corresponding SQL statement.
+	<LI>sqllike takes two strings from the stack, considers each to be a search string and a field name, and adds &quot;and field name like &quot;%search string%&quot;&quot; to the corresponding SQL statement.
+	<LI>sqllike2 takes three strings from the stack, considers them as search string, field name 1, and field name 2, respectively, and adds &quot;and (field name 1 like &quot;%search string%&quot; or field name 2 like &quot;%search string%&quot;)&quot; to the corresponding SQL statement.
+	<LI>sqllike3 takes four strings from the stack, considers each as a search string, field name 1, field name 2, and field name 3, and adds &quot;and (field name 1 like &quot;%Search String%&quot; or field name 2 like &quot;%Search String%&quot; or field Field name 3 like &quot;%Search String %&quot;)&quot; is added.
+	<LI>sqllike4 takes five strings from the stack, considers each as a search string, field name 1, field name 2, field name 3, and field name 4, and adds &quot;and (field name 1 like &quot;%Search String%&quot; or field name 2 like &quot;%Search String %&quot; or field name 3 like &quot;%search string%&quot; or field name 4 like &quot;%search string&quot;)&quot; is added.
+	<LI>sqlnotlike takes two strings from the stack, considers each to be a search string and a field name, and adds &quot;and field name not like &quot;%search string%&quot;&quot; to the corresponding SQL statement.
+	<LI>sqleq takes two strings from the stack, considers each to be a string and a field name, and adds &quot;and &quot;string&quot; = field name&quot; to the corresponding SQL statement.
+	<LI>sqlne takes two strings from the stack, considers each to be a string and a field name, and adds &quot;and &quot;string&quot; &lt;&gt; field name&quot; to the corresponding SQL statement.
+	<LI>sqllt takes two strings from the stack, considers each to be a string and a field name, and adds &quot;and &quot;string&quot; &lt; field name&quot; to the corresponding SQL statement.
+	<LI>sqlle takes two strings from the stack, considers each to be a string and a field name, and adds &quot;and &quot;string&quot; &lt;= field name&quot; to the corresponding SQL statement.
+	<LI>sqlgt takes two strings from the stack, considers each to be a string and a field name, and adds &quot;and &quot;string&quot; &gt; field name&quot; to the corresponding SQL statement.
+	<LI>sqlge takes two strings from the stack, considers each to be a string and a field name, and adds &quot;and &quot;string&quot; &gt;= field name&quot; to the corresponding SQL statement.
 </UL>
 
 

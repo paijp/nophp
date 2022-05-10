@@ -38,10 +38,10 @@ Welcome `login__:loginrecord`!
 </TABLE>
 
 <UL>
-	<LI>レコードは生成時にcreatedに、生成時と更新時にmodifiedに、それぞれ現在時刻が入ります。
-	<LI>現在時刻は、1970年1月1日09:00JSTからの経過秒数(つまり数字)です。
-	<LI>`:bq`created__:r`:bq`で、この秒数が得られます。
-	<LI>そのあとに「__y/m/d H:i:s__:todate」で、秒数を、年や時といった数字に変換しています。
+	<LI>The record is created with the current time in created, and modified with the current time in created and modified, respectively.
+	<LI>The current time is the number of seconds (i.e., the number of digits) elapsed since January 1, 1970 09:00 JST.
+	<LI>With `:bq`created__:r`:bq`, this number of seconds is obtained.
+	<LI>After that, &quot;__y/m/d H:i:s__:todate&quot; converts seconds into numbers such as years and hours.
 </UL>
 
 

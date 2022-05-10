@@ -29,8 +29,8 @@ new message1_table();
 </TABLE>
 
 <UL>
-	<LI>前回と同じテーブルですが、tv_mailメソッドを定義しました。
-	<LI>「@」が入っていないと1を返してエラーを示します。
+	<LI>Same table as before, but with tv_mail method defined.
+	<LI>If &quot;@&quot; is not included, 1 is returned to indicate an error.
 </UL>
 
 <TABLE border width="96%">
@@ -39,51 +39,51 @@ new message1_table();
 <TH>Display on the browser(can be operated)
 <TR><TD width="33%">&lt;FORM method=POST&gt;<br />
 &lt;!--{tableid message1--&gt;<br />
-メールアドレス:<br />
+Email Address:<br />
 &lt;!--{valid mail mail--&gt;<br />
-&lt;SPAN style=&quot;color:#ff0000;&quot;&gt;メールアドレスを入力してください。&lt;/SPAN&gt;<br />
+&lt;SPAN style=&quot;color:#ff0000;&quot;&gt;Please enter your email address.&lt;/SPAN&gt;<br />
 &lt;!--}--&gt;<br />
 &lt;INPUT type=text name=&quot;mail&quot;&gt;<br />
-記事を投稿する:<br />
+Submit an article:<br />
 &lt;!--{valid len1- body--&gt;<br />
-&lt;SPAN style=&quot;color:#ff0000;&quot;&gt;空欄なので投稿できません。&lt;/SPAN&gt;<br />
+&lt;SPAN style=&quot;color:#ff0000;&quot;&gt;Cannot post because it is blank.&lt;/SPAN&gt;<br />
 &lt;!--}--&gt;<br />
 &lt;TEXTAREA name=&quot;body&quot; cols=40 rows=10&gt;&lt;/TEXTAREA&gt;<br />
-&lt;INPUT type=submit name=&quot;:isvalid:orbreak:curtable:h_update:popall:curpage:jump&quot; value=&quot;投稿&quot;&gt;<br />
+&lt;INPUT type=submit name=&quot;:isvalid:orbreak:curtable:h_update:popall:curpage:jump&quot; value=&quot;Submit an article&quot;&gt;<br />
 &lt;!--}--&gt;<br />
 &lt;/FORM&gt;<br />
 <br />
 
 <TD width="34%"><!--{htmlsrc--><FORM method=POST>
 <!--{tableid message1-->
-メールアドレス:
+Email Address:
 <!--{valid mail mail-->
-<SPAN style="color:#ff0000;">メールアドレスを入力してください。</SPAN>
+<SPAN style="color:#ff0000;">Please enter your email address.</SPAN>
 <!--}-->
 <INPUT type=text name="mail">
-記事を投稿する:
+Submit an article:
 <!--{valid len1- body-->
-<SPAN style="color:#ff0000;">空欄なので投稿できません。</SPAN>
+<SPAN style="color:#ff0000;">Cannot post because it is blank.</SPAN>
 <!--}-->
 <TEXTAREA name="body" cols=40 rows=10></TEXTAREA>
-<INPUT type=submit name=":isvalid:orbreak:curtable:h_update:popall:curpage:jump" value="投稿">
+<INPUT type=submit name=":isvalid:orbreak:curtable:h_update:popall:curpage:jump" value="Submit an article">
 <!--}-->
 </FORM>
 
 <!--}-->
 <TD width="33%"><FORM method=POST>
 <!--{tableid message1-->
-メールアドレス:
+Email Address:
 <!--{valid mail mail-->
-<SPAN style="color:#ff0000;">メールアドレスを入力してください。</SPAN>
+<SPAN style="color:#ff0000;">Please enter your email address.</SPAN>
 <!--}-->
 <INPUT type=text name="mail">
-記事を投稿する:
+Submit an article:
 <!--{valid len1- body-->
-<SPAN style="color:#ff0000;">空欄なので投稿できません。</SPAN>
+<SPAN style="color:#ff0000;">Cannot post because it is blank.</SPAN>
 <!--}-->
 <TEXTAREA name="body" cols=40 rows=10></TEXTAREA>
-<INPUT type=submit name=":isvalid:orbreak:curtable:h_update:popall:curpage:jump" value="投稿">
+<INPUT type=submit name=":isvalid:orbreak:curtable:h_update:popall:curpage:jump" value="Submit an article">
 <!--}-->
 </FORM>
 
@@ -91,7 +91,7 @@ new message1_table();
 </TABLE>
 
 <UL>
-	<LI>メールアドレス欄を追加し、「&lt;!--{valid mail」で、上述のtv_mail()を使うようにしました。
+	<LI>Added an email address field and added &quot;&lt;!--{valid mail&quot; to use tv_mail() as described above.
 </UL>
 
 <TABLE border width="96%">
@@ -140,7 +140,7 @@ new message1_table();
 </TABLE>
 
 <UL>
-	<LI>入力されたメールアドレスを表示するようにしました。
+	<LI>The email address entered is now displayed.
 </UL>
 
 

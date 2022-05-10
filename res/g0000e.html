@@ -16,27 +16,27 @@ Welcome `login__:loginrecord`!
 <TH>Display on the browser(can be operated)
 <TR><TD width="33%">&lt;FORM method=POST&gt;<br />
 &lt;!--{tableid message0--&gt;<br />
-記事を投稿する:<br />
+Submit an article:<br />
 &lt;TEXTAREA name=&quot;body&quot; cols=40 rows=10&gt;&lt;/TEXTAREA&gt;<br />
-&lt;INPUT type=submit name=&quot;id__:loginrecord__owner__:set:curtable:h_update:popall:curpage:jump&quot; value=&quot;投稿&quot;&gt;<br />
+&lt;INPUT type=submit name=&quot;id__:loginrecord__owner__:set:curtable:h_update:popall:curpage:jump&quot; value=&quot;Submit an article&quot;&gt;<br />
 &lt;!--}--&gt;<br />
 &lt;/FORM&gt;<br />
 <br />
 
 <TD width="34%"><!--{htmlsrc--><FORM method=POST>
 <!--{tableid message0-->
-記事を投稿する:
+Submit an article:
 <TEXTAREA name="body" cols=40 rows=10></TEXTAREA>
-<INPUT type=submit name="id__:loginrecord__owner__:set:curtable:h_update:popall:curpage:jump" value="投稿">
+<INPUT type=submit name="id__:loginrecord__owner__:set:curtable:h_update:popall:curpage:jump" value="Submit an article">
 <!--}-->
 </FORM>
 
 <!--}-->
 <TD width="33%"><FORM method=POST>
 <!--{tableid message0-->
-記事を投稿する:
+Submit an article:
 <TEXTAREA name="body" cols=40 rows=10></TEXTAREA>
-<INPUT type=submit name="id__:loginrecord__owner__:set:curtable:h_update:popall:curpage:jump" value="投稿">
+<INPUT type=submit name="id__:loginrecord__owner__:set:curtable:h_update:popall:curpage:jump" value="Submit an article">
 <!--}-->
 </FORM>
 
@@ -44,15 +44,15 @@ Welcome `login__:loginrecord`!
 </TABLE>
 
 <UL>
-	<LI>submitのコマンド中に、「id__:loginrecord__owner__:set」が追加されました。
-	<LI>`:bq`id__:loginrecord`:bq`の部分が、保存したいログインIDです。
-	<LI>「フィールド名__:set」とすると、現在レコードのフィールド値に、直前の値を設定します。
-	<LI>後続するh_updateで、これがデータベースに書き込まれます。
+	<LI>id__:loginrecord__owner__:set&quot; has been added in the submit command.
+	<LI>The `:bq`id__:loginrecord`:bq` part is the login ID you want to save.
+	<LI>Field name__:set&quot; will set the field value of the current record to the previous value.
+	<LI>Subsequent h_update will write this to the database.
 </UL>
 
 
 <UL>
-	<LI>こうすると、ownerフィールドへの設定はサーバ側でおこなわれますから、偽装ができなくなます。
+	<LI>In this way, the owner field is set on the server side and cannot be falsified.
 </UL>
 
 <TABLE border width="96%">
@@ -95,7 +95,7 @@ Welcome `login__:loginrecord`!
 </TABLE>
 
 <UL>
-	<LI>こちらは変更ありません。
+	<LI>No change here.
 </UL>
 
 

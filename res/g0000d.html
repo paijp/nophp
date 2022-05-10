@@ -16,30 +16,30 @@ Welcome `login__:loginrecord`!
 <TH>Display on the browser(can be operated)
 <TR><TD width="33%">&lt;FORM method=POST&gt;<br />
 &lt;!--{tableid message0--&gt;<br />
-記事を投稿する:<br />
+Submit an article:<br />
 &lt;INPUT type=hidden name=&quot;owner&quot; value=&quot;`:bq`id__:loginrecord`:bq`&quot;&gt;<br />
 &lt;TEXTAREA name=&quot;body&quot; cols=40 rows=10&gt;&lt;/TEXTAREA&gt;<br />
-&lt;INPUT type=submit name=&quot;:curtable:h_update:popall:curpage:jump&quot; value=&quot;投稿&quot;&gt;<br />
+&lt;INPUT type=submit name=&quot;:curtable:h_update:popall:curpage:jump&quot; value=&quot;Submit an article&quot;&gt;<br />
 &lt;!--}--&gt;<br />
 &lt;/FORM&gt;<br />
 <br />
 
 <TD width="34%"><!--{htmlsrc--><FORM method=POST>
 <!--{tableid message0-->
-記事を投稿する:
+Submit an article:
 <INPUT type=hidden name="owner" value="`id__:loginrecord`">
 <TEXTAREA name="body" cols=40 rows=10></TEXTAREA>
-<INPUT type=submit name=":curtable:h_update:popall:curpage:jump" value="投稿">
+<INPUT type=submit name=":curtable:h_update:popall:curpage:jump" value="Submit an article">
 <!--}-->
 </FORM>
 
 <!--}-->
 <TD width="33%"><FORM method=POST>
 <!--{tableid message0-->
-記事を投稿する:
+Submit an article:
 <INPUT type=hidden name="owner" value="`id__:loginrecord`">
 <TEXTAREA name="body" cols=40 rows=10></TEXTAREA>
-<INPUT type=submit name=":curtable:h_update:popall:curpage:jump" value="投稿">
+<INPUT type=submit name=":curtable:h_update:popall:curpage:jump" value="Submit an article">
 <!--}-->
 </FORM>
 
@@ -47,15 +47,15 @@ Welcome `login__:loginrecord`!
 </TABLE>
 
 <UL>
-	<LI>INPUTタグでvalue=を設定すると、submit時にそのまま設定されて、データベースに書き込まれます。
-	<LI>前節ではログイン名を書き込んでいましたが、こちらではログインIDを書き込んでいます。
+	<LI>If value= is set in the INPUT tag, it will be set as is on submit and written to the database.
+	<LI>In the previous section, we wrote the login name, but here we write the login ID.
 </UL>
 
 
 <UL>
-	<LI>なお、ここでもhiddenを使ってownerフィールドを設定していますが、この部分はログインできる人なら誰でも偽装できるので、セキュリティが必要な場合は好ましくありません。
-	<LI>このような場合は、コマンドを使って設定すると、この問題を解決できます。
-	<LI>方法については、追って説明します。
+	<LI>Note that the owner field is also set here using hidden, but this is not desirable if security is required, since this part can be spoofed by anyone who can log in.
+	<LI>In such cases, using the command to configure can solve this problem.
+	<LI>Methods will be explained in due course.
 </UL>
 
 <TABLE border width="96%">
@@ -98,8 +98,8 @@ Welcome `login__:loginrecord`!
 </TABLE>
 
 <UL>
-	<LI>`:bq`owner__:r`:bq`は、例えば1になります。
-	<LI>`:bq`login__login__:t_id`:bq`ですが、指定されたレコードID(上記では1)に対応するloginフィールド値を、loginテーブルから取得します。
+	<LI>The `:bq`owner__:r`:bq` will be 1, for example.
+	<LI>`:bq`login__login__:t_id`:bq`, retrieves the corresponding login field value for the specified record ID (1 in the above) from the login table.
 </UL>
 
 

@@ -26,26 +26,26 @@ new message2_table();
 </TABLE>
 
 <UL>
-	<LI>いままで、テーブルには何も登録しないで進めてきました。
-	<LI>この場合、テーブルに登録されていないフィールドにアクセスすると、自動的にmixedというフィールドの中にエスケープして保存されます。
-	<LI>しかしこれでは、SQLのwhereによる検索やorderによるソートができません。
+	<LI>So far, we have proceeded without registering anything in the table.
+	<LI>In this case, if you access a field that is not registered in the table, it is automatically escaped and stored in a field called mixed.
+	<LI>However, this does not allow searching by SQL where or sorting by order.
 </UL>
 
 
 <UL>
-	<LI>上記では、ownerとbodyを実フィールドとして登録しています。
-	<LI>さらに、ownerにはインディックスをつけています(内部的に文字列処理で認識しているため、「/*indexed*/」には空白などは入れないでください)。
-	<LI>ownerとbody以外(これまでの例ではmailなど)は、今までどおりmixedに保存されます。
+	<LI>In the above, owner and body are registered as real fields.
+	<LI>In addition, the owner is indicted (do not put any spaces or other characters in &quot;/*indexed*/&quot; because it is recognized internally by string processing).
+	<LI>All other items except owner and body (e.g., mail in the previous examples) will still be stored in mixed.
 </UL>
 
 
 <UL>
-	<LI>なお、tables.phpでテーブルを追加したりフィールドを追加したりインディックスを追加したりした場合は、?mode=sqlの画面でcreateのボタンを押すと、データベースが更新されます。
+	<LI>Note that if you add tables, fields, or indices in tables.php, the database will be updated by pressing the create button in the ?mode=sql screen.
 </UL>
 <UL><UL>
-	<LI>登録済みのデータは失われません。
-	<LI>追加されたテーブル・フィールド・インディックスがあれば、それらをデータベースに追加します。
-	<LI>すでにmixedに収容されているフィールドが、実フィールドとして追加された場合は、mixedから実フィールドにデータを移動します。
+	<LI>Registered data will not be lost.
+	<LI>Add the added tables/fields/indices, if any, to the database.
+	<LI>If a field already housed in a mixed is added as a real field, the data is moved from the mixed to the real field.
 </UL></UL>
 
 <TABLE border width="96%">
@@ -54,10 +54,10 @@ new message2_table();
 <TH>Display on the browser(can be operated)
 <TR><TD width="33%">&lt;FORM method=POST&gt;<br />
 &lt;!--{tableid message2--&gt;<br />
-記事を投稿する:<br />
+Submit an article:<br />
 &lt;INPUT type=hidden name=&quot;id__:loginrecord__owner__:set&quot;&gt;<br />
 &lt;TEXTAREA name=&quot;body&quot; cols=40 rows=10&gt;&lt;/TEXTAREA&gt;<br />
-&lt;INPUT type=submit name=&quot;:curtable:h_update:popall:curpage:jump&quot; value=&quot;投稿&quot;&gt;<br />
+&lt;INPUT type=submit name=&quot;:curtable:h_update:popall:curpage:jump&quot; value=&quot;Submit an article&quot;&gt;<br />
 &lt;!--}--&gt;<br />
 &lt;/FORM&gt;<br />
 <br />
@@ -74,10 +74,10 @@ new message2_table();
 
 <TD width="34%"><!--{htmlsrc--><FORM method=POST>
 <!--{tableid message2-->
-記事を投稿する:
+Submit an article:
 <INPUT type=hidden name="id__:loginrecord__owner__:set">
 <TEXTAREA name="body" cols=40 rows=10></TEXTAREA>
-<INPUT type=submit name=":curtable:h_update:popall:curpage:jump" value="投稿">
+<INPUT type=submit name=":curtable:h_update:popall:curpage:jump" value="Submit an article">
 <!--}-->
 </FORM>
 
@@ -94,10 +94,10 @@ new message2_table();
 <!--}-->
 <TD width="33%"><FORM method=POST>
 <!--{tableid message2-->
-記事を投稿する:
+Submit an article:
 <INPUT type=hidden name="id__:loginrecord__owner__:set">
 <TEXTAREA name="body" cols=40 rows=10></TEXTAREA>
-<INPUT type=submit name=":curtable:h_update:popall:curpage:jump" value="投稿">
+<INPUT type=submit name=":curtable:h_update:popall:curpage:jump" value="Submit an article">
 <!--}-->
 </FORM>
 
@@ -115,12 +115,12 @@ new message2_table();
 </TABLE>
 
 <UL>
-	<LI>使い方は一緒ですが、内部的には実フィールドが読み書きされています。
+	<LI>The usage is the same, but real fields are read and written internally.
 </UL>
 
 
 <UL>
-	<LI>次節で、このデータを検索します。
+	<LI>We will retrieve this data in the next section.
 </UL>
 
 

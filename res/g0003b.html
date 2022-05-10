@@ -50,22 +50,22 @@ Welcome `login__:loginrecord`!
 </TABLE>
 
 <UL>
-	<LI>dayrowsに起点と出力数を指定すると、日付を変化させながら繰り返しができます。
-	<LI>使用可能なのは、以下の通りです。
+	<LI>Specifying a starting point and the number of outputs in dayrows allows repetition with changing dates.
+	<LI>Available for
 </UL>
 <UL><UL>
-	<LI>t : (1970年1月1日0:00:00UTCからの秒数)
+	<LI>t : (seconds since January 1, 1970 0:00:00 UTC)
 	<LI>Y : 2001
 	<LI>y : 01
 	<LI>m : 01-12
 	<LI>n : 1-12
 	<LI>w : 0-6
-	<LI>W : (週番号)
+	<LI>W : (week number)
 	<LI>d : 01-31
 	<LI>j : 1-31
 </UL></UL>
 <UL>
-	<LI>また、dayrowsの3番目の引数に、:todate形式の文字列を指定すると、`:bq`s__:r`:bq`で参照できます。
+	<LI>Also, if you specify a :todate format string as the third argument of dayrows, you can refer to it by `:bq`s__:r`:bq`.
 </UL>
 
 <TABLE border width="96%">
@@ -246,9 +246,9 @@ Welcome `login__:loginrecord`!
 </TABLE>
 
 <UL>
-	<LI>wdayrowsに起点と出力数と最初の曜日(0-6)を指定すると、日付を変化させながら繰り返しができます。
-	<LI>出力数を負にした場合は、21,22,23,24,25,26,27,14,15,16,17,18,19,20,7,8,9,10,11,12,13のように、1週間単位で逆順に出力します。
-	<LI>また、wdayrowsの4番目の引数に、:todate形式の文字列を指定すると、`:bq`s__:r`:bq`で参照できます。
+	<LI>Specify the starting point, number of outputs, and first day of the week (0-6) in wdayrows to repeat with varying dates.
+	<LI>If the number of outputs is negative, the outputs are in reverse order by week, as in 21,22,23,24,25,26,27,14,15,16,17,18,19,20,7,8,9,10,11,12,13.
+	<LI>Also, if you specify a :todate format string as the fourth argument of wdayrows, you can refer to it by `:bq`s__:r`:bq`.
 </UL>
 
 
