@@ -317,12 +317,12 @@ function	execsql($sql, $array = null, $returnid = 0, $ignoreerror = 0)
 		$array = array();
 	
 	if (@$sys->debugdir !== null) {
-		$debuglog .= "<TABLE border>\n";
+		$debuglog .= "<table border>\n";
 		foreach (explode("?", $sql) as $key => $val) {
-			$debuglog .= "<TR><TH align=right>".htmlspecialchars($val, ENT_QUOTES);
-			$debuglog .= "<TD>".nl2br(htmlspecialchars(@$array[$key], ENT_QUOTES));
+			$debuglog .= '<tr><th align="right"><span style="color:#a00;">'.htmlspecialchars($val, ENT_QUOTES)."</span>";
+			$debuglog .= '<td>'.nl2br(htmlspecialchars(@$array[$key], ENT_QUOTES));
 		}
-		$debuglog .= "</TABLE>\n";
+		$debuglog .= "</table>\n";
 		file_add_contents("{$sys->debugdir}/{$sys->debugfn}.php", $debuglog);
 		$debuglog = "";
 	}
@@ -375,7 +375,7 @@ function	execsql($sql, $array = null, $returnid = 0, $ignoreerror = 0)
 		return array();
 	if (@$sys->debugdir === null)
 		return $list;
-	$debuglog .= "<P><B>results : ".count($list)."</B></P>\n";
+#	$debuglog .= "<P><B>results : ".count($list)."</B></P>\n";
 	file_add_contents("{$sys->debugdir}/{$sys->debugfn}.php", $debuglog);
 	$debuglog = "";
 	
@@ -1132,31 +1132,31 @@ class	recordholder {
 	function	popstack($cmd, $par) {
 		global	$sys;
 		
-		$this->debuglogtable = "<TR>";
-		foreach ($this->stack as $val)
-			$this->debuglogtable .= "<TD>".htmlspecialchars($val, ENT_QUOTES);
-		$this->debuglogtable .= "<TH>:{$cmd}";
-		if (count($this->remaincmds) > 0)
-			$this->debuglogtable .= "<TD>:".implode(":", $this->remaincmds);
-		if (count($this->remainblocks) > 0)
-			$this->debuglogtable .= "<TD>__".implode("__", $this->remainblocks);
-		$this->debuglogtable .= "\n<TR>";
-		$a = explode(" ", $par);
-		for ($i=0; $i<count($this->stack) - count($a); $i++)
-			$this->debuglogtable .= "<TD>";
+#		$this->debuglogtable = "<TR>";
+#		foreach ($this->stack as $val)
+#			$this->debuglogtable .= "<TD>".htmlspecialchars($val, ENT_QUOTES);
+#		$this->debuglogtable .= "<TH>:{$cmd}";
+#		if (count($this->remaincmds) > 0)
+#			$this->debuglogtable .= "<TD>:".implode(":", $this->remaincmds);
+#		if (count($this->remainblocks) > 0)
+#			$this->debuglogtable .= "<TD>__".implode("__", $this->remainblocks);
+#		$this->debuglogtable .= "\n<TR>";
+#		$a = explode(" ", $par);
+#		for ($i=0; $i<count($this->stack) - count($a); $i++)
+#			$this->debuglogtable .= "<TD>";
 		if ($par == "") {
-			$this->debuglogwork = " = {$cmd}()\n";
+#			$this->debuglogwork = " = {$cmd}()\n";
 			return array();
 		}
-		foreach ($a as $val)
-			$this->debuglogtable .= "<TD>(".htmlspecialchars($val).")";
+#		foreach ($a as $val)
+#			$this->debuglogtable .= "<TD>(".htmlspecialchars($val).")";
 		$ret = array();
-		$a = array();
+#		$a = array();
 		foreach (array_reverse(explode(" ", $par)) as $val) {
 			$ret[] = $v = array_pop($this->stack)."";
-			$a[] = "{$val}=$v";
+#			$a[] = "{$val}=$v";
 		}
-		$this->debuglogwork = " = {$cmd}(".implode(" ", array_reverse($a)).")\n";
+#		$this->debuglogwork = " = {$cmd}(".implode(" ", array_reverse($a)).")\n";
 		$a = array_reverse($ret);
 		return $a;
 	}
@@ -1166,21 +1166,22 @@ class	recordholder {
 		
 		if (($tocoverage))
 			@$this->coveragelist[] = implode(" ", $array);
-		$debuglogtail = "";
-		if ($this->debuglogtable == "") {
-			foreach ($this->stack as $val)
-				$this->debuglogtable .= "<TD>".htmlspecialchars($val, ENT_QUOTES);
-			if (count($this->remaincmds) > 0)
-				$debuglogtail .= "<TD>:".implode(":", $this->remaincmds);
-			if (count($this->remainblocks) > 0)
-				$debuglogtail .= "<TD>__".implode("__", $this->remainblocks);
-		}
-		$this->debuglog .= implode(" ", $this->stack);
+#		$debuglogtail = "";
+#		if ($this->debuglogtable == "") {
+#			foreach ($this->stack as $val)
+#				$this->debuglogtable .= "<TD>".htmlspecialchars($val, ENT_QUOTES);
+#			if (count($this->remaincmds) > 0)
+#				$debuglogtail .= "<TD>:".implode(":", $this->remaincmds);
+#			if (count($this->remainblocks) > 0)
+#				$debuglogtail .= "<TD>__".implode("__", $this->remainblocks);
+#		}
+#		$this->debuglog .= implode(" ", $this->stack);
 		foreach ($array as $v) {
-			$this->debuglog .= " [{$v}]";
+#			$this->debuglog .= " [{$v}]";
 			$this->stack[] = $v;
-			$this->debuglogtable .= "<TH>".htmlspecialchars($v, ENT_QUOTES);
+#			$this->debuglogtable .= "<TH>".htmlspecialchars($v, ENT_QUOTES);
 		}
+return;
 		$this->debuglog .= $this->debuglogwork;
 		$debuglog .= <<<EOO
 <TABLE border>
@@ -1349,6 +1350,7 @@ EOO;
 		global	$coverage_list;
 		global	$coverage_id;
 		global	$coverage_count;
+		global	$debuglog;
 		
 		if ($coverage_list === null)
 			return;
@@ -1359,6 +1361,27 @@ EOO;
 			return;
 		if (@$coverage_list[$coverage_id][$s] === null)
 			$coverage_list[$coverage_id][$s] = @$coverage_count[$coverage_id] + 0;
+		
+		$head = "";
+		$pars = "";
+		foreach (explode("__", $this->coveragelist[0]) as $block) {
+			if (!preg_match('/^:/', $block)) {
+				$pars .= "{$block}__ ";
+				continue;
+			}
+			$remaincmds = explode(":", $block);
+			array_shift($remaincmds);
+			foreach ($remaincmds as $cmd) {
+				$head .= '<th><span style="color: #f8f;">'.htmlspecialchars($pars);
+				$pars = "";
+				$head .= "</span>:".htmlspecialchars($cmd);
+			}
+		}
+		$debuglog .= "<table border><tr>{$head}\n<tr>";
+		foreach ($this->coveragelist as $key => $val)
+			if ($key > 0)
+				$debuglog .= "\t".'<td style="text-align: right;">'.htmlspecialchars($val);
+		$debuglog .= "\n</table>\n";
 	}
 	function	parsebq($text = "", $record = null, $issubmit = 0, $initstack = null) {
 		global	$sys;
@@ -1377,8 +1400,8 @@ EOO;
 		
 		$this->coveragelist = array($text);
 		
-		$this->debuglog = "\n\n*** {$text}\n\n";
-		$debuglog .= "<H3>".htmlspecialchars($text)."</H3>\n";
+#		$this->debuglog = "\n\n*** {$text}\n\n";
+#		$debuglog .= "<H3>".htmlspecialchars($text)."</H3>\n";
 		$outputmode = "";
 		$this->remainblocks = explode("__", $text);
 		while (($block = array_shift($this->remainblocks)) !== null) {
@@ -2424,8 +2447,8 @@ EOO;
 				$output .= $s;
 				break;
 		}
-		$this->debuglog .= "\noutput({$output})\n";
-		$debuglog .= "<H3>output(".htmlspecialchars($output, ENT_QUOTES).")</H3>\n";
+#		$this->debuglog .= "\noutput({$output})\n";
+#		$debuglog .= "<H3>output(".htmlspecialchars($output, ENT_QUOTES).")</H3>\n";
 		return $output;
 	}
 	function	parsewithbq($text, $record = null) {
@@ -2436,6 +2459,17 @@ EOO;
 				continue;
 			}
 			$output .= $this->parsebq($chunk, $record);
+		}
+		return $output;
+	}
+	function	parsewithbqhighlight($text, $record = null) {
+		$output = "";
+		foreach (explode("`", $text) as $key => $chunk) {
+			if (($key & 1) == 0) {
+				$output .= $chunk;
+				continue;
+			}
+			$output .= "`?".str_replace("`", "`!", $this->parsebq($chunk, $record))."`?";
 		}
 		return $output;
 	}
@@ -2451,9 +2485,6 @@ EOO;
 			$output .= $s;
 		}
 		return $output;
-	}
-	function	parsewithbqinhtml($text, $record = null) {
-		return $this->parsewithbq($text, $record);
 	}
 	function	parsename($text) {
 		return $this->record->getfield($text);
@@ -2480,7 +2511,7 @@ EOO;
 		$s = "v_".$name;
 		$this->record->$s = $val;
 	}
-	function	parsehtml($html = "") {
+	function	parsehtmlhighlight($html = "") {
 		global	$tablelist;
 		global	$actionrecordholder;
 		global	$beforename;
@@ -2506,12 +2537,12 @@ EOO;
 			if (preg_match('/type="?([a-zA-Z]+)/', $tag, $a))
 				$type = strtolower($a[1]);
 			if (($tagtype == "form")&&(!preg_match("/action=/i", $tag)))
-				$tag .= ' action="?'.$sys->urlquery.'"';
+				$tag .= '`| action="?'.$sys->urlquery.'"`|';
 			else if (($tagtype == "/form")&&($loginrecord !== null))
-				$output .= '<INPUT type=hidden name=submitkey value="'.($loginrecord->v_submitkey).'">'."\n";
+				$output .= '`|<INPUT type=hidden name=submitkey value="'.($loginrecord->v_submitkey).'">`|'."\n";
 			else if (($tagtype == "input")&&($type == "submit") && preg_match('/name="([^"]+)"/', $tag, $a)) {
 				if ($this->prefix != "")
-					$tag = preg_replace('/name="/', 'name="'.$this->prefix, $tag, 1);
+					$tag = preg_replace('/name="/', 'name="`|'.$this->prefix."`|", $tag, 1);
 				$coverage_actionlist[$a[1]] = 1;
 				$postkey = $this->prefix.str_replace(array(" ", "."), "_", $a[1]);
 				if ((ispost())&&(@$_POST[$postkey] !== null)) {
@@ -2528,56 +2559,56 @@ EOO;
 				}
 			} else if (($tagtype == "input")&&($type == "checkbox") && preg_match('/name="([^"]+)/', $tag, $a) && preg_match('/value="([^"]+)/', $tag, $a2)) {
 				if ($this->prefix != "")
-					$tag = preg_replace('/name="/', 'name="'.$this->prefix, $tag, 1);
+					$tag = preg_replace('/name="/', 'name="`|'.$this->prefix."`|", $tag, 1);
 				$this->postname($a[1], $a2[1]);
 				if ($this->parsename($a[1]) == $a2[1])
 					$tag .= " checked";
 			} else if (($tagtype == "input")&&($type == "radio") && preg_match('/name="([^"]+)/', $tag, $a) && preg_match('/value="([^"]+)/', $tag, $a2)) {
 				if ($this->prefix != "")
-					$tag = preg_replace('/name="/', 'name="'.$this->prefix, $tag, 1);
+					$tag = preg_replace('/name="/', 'name="`|'.$this->prefix."`|", $tag, 1);
 				$this->postname($a[1], $a2[1], 1);
 				if ($this->parsename($a[1]) == $a2[1])
 					$tag .= " checked";
 			} else if (($tagtype == "input") && preg_match('/name="([^"]+)"/', $tag, $a) && preg_match('/x-value="([^"]*)"/', $tag, $a2)) {
 				if ($this->prefix != "")
-					$tag = preg_replace('/name="/', 'name="'.$this->prefix, $tag, 1);
+					$tag = preg_replace('/name="/', 'name="`|'.$this->prefix."`|", $tag, 1);
 				$this->postname($a[1], null, 0, $a2[1]);
-				$tag .= ' value="'.htmlspecialchars(@$this->parsename($a[1]), ENT_QUOTES).'"';
+				$tag .= ' `|value="'.htmlspecialchars(@$this->parsename($a[1]), ENT_QUOTES).'"`|';
 			} else if (($tagtype == "input") && preg_match('/name="([^"]+)"/', $tag, $a) && preg_match('/value=/', $tag)) {
 				if ($this->prefix != "")
-					$tag = preg_replace('/name="/', 'name="'.$this->prefix, $tag, 1);
+					$tag = preg_replace('/name="/', 'name="`|'.$this->prefix."`|", $tag, 1);
 				$this->postname($a[1]);
 			} else if (($tagtype == "input") && preg_match('/name="([^"]+)"/', $tag, $a)) {
 				if ($this->prefix != "")
-					$tag = preg_replace('/name="/', 'name="'.$this->prefix, $tag, 1);
+					$tag = preg_replace('/name="/', 'name="`|'.$this->prefix."`|", $tag, 1);
 				$this->postname($a[1]);
-				$tag .= ' value="'.htmlspecialchars(@$this->parsename($a[1]), ENT_QUOTES).'"';
+				$tag .= ' `|value="'.htmlspecialchars(@$this->parsename($a[1]), ENT_QUOTES).'"`|';
 			} else if (($tagtype == "select") && preg_match('/name="([^"]+)"/', $tag, $a) && preg_match('/x-value="([^"]*)"/', $tag, $a2)) {
 				if ($this->prefix != "")
-					$tag = preg_replace('/name="/', 'name="'.$this->prefix, $tag, 1);
+					$tag = preg_replace('/name="/', 'name="`|'.$this->prefix."`|", $tag, 1);
 				$beforename = $a[1];
 				$beforenopost = $a2[1];
 			} else if (($tagtype == "select") && preg_match('/name="([^"]+)"/', $tag, $a)) {
 				if ($this->prefix != "")
-					$tag = preg_replace('/name="/', 'name="'.$this->prefix, $tag, 1);
+					$tag = preg_replace('/name="/', 'name="`|'.$this->prefix."`|", $tag, 1);
 				$beforename = $a[1];
 				$beforenopost = null;
 			} else if (($tagtype == "option") && preg_match('/value="([^"]*)"/', $tag, $a)) {
 				$this->postname($beforename, $a[1], 1, $beforenopost);
 				if (@$this->parsename($beforename) == $a[1])
-					$tag .= " selected";
+					$tag .= " `|selected`|";
 			} else if (($tagtype == "textarea") && preg_match('/name="([_0-9A-Za-z]+)"/', $tag, $a) && preg_match('/x-value="([^"]*)"/', $tag, $a2)) {
 				if ($this->prefix != "")
-					$tag = preg_replace('/name="/', 'name="'.$this->prefix, $tag, 1);
+					$tag = preg_replace('/name="/', 'name="`|'.$this->prefix."`|", $tag, 1);
 				$this->postname($a[1], null, 0, $a2[1]);
 				if ($body == "")
-					$body = htmlspecialchars(@$this->parsename($a[1]), ENT_QUOTES);
+					$body = "`|".htmlspecialchars(@$this->parsename($a[1]), ENT_QUOTES)."`|";
 			} else if (($tagtype == "textarea") && preg_match('/name="([_0-9A-Za-z]+)"/', $tag, $a)) {
 				if ($this->prefix != "")
-					$tag = preg_replace('/name="/', 'name="'.$this->prefix, $tag, 1);
+					$tag = preg_replace('/name="/', 'name="`|'.$this->prefix."`|", $tag, 1);
 				$this->postname($a[1]);
 				if ($body == "")
-					$body = htmlspecialchars(@$this->parsename($a[1]), ENT_QUOTES);
+					$body = "`|".htmlspecialchars(@$this->parsename($a[1]), ENT_QUOTES)."`|";
 			}
 			if ($tag != "")
 				$output .= "<{$tag}>";
@@ -2693,6 +2724,8 @@ class	commandparser {		# volatile object
 		$ret = "";
 		if ($this->parent === null) {
 			$ret .= '<ul style="background:#c0c0ff">';
+			$id = $this->gettreecoverageid($index);
+			$ret .= '<a href="?coverage=1#'.$id.'" name="'.$id.'">coverage</a>';
 			foreach ($this->children as $child)
 				$ret .= $child->gettree($index);
 			$ret .= "</ul>\n";
@@ -2720,6 +2753,19 @@ class	commandparser {		# volatile object
 			foreach ($this->children as $child)
 				$ret .= $child->gettree($index);
 			$ret .= "</ul>\n";
+		}
+		return $ret;
+	}
+	function	gettreecoverageid($index) {
+		if ($index == 0)
+			return 0;
+		if ($index < $this->index)
+			return 0;
+		$ret = $this->coverage_id;
+		foreach ($this->children as $child) {
+			$id = $child->gettreecoverageid($index);
+			if ($ret < $id)
+				$ret = $id;
 		}
 		return $ret;
 	}
@@ -2766,19 +2812,63 @@ class	commandparserhtml extends commandparser {
 		$debuglog .= $rootparser->gettree($this->index);
 		
 		if (($this->first)) {
-			$debuglog .= '<TABLE><TR><TD style="width:100%; background:#c0ffc0;"><PRE>'.debugbq($this->par).'</PRE><TD>'.$sys->target.'.html</TABLE>';
+			$debuglog .= '<pre style="margin:0; background:#c0ffc0;">';
 			$this->first = 0;
 		} else {
-			$debuglog .= '<TABLE><TR><TD style="width:100%; background:#c0c0c0;"><PRE>'.debugbq($this->par).'</PRE><TD>'.$sys->target.'.html</TABLE>';
+			$debuglog .= '<pre style="margin:0; background:#c0c0c0;">';
 		}
-		$ret = $rh->parsehtml($rh->parsewithbqinhtml($this->par, $record));
-
-		$debuglog .= '<TABLE><TR><TD>-------';
+		foreach (explode("`", $this->par) as $key => $chunk) {
+			$chunk = htmlspecialchars($chunk);
+			if (($key & 1))
+				$debuglog .= '<b style="color: #ff0000;">`'.$chunk.'`</b>';
+			else
+				$debuglog .= $chunk;
+		}
+		$debuglog .= '</pre>';
+		
+		$highlight = $rh->parsehtmlhighlight($rh->parsewithbqhighlight($this->par, $record));
+		
 		if ($phase == 0)
-			$debuglog .= 'X <TD style="width:100%; background:#ffc0c0;">';
+			$debuglog .= '<pre style="margin:0; background:#ffc0c0;">';
 		else
-			$debuglog .= '&gt; <TD style="width:100%; background:#ffffc0;">';
-		$debuglog .= '<PRE>'.htmlspecialchars($ret).'</PRE></TABLE>';
+			$debuglog .= '<pre style="margin:0; background:#ffffc0;">';
+		
+		$ret = "";
+		$flag = 0;
+		foreach (explode("`", $highlight) as $key => $val) {
+			if ($key == 0) {
+				$debuglog .= htmlspecialchars($val);
+				$ret .= $val;
+				continue;
+			}
+			$s = "";
+			switch (substr($val, 0, 1)) {
+				case	"!":
+					$s = "`";
+					break;
+				case	"?":
+					$flag ^= 1;
+					break;
+				case	"|":
+					$flag ^= 2;
+					break;
+			}
+			$sclose = "";
+			switch ($flag) {
+				case	1:
+				case	3:
+					$debuglog .= '<b style="color: #ff0000;">';
+					$sclose = "</b>";
+					break;
+				case	2:
+					$debuglog .= '<span style="color: #0000ff;">';
+					$sclose = "</span>";
+					break;
+			}
+			$debuglog .= htmlspecialchars($s.substr($val, 1)).$sclose;
+			$ret .= $s.substr($val, 1);
+		}
+		$debuglog .= '</pre>';
 		
 		return $ret;
 	}
@@ -2912,7 +3002,7 @@ class	daterecord extends rootrecord {
 
 class	commandparser_dayrows extends commandparser {
 	function	parsehtmlinner($rh = null, $record = null) {
-		$a = explode(" ", $rh->parsewithbqinhtml($this->par, $record), 3);
+		$a = explode(" ", $rh->parsewithbq($this->par, $record), 3);
 		$t = $a[0] + 0;
 		if (($count = @$a[1]) == 0)
 			$count = 1;
@@ -2935,7 +3025,7 @@ class	commandparser_dayrows extends commandparser {
 
 class	commandparser_wdayrows extends commandparser {
 	function	parsehtmlinner($rh = null, $record = null) {
-		$a = explode(" ", $rh->parsewithbqinhtml($this->par, $record), 4);
+		$a = explode(" ", $rh->parsewithbq($this->par, $record), 4);
 		$t = $a[0] + 0;
 		if (($count = @$a[1]) == 0)
 			$count = 1;
@@ -3517,20 +3607,6 @@ $debuglog .= <<<EOO
 </TABLE>
 
 EOO;
-
-
-function	debugbq($s)
-{
-	$ret = "";
-	foreach (explode("`", $s) as $key => $chunk) {
-		$chunk = htmlspecialchars($chunk);
-		if (($key & 1))
-			$ret .= '<B style="color: #ff0000;">`'.$chunk.'`</B>';
-		else
-			$ret .= $chunk;
-	}
-	return $ret;
-}
 
 
 $recordholderlist = array();
