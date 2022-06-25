@@ -39,6 +39,30 @@ $a = explode("?", @$_SERVER["REQUEST_URI"], 2);
 $sys->url .= @$_SERVER["HTTP_HOST"].$a[0];
 $sys->urlquery = @$a[1];
 
+if (($logview_snapshot)) {
+	$output = "";
+	foreach (explode('<pre class="outphase1"', file_get_contents("{$logview_fn}.php")) as $key => $val) {
+		if ($key == 0)
+			continue;
+		$a = explode(">", $val, 2);
+		$a2 = explode("</pre>", @$a[1], 2);
+		$output .= html_entity_decode(strip_tags($a2[0]));
+	}
+	if (count($a = preg_split("/<HEAD>/i", $output, 2)) == 2) {
+		list($s0, $s1) = $a;
+		$output = <<<EOO
+{$s0}<HEAD><BASE href="{$logview_urlbase}/nopost/snapshot.html">
+{$s1}
+EOO;
+	} else {
+		$output = <<<EOO
+<HEAD><BASE href="{$logview_urlbase}/nopost/snapshot.html"></HEAD>
+{$output}
+EOO;
+	}
+	print $output;
+	die();
+}
 if (($logview_coverage)) {
 	if (!is_readable($fn = "{$logview_coverage}.log"))
 		die();
@@ -317,7 +341,8 @@ function	execsql($sql, $array = null, $returnid = 0, $ignoreerror = 0)
 		$array = array();
 	
 	if (@$sys->debugdir !== null) {
-		$debuglog .= "<table border>\n";
+#		$debuglog .= "<table border>\n";
+		$debuglog .= "<table>\n";
 		foreach (explode("?", $sql) as $key => $val) {
 			$debuglog .= '<tr><th align="right"><span style="color:#a00;">'.htmlspecialchars($val, ENT_QUOTES)."</span>";
 			$debuglog .= '<td>'.nl2br(htmlspecialchars(@$array[$key], ENT_QUOTES));
@@ -622,14 +647,15 @@ EOO;
 		
 		if (@$sys->debugdir == "")
 			return;
-		$debuglog .= "<TABLE border><TR><TH colspan=2>{$this->tablename}\n";
+		$debuglog .= '<table border><tr><th colspan="2" style="background:#aff;">'."{$this->tablename}\n";
+		$debuglog .= "<tr><th>id<td>".htmlspecialchars($this->id)."\n";
 		foreach (get_object_vars($this) as $key => $val)
 			if (preg_match('/^v_(.*)/', $key, $a2)) {
 				$s = htmlspecialchars($a2[1], ENT_QUOTES);
 				$s2 = htmlspecialchars($val);
-				$debuglog .= "<TR><TH>{$s}<TD>{$s2}\n";
+				$debuglog .= "<tr><th>{$s}<td>{$s2}\n";
 			}
-		$debuglog .= "</TABLE>\n";
+		$debuglog .= "</table>\n";
 	}
 }
 
@@ -2812,10 +2838,10 @@ class	commandparserhtml extends commandparser {
 		$debuglog .= $rootparser->gettree($this->index);
 		
 		if (($this->first)) {
-			$debuglog .= '<pre style="margin:0; background:#c0ffc0;">';
+			$debuglog .= '<pre class="srcpartfirst" style="margin:0; background:#c0ffc0;">';
 			$this->first = 0;
 		} else {
-			$debuglog .= '<pre style="margin:0; background:#c0c0c0;">';
+			$debuglog .= '<pre class="srcpartnotfirst" style="margin:0; background:#c0c0c0;">';
 		}
 		foreach (explode("`", $this->par) as $key => $chunk) {
 			$chunk = htmlspecialchars($chunk);
@@ -2829,9 +2855,9 @@ class	commandparserhtml extends commandparser {
 		$highlight = $rh->parsehtmlhighlight($rh->parsewithbqhighlight($this->par, $record));
 		
 		if ($phase == 0)
-			$debuglog .= '<pre style="margin:0; background:#ffc0c0;">';
+			$debuglog .= '<pre class="outphase0" style="margin:0; background:#ffc0c0;">';
 		else
-			$debuglog .= '<pre style="margin:0; background:#ffffc0;">';
+			$debuglog .= '<pre class="outphase1" style="margin:0; background:#ffffc0;">';
 		
 		$ret = "";
 		$flag = 0;
@@ -3414,6 +3440,9 @@ if (!preg_match('%^/([^/]*)/([0-9A-Za-z]+)[.]html$%', $a[3], $a2)) {
 $orgdebugfn = $a2[1];
 $sys->target = $a2[2];
 
+if ($orgdebugfn == "nopost")
+	die("<h1>view only.</h1>");
+
 if (($s = @$_POST[":reportbody"]) !== null) {
 	$body = $s."";
 	$link = "";
@@ -3573,11 +3602,17 @@ if ((@\$isinclude))
 	return;
 \$logview_fn = "{$sys->debugfn}";
 \$logview_coverage = "{$targethash}.{$tableshash}";
+\$logview_urlbase = "{$sys->urlbase}";
+\$logview_targetpath = "{$sys->htmlbase}/{$sys->target}.html";
 if ((@\$_GET["coverage"]))
 	require("{$fn_self}");
+if ((@\$_GET["snapshot"])) {
+	\$logview_snapshot = 1;
+	require("{$fn_self}");
+}
 ?>
 orgdebuglog: <A href="{$orgdebugfn}.php">{$orgdebugfn}.php</A> from {$ip} ({$ua})
-<br /><a href="?coverage=1">coverage</a>
+<br /><a href="?coverage=1">coverage</a> <a href="?snapshot=1">view snapshot</a>
 <TABLE border>
 <TR><TH colspan=2>GET
 
@@ -3613,7 +3648,7 @@ $recordholderlist = array();
 $actionrecordholder = null;
 
 if (@$sys->debugdir !== null) {
-	$debuglog .= "<h1>* source</h1>";
+	$debuglog .= '<h1>* source</h1><div class="srcall">';
 	foreach (preg_split("/\r\n|\r|\n/", $targethtml) as $line) {
 		$debuglog .= '<p style="margin:0; background:#c0c0c0;">';
 		foreach (explode("<!--{", $line) as $k0 => $v0) {
@@ -3639,6 +3674,7 @@ if (@$sys->debugdir !== null) {
 		}
 		$debuglog .= "</p>\n";
 	}
+	$debuglog .= "</div>\n";
 }
 
 for ($phase=0; $phase<2; $phase++) {
