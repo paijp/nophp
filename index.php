@@ -39,6 +39,131 @@ $a = explode("?", @$_SERVER["REQUEST_URI"], 2);
 $sys->url .= @$_SERVER["HTTP_HOST"].$a[0];
 $sys->urlquery = @$a[1];
 
+if (($logview_coverage)) {
+	if (!is_readable($fn = "{$logview_coverage}.log"))
+		die();
+	$content = file_get_contents($fn);
+	$list = array();
+	$actionid = -1;
+	$actionlist = array();
+	foreach (preg_split("/\r\n|\r|\n/", $content) as $line) {
+		if (count($a = explode("\t", $line, 4)) < 3)
+			continue;
+		$key = $a[1] + 0;
+		$key2 = "_".$a[2];
+		if (count($a) == 3) {
+			$actionid = $key;
+			$actionlist[$key2] = 1;
+			continue;
+		}
+		$key3 = "_".$a[3];
+		if (@$list[$key][$key2][$key3] === null)
+			$list[$key][$key2][$key3] = $a[0];
+	}
+	
+	$head = null;
+	$titlelist = array();
+	foreach($list[0]["_0"] as $key => $val) {
+		if ($head === null) {
+			$head = "";
+			print "<table border>\n";
+			foreach (explode("\t", substr($key, 1)) as $k => $v) {
+				if (($k & 1))
+					continue;
+				$head .= '<tr><th colspan="'.($k / 2 + 2).'" style="text-align: right;';
+				if ((($k / 2) % 6) < 3)
+					$head .= " background: #8f8;";
+				$head .= '">';
+				list($l, $s) = explode("_", base64_decode($v), 2);
+				$titlelist[$l] = $s;
+				$head .= '<a href="#'.$l.'">'.htmlspecialchars($s)."</a>\n";
+			}
+			print $head;
+		}
+		$fn = htmlspecialchars($val, ENT_QUOTES);
+		print '<tr><th style="text-align: left;"><a href="'.$fn.'.php">'."{$fn}\n";
+		foreach (explode("\t", substr($key, 1)) as $k => $v)
+			if (($k & 1)) {
+				print "\t<td";
+				if ((($k / 2) % 6) < 3)
+					print ' style="background: #8f8;"';
+				print ">";
+				if (($s = base64_decode($v)) == 0)
+					$s = "";
+				print htmlspecialchars($s)."\n";
+			}
+	}
+	if ($head !== null)
+		print "{$head}</table>\n";
+	
+	ksort($list);
+	foreach ($list as $id => $val) {
+		if ($id == 0)
+			continue;
+		print '<h2><a name="'.$id.'">'.htmlspecialchars(@$titlelist[$id])."</a></h2>\n";
+		foreach ($val as $key2 => $val2) {
+			if ($id == $actionid)
+				$actionlist[$key2] = 0;
+			$head = "";
+			$pars = "";
+			foreach (explode("__", base64_decode($key2)) as $block) {
+				if (!preg_match('/^:/', $block)) {
+					$pars .= "{$block}__ ";
+					continue;
+				}
+				$remaincmds = explode(":", $block);
+				array_shift($remaincmds);
+				foreach ($remaincmds as $cmd) {
+					$head .= '<th><span style="color: #f8f;">'.htmlspecialchars($pars);
+					$pars = "";
+					$head .= "</span>:".htmlspecialchars($cmd);
+				}
+			}
+			print "<table border><tr><th>\n{$head}";
+			foreach ($val2 as $key3 => $val3) {
+				$a = explode("#", $val3);
+				$fn = htmlspecialchars($a[0], ENT_QUOTES);
+				$frag = htmlspecialchars($a[1], ENT_QUOTES);
+				print '<tr><th style="text-align: left;"><a href="'.$fn.'.php#'.$id.".".$frag.'">'."{$fn}#{$frag}\n";
+				foreach (explode("\t", $key3) as $k => $v)
+					print "\t".'<td style="text-align: right;">'.htmlspecialchars(base64_decode($v));
+			}
+			print "<tr><th>\n{$head}</table>\n<p></p>\n";
+		}
+	}
+	if ($id != $actionid)
+		print '<h2><a name="'.$actionid.'">'."(action)</a></h2>\n";
+	foreach ($actionlist as $key2 => $val2) {
+		if ($val2 == 0)
+			continue;
+		$head = "";
+		$pars = "";
+		foreach (explode("__", base64_decode($key2)) as $block) {
+			if (!preg_match('/^:/', $block)) {
+				$pars .= "{$block}__ ";
+				continue;
+			}
+			$remaincmds = explode(":", $block);
+			array_shift($remaincmds);
+			foreach ($remaincmds as $cmd) {
+				$head .= '<th><span style="color: #f8f;">'.htmlspecialchars($pars);
+				$pars = "";
+				$head .= "</span>:".htmlspecialchars($cmd);
+			}
+		}
+		print '<table border><tr><th><span style="color: #aaa;">(no log)</span>'."\n{$head}";
+#		print '<tr><th><span style="color: #aaa;">(no log)</span>'."\n{$head}</table>\n<p></p>\n";
+		print "</table>\n<p></p>\n";
+	}
+	die();
+}
+$coverage_list = null;
+$coverage_nextid = 0;
+$coverage_id = 0;
+$coverage_title = array();
+$coverage_count = array();
+$coverage_actionlist = array();
+
 $sys->importlist = array();
 
 list($m, $s) = explode(" ", microtime());
@@ -53,14 +178,17 @@ if (!is_dir(@$sys->debugdir)) {
 }
 
 
-function	file_add_contents($fn, $s)
+function	file_add_contents($fn, $s, $timestamp = 1)
 {
 	if ($fn == "")
 		return;
 	if (($fp = @fopen($fn, "a")) === false)
 		return;
 	$a = explode(" ", microtime());
-	fputs($fp, "<!-- ".date("ymd_His", $a[1] + 0).substr($a[0], 1)." -->{$s}");
+	if (($timestamp))
+		fputs($fp, "<!-- ".date("ymd_His", $a[1] + 0).substr($a[0], 1)." -->{$s}");
+	else
+		fputs($fp, $s);
 	fclose($fp);
 }
 
@@ -75,6 +203,11 @@ function	log_die($message = "")
 	global	$debuglog;
 	global	$debugtablelist;
 	global	$loginrecord;
+	global	$targethash;
+	global	$tableshash;
+	global	$coverage_list;
+	global	$coverage_title;
+	global	$coverage_count;
 	
 	if (($loginrecord))
 		execsql("commit;");
@@ -158,6 +291,17 @@ EOO;
 		$debuglog .= "</TABLE>\n";
 		file_add_contents("{$debugdir0}/{$sys->debugfn}.php", $debuglog);
 		$debuglog = "";
+	}
+	if ($coverage_list !== null) {
+		$s0 = $sys->debugfn."\t0\t0";
+		foreach ($coverage_title as $k => $v)
+			if ($v != "")
+				$s0 .= "\t".base64_encode($v)."\t".base64_encode(@$coverage_count[$k] + 0);
+		$s0 .= "\n";
+		foreach ($coverage_list as $key => $val)
+			foreach ($val as $key2 => $val2)
+				$s0 .= "{$sys->debugfn}#{$val2}\t{$key}{$key2}\n";
+		file_add_contents("{$debugdir0}/{$targethash}.{$tableshash}.log", $s0."\n", 0);
 	}
 	die($message);
 }
@@ -979,6 +1123,7 @@ class	recordholder {
 	var	$prefix = "";
 	var	$methodlist = null;
 	var	$recordmethodlist = null;
+	var	$coveragelist = null;
 	function	__construct($rh = null, $record = null, $tablename = "", $prefix = "", $par = "") {
 		$this->record = new rootrecord();
 		$this->prefix = $prefix;
@@ -1015,10 +1160,12 @@ class	recordholder {
 		$a = array_reverse($ret);
 		return $a;
 	}
-	function	pushstack($array) {
+	function	pushstack($array, $tocoverage = 1) {
 		global	$sys;
 		global	$debuglog;
 		
+		if (($tocoverage))
+			@$this->coveragelist[] = implode(" ", $array);
 		$debuglogtail = "";
 		if ($this->debuglogtable == "") {
 			foreach ($this->stack as $val)
@@ -1063,7 +1210,7 @@ EOO;
 		
 		if ($rh === null) {
 			list($s1) = $this->popstack($cmd, "table");
-			$this->pushstack(array());
+			$this->pushstack(array(), 0);
 			if (($rh = @$recordholderlist[$s1]) === null)
 				return;
 		}
@@ -1127,7 +1274,7 @@ EOO;
 		
 		if ($t === null) {
 			list($s1) = $this->popstack($cmd, "table:t");
-			$this->pushstack(array());
+			$this->pushstack(array(), 0);
 			if (($t = @$tablelist[$s1]) === null)
 				return;
 		}
@@ -1165,7 +1312,7 @@ EOO;
 		global	$tablelist;
 		
 		list($s1) = $this->popstack($cmd, "stable");
-		$this->pushstack(array());
+		$this->pushstack(array(), 0);
 		
 		$t = @$tablelist["simple"]->gettable($s1);
 		if ($t->methodlist === null) {
@@ -1198,6 +1345,21 @@ EOO;
 			return;
 		}
 	}
+	function	flush_coverage() {
+		global	$coverage_list;
+		global	$coverage_id;
+		global	$coverage_count;
+		
+		if ($coverage_list === null)
+			return;
+		$s = "";
+		foreach ($this->coveragelist as $val)
+			$s .= "\t".base64_encode($val);
+		if ($s == "")
+			return;
+		if (@$coverage_list[$coverage_id][$s] === null)
+			$coverage_list[$coverage_id][$s] = @$coverage_count[$coverage_id] + 0;
+	}
 	function	parsebq($text = "", $record = null, $issubmit = 0, $initstack = null) {
 		global	$sys;
 		global	$debuglog;
@@ -1212,13 +1374,16 @@ EOO;
 		$this->stack = array();
 		if ($initstack !== null)
 			$this->stack = $initstack;
+		
+		$this->coveragelist = array($text);
+		
 		$this->debuglog = "\n\n*** {$text}\n\n";
 		$debuglog .= "<H3>".htmlspecialchars($text)."</H3>\n";
 		$outputmode = "";
 		$this->remainblocks = explode("__", $text);
 		while (($block = array_shift($this->remainblocks)) !== null) {
 			if (!preg_match('/^:/', $block)) {
-				$this->pushstack(array($block));
+				$this->pushstack(array($block), 0);
 				continue;
 			}
 			$this->remaincmds = explode(":", $block);
@@ -1251,6 +1416,7 @@ EOO;
 							if (($tablename2 = @$sys->$s) === null) {
 								$this->debuglog .= "\not registed({$cmd})\n\n";
 								$debuglog .= "<H3>not registed(".htmlspecialchars($cmd, ENT_QUOTES)." in ".get_class($this).")</H3>\n";
+								$this->pushstack(array());
 								break;
 							}
 							list($tablename) = $this->popstack($cmd, "table");
@@ -1316,6 +1482,7 @@ EOO;
 						if (($s = @$funclist["bq_{$cmd}"]) === null) {
 							$this->debuglog .= "\nunknown command({$cmd})\n\n";
 							$debuglog .= "<H3>unknown command(".htmlspecialchars($cmd, ENT_QUOTES)." in ".get_class($this).")</H3>\n";
+							$this->pushstack(array());
 							break;
 						}
 						$a = explode("__", $s);
@@ -1507,6 +1674,7 @@ EOO;
 ## また、すべてをrawurlエンコードする場合よりも、出力を少なくすることが可能です。
 					case	"raw":
 						$outputmode = $cmd;
+						$this->pushstack(array());
 						break;
 					case	"cat":
 ## スタックから、文字列を2つ取り出して、結合し、それをスタックに積みます。
@@ -1734,11 +1902,11 @@ EOO;
 						list($s1) = $this->popstack($cmd, "val");
 						$this->pushstack(array());
 						if ($s1 != 0) {
+							$this->flush_coverage();
 							$this->debuglog .= "\nBREAK.\n";
 							$debuglog .= "<H3>BREAK</H3>\n";
 							return "";
 						}
-						$this->pushstack(array());
 						break;
 					case	"iandbreak":
 ## スタックの文字列が、空文字列か「0」ならばそのまま継続し、そうでなければそこで式の評価を終了して空文字列を返します。
@@ -1748,11 +1916,11 @@ EOO;
 						list($s1) = $this->popstack($cmd, "val");
 						$this->pushstack(array());
 						if ($s1 != 0) {
+							$this->flush_coverage();
 							$this->debuglog .= "\nBREAK.\n";
 							$debuglog .= "<H3>BREAK</H3>\n";
 							return "";
 						}
-						$this->pushstack(array($s1));
 						break;
 					case	"orbreak":
 ## スタックから文字列を1つ取り出し、空文字列か「0」ならばそこで式の評価を終了して空文字列を返し、そうでなければそのまま継続します。
@@ -1762,11 +1930,11 @@ EOO;
 						list($s1) = $this->popstack($cmd, "val");
 						$this->pushstack(array());
 						if ($s1 == 0) {
+							$this->flush_coverage();
 							$this->debuglog .= "\nBREAK.\n";
 							$debuglog .= "<H3>BREAK</H3>\n";
 							return "";
 						}
-						$this->pushstack(array());
 						break;
 					case	"iorbreak":
 ## スタックの文字列が、空文字列か「0」ならばそこで式の評価を終了して空文字列を返し、そうでなければそのまま継続します。
@@ -1776,16 +1944,17 @@ EOO;
 						list($s1) = $this->popstack($cmd, "val");
 						$this->pushstack(array());
 						if ($s1 == 0) {
+							$this->flush_coverage();
 							$this->debuglog .= "\nBREAK.\n";
 							$debuglog .= "<H3>BREAK</H3>\n";
 							return "";
 						}
-						$this->pushstack(array($s1));
 						break;
 					case	"break":
 ## そこで式の評価を終了して空文字列を返します。
 						$this->popstack($cmd, "");
 						$this->pushstack(array());
+						$this->flush_coverage();
 						$this->debuglog .= "\nBREAK.\n";
 						$debuglog .= "<H3>BREAK</H3>\n";
 						return "";
@@ -1797,6 +1966,7 @@ EOO;
 						if ($s1 != 0) {
 							$this->stack = array();
 							$this->pushstack(array(0));
+							$this->flush_coverage();
 							$this->debuglog .= "\nRETURN(".$this->stack[0].")\n";
 							$debuglog .= "<H3>RETURN(".$this->stack[0].")</H3>\n";
 							return $this->stack[0];
@@ -1811,6 +1981,7 @@ EOO;
 						if ($s1 == 0) {
 							$this->stack = array();
 							$this->pushstack(array(0));
+							$this->flush_coverage();
 							$this->debuglog .= "\nRETURN(".$this->stack[0].")\n";
 							$debuglog .= "<H3>RETURN(".$this->stack[0].")</H3>\n";
 							return $this->stack[0];
@@ -1825,6 +1996,7 @@ EOO;
 						if ($s1 != 0) {
 							$this->stack = array();
 							$this->pushstack(array(1));
+							$this->flush_coverage();
 							$this->debuglog .= "\nRETURN(".$this->stack[0].")\n";
 							$debuglog .= "<H3>RETURN(".$this->stack[0].")</H3>\n";
 							return $this->stack[0];
@@ -1839,6 +2011,7 @@ EOO;
 						if ($s1 == 0) {
 							$this->stack = array();
 							$this->pushstack(array(1));
+							$this->flush_coverage();
 							$this->debuglog .= "\nRETURN(".$this->stack[0].")\n";
 							$debuglog .= "<H3>RETURN(".$this->stack[0].")</H3>\n";
 							return $this->stack[0];
@@ -1853,6 +2026,7 @@ EOO;
 						if ($s1 != 0) {
 							$this->stack = array();
 							$this->pushstack(array(2));
+							$this->flush_coverage();
 							$this->debuglog .= "\nRETURN(".$this->stack[0].")\n";
 							$debuglog .= "<H3>RETURN(".$this->stack[0].")</H3>\n";
 							return $this->stack[0];
@@ -1867,6 +2041,7 @@ EOO;
 						if ($s1 == 0) {
 							$this->stack = array();
 							$this->pushstack(array(2));
+							$this->flush_coverage();
 							$this->debuglog .= "\nRETURN(".$this->stack[0].")\n";
 							$debuglog .= "<H3>RETURN(".$this->stack[0].")</H3>\n";
 							return $this->stack[0];
@@ -1881,6 +2056,7 @@ EOO;
 						if ($s1 != 0) {
 							$this->stack = array();
 							$this->pushstack(array(3));
+							$this->flush_coverage();
 							$this->debuglog .= "\nRETURN(".$this->stack[0].")\n";
 							$debuglog .= "<H3>RETURN(".$this->stack[0].")</H3>\n";
 							return $this->stack[0];
@@ -1895,6 +2071,7 @@ EOO;
 						if ($s1 == 0) {
 							$this->stack = array();
 							$this->pushstack(array(3));
+							$this->flush_coverage();
 							$this->debuglog .= "\nRETURN(".$this->stack[0].")\n";
 							$debuglog .= "<H3>RETURN(".$this->stack[0].")</H3>\n";
 							return $this->stack[0];
@@ -1909,6 +2086,7 @@ EOO;
 						if ($s1 != 0) {
 							$this->stack = array();
 							$this->pushstack(array(4));
+							$this->flush_coverage();
 							$this->debuglog .= "\nRETURN(".$this->stack[0].")\n";
 							$debuglog .= "<H3>RETURN(".$this->stack[0].")</H3>\n";
 							return $this->stack[0];
@@ -1923,6 +2101,7 @@ EOO;
 						if ($s1 == 0) {
 							$this->stack = array();
 							$this->pushstack(array(4));
+							$this->flush_coverage();
 							$this->debuglog .= "\nRETURN(".$this->stack[0].")\n";
 							$debuglog .= "<H3>RETURN(".$this->stack[0].")</H3>\n";
 							return $this->stack[0];
@@ -1932,6 +2111,8 @@ EOO;
 					case	"home":
 ## 式の評価を終了してルートページにリダイレクトします。
 						$this->popstack($cmd, "");
+						$this->pushstack(array("HOME"));
+						$this->flush_coverage();
 						$this->debuglog .= "\nHOME\n";
 						$debuglog .= "<H3>HOME</H3>\n";
 						if (@$sys->debugdir !== null) {
@@ -1946,6 +2127,8 @@ EOO;
 ## 一方、`1__:andhome__a`はルートページにリダイレクトします(__a以降は評価されません)。
 						list($s1) = $this->popstack($cmd, "val");
 						if ($s1 != 0) {
+							$this->pushstack(array("HOME"));
+							$this->flush_coverage();
 							$this->debuglog .= "\nHOME\n";
 							$debuglog .= "<H3>HOME</H3>\n";
 							if (@$sys->debugdir !== null) {
@@ -1963,6 +2146,8 @@ EOO;
 ## 一方、`1__:iandhome`はルートページにリダイレクトします(以降は評価されません)。
 						list($s1) = $this->popstack($cmd, "val");
 						if ($s1 != 0) {
+							$this->pushstack(array("HOME"));
+							$this->flush_coverage();
 							$this->debuglog .= "\nHOME\n";
 							$debuglog .= "<H3>HOME</H3>\n";
 							if (@$sys->debugdir !== null) {
@@ -1980,6 +2165,8 @@ EOO;
 ## 一方、`0__:orhome__a`はルートページにリダイレクトします(__a以降は評価されません)。
 						list($s1) = $this->popstack($cmd, "val");
 						if ($s1 == 0) {
+							$this->pushstack(array("HOME"));
+							$this->flush_coverage();
 							$this->debuglog .= "\nHOME\n";
 							$debuglog .= "<H3>HOME</H3>\n";
 							if (@$sys->debugdir !== null) {
@@ -1997,6 +2184,8 @@ EOO;
 ## 一方、`0__:iorhome`はルートページにリダイレクトします(以降は評価されません)。
 						list($s1) = $this->popstack($cmd, "val");
 						if ($s1 == 0) {
+							$this->pushstack(array("HOME"));
+							$this->flush_coverage();
 							$this->debuglog .= "\nHOME\n";
 							$debuglog .= "<H3>HOME</H3>\n";
 							if (@$sys->debugdir !== null) {
@@ -2028,7 +2217,6 @@ EOO;
 ## さらに、`a0__id__1__mode__new__:jump`は「a0.html?id=1&mode=new」にジャンプします。
 ## これは必要なだけ続けることができます。
 						$this->popstack($cmd, "");
-						$this->pushstack(array());
 						$s = "";
 						foreach ($this->stack as $k3 => $v3) {
 							if ($k3 == 0)
@@ -2040,6 +2228,8 @@ EOO;
 							else
 								$s .= "={$v3}";
 						}
+						$this->pushstack(array($s));
+						$this->flush_coverage();
 						header("Location: {$s}");
 						$debuglog .= "<H3>JUMP(".htmlspecialchars($s, ENT_QUOTES).")</H3>\n";
 						if (@$sys->debugdir !== null) {
@@ -2212,6 +2402,7 @@ EOO;
 				}
 			}
 		}
+		$this->flush_coverage();
 		$output = "";
 		$s = @$this->stack[0]."";
 		switch ($outputmode) {
@@ -2296,6 +2487,7 @@ EOO;
 		global	$beforenopost;
 		global	$loginrecord;
 		global	$sys;
+		global	$coverage_actionlist;
 		
 		$output = "";
 		foreach (explode("<", $html) as $key => $chunk) {
@@ -2320,6 +2512,7 @@ EOO;
 			else if (($tagtype == "input")&&($type == "submit") && preg_match('/name="([^"]+)"/', $tag, $a)) {
 				if ($this->prefix != "")
 					$tag = preg_replace('/name="/', 'name="'.$this->prefix, $tag, 1);
+				$coverage_actionlist[$a[1]] = 1;
 				$postkey = $this->prefix.str_replace(array(" ", "."), "_", $a[1]);
 				if ((ispost())&&(@$_POST[$postkey] !== null)) {
 					$actionrecordholder = $this;
@@ -2470,8 +2663,11 @@ class	commandparser {		# volatile object
 	var	$name;
 	var	$children;
 	var	$index;
+	var	$coverage_id;
 	function	__construct($par = "", $parent = null, $before = null, $name = "") {
 		global	$commandparserindex;
+		global	$coverage_nextid;
+		global	$coverage_title;
 		
 		$this->par = $par;
 		$this->parent = $parent;
@@ -2479,6 +2675,9 @@ class	commandparser {		# volatile object
 		$this->name = $name;
 		$this->children = array();
 		$this->index = $commandparserindex++;
+		$this->coverage_id = $coverage_nextid;
+		if ($name != "")
+			$coverage_title[$coverage_nextid] = "{$coverage_nextid}_{$name} {$par}";
 		
 		if ($this->parent !== null)
 			$this->parent->addchild($this);
@@ -2535,11 +2734,19 @@ class	commandparser {		# volatile object
 	function	parsehtml($rh = null, $record = null) {
 		global	$debuglog;
 		global	$rootparser;
+		global	$coverage_id;
+		
+		$coverage_id = $this->coverage_id;
 		
 		$debuglog .= $rootparser->gettree($this->index);
 		return $this->parsehtmlinner($rh, $record);
 	}
 	function	parsehtmlinner($rh = null, $record = null) {
+		global	$coverage_id;
+		global	$coverage_count;
+		
+		@$coverage_count[$coverage_id]++;
+		
 		$ret = "";
 		foreach ($this->children as $index => $child)
 			$ret .= $child->parsehtml($rh, $record, $index);
@@ -3237,6 +3444,8 @@ if (($targethtml = @file_get_contents("{$sys->htmlbase}/{$sys->target}.html")) =
 	header("Location: {$sys->urlbase}/nopage/".@$sys->rootpage.".html");
 	log_die();
 }
+$targethash = sha1($targethtml);
+$tableshash = sha1(file_get_contents("tables.php"));
 
 #file_put_contents("php://stderr", $sys->target."\n");
 
@@ -3263,15 +3472,22 @@ if (@$sys->debugdir !== null) {
 		$sys->debugfn .= "_post";
 	ini_set("log_errors", "1");
 	ini_set("error_log", "{$sys->debugdir}/{$sys->debugfn}.php");
+	$coverage_list = array();
 }
 $ip = @$_SERVER["REMOTE_ADDR"];
 $ua = htmlspecialchars(@$_SERVER["HTTP_USER_AGENT"], ENT_QUOTES);
+$fn_self = __FILE__;
 $debuglog = <<<EOO
 <?php
 if ((@\$isinclude))
 	return;
+\$logview_fn = "{$sys->debugfn}";
+\$logview_coverage = "{$targethash}.{$tableshash}";
+if ((@\$_GET["coverage"]))
+	require("{$fn_self}");
 ?>
 orgdebuglog: <A href="{$orgdebugfn}.php">{$orgdebugfn}.php</A> from {$ip} ({$ua})
+<br /><a href="?coverage=1">coverage</a>
 <TABLE border>
 <TR><TH colspan=2>GET
 
@@ -3356,12 +3572,14 @@ for ($phase=0; $phase<2; $phase++) {
 	
 	$invalid = 0;
 	$debuglog .= "\n\n<H1>* phase{$phase}</H1>\n\n";
-	$parserstack = array($rootparser = new commandparser());
+	$coverage_nextid++;
+	$parserstack = array($rootparser = new commandparser("", null, null, "(phase{$phase})"));
 	$currenttablename = "";
 	$output = "";
 	
 	foreach (explode("<!--{", $targethtml) as $key => $chunk) {
 		if ($key == 0) {
+			$coverage_nextid++;
 			new commandparserhtml($chunk, $parserstack[0]);
 			continue;
 		}
@@ -3369,6 +3587,7 @@ for ($phase=0; $phase<2; $phase++) {
 			if ($key2 == 0) {
 				$a = explode("-->", $chunk2, 2);
 				$a2 = explode(" ", $a[0], 2);
+				$coverage_nextid++;
 				if (class_exists($s = "commandparser_".$a2[0]))
 					$obj = new $s(@$a2[1]."", $parserstack[0], null, $a2[0]);
 				else if (class_exists($s = "recordholder_".$a2[0]))
@@ -3384,6 +3603,7 @@ for ($phase=0; $phase<2; $phase++) {
 			else
 				$beforeparser = $parserstack[0];
 			$a = explode("-->", $chunk2, 2);
+			$coverage_nextid++;
 			if (substr($a[0], 0, 1) == "{") {
 				$a2 = explode(" ", $a[0], 2);
 				if (!class_exists($s = "commandparser__".substr($a2[0], 1)))
@@ -3412,7 +3632,14 @@ EOO;
 EOO;
 }
 
+$coverage_nextid++;
+$rootparser = new commandparser("", null, null, "(action)");
+if ($coverage_list !== null)
+	foreach ($coverage_actionlist as $key => $val)
+		$coverage_list[$coverage_nextid]["\t".base64_encode($key)] = 0;
+
 if ($actionrecordholder !== null) {
+	$rootparser->parsehtml();
 	$debuglog .= "\n\n<H1>submit</H1>\n\n";
 $debuglog .= "\n\n<H2>".str_repeat(" |  ", 1).get_class($actionrecordholder)."(".$actionrecordholder->record->tablename.") ".$parserstack[0]->cond."</H2>\n";
 	$actionrecordholder->action();
