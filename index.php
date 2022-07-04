@@ -756,13 +756,13 @@ EOO;
 		}
 		execsql("commit;");
 	}
-	function	dumpfields() {
+	function	dumpfields($title = "") {
 		global	$sys;
 		global	$debuglog;
 		
 		if (@$sys->debugdir == "")
 			return;
-		$debuglog .= '<table border><tr><th colspan="2" style="background:#aff;">'."{$this->tablename}\n";
+		$debuglog .= '<table border><tr><th colspan="2" style="background:#aff;">'."{$title}{$this->tablename}\n";
 		$debuglog .= "<tr><th>id<td>".htmlspecialchars($this->id)."\n";
 		foreach (get_object_vars($this) as $key => $val)
 			if (preg_match('/^v_(.*)/', $key, $a2)) {
@@ -943,13 +943,13 @@ class	simpletable {
 	function	update() {
 		log_die("update called.");
 	}
-	function	dumpfields() {
+	function	dumpfields($title = "") {
 		global	$sys;
 		global	$debuglog;
 		
 		if (@$sys->debugdir == "")
 			return;
-		$debuglog .= "<TABLE border><TR><TH colspan=2>simple: {$this->tablename}\n";
+		$debuglog .= "<TABLE border><TR><TH colspan=2>{$title}simple: {$this->tablename}\n";
 		foreach (get_object_vars($this) as $key => $val)
 			if (preg_match('/^v_(.*)/', $key, $a2)) {
 				$s = htmlspecialchars($a2[1], ENT_QUOTES);
@@ -1246,6 +1246,8 @@ class	rootrecord {
 		if ($s != "id")
 			$s = "v_{$s}";
 		return @$this->$s;
+	}
+	function	dumpfields($title = "") {
 	}
 }
 
@@ -2623,7 +2625,7 @@ class	recordholder_tableid extends recordholder {
 		if (($t = @$tablelist[$tablename]) === null)
 			return;
 		$this->record = $t->getrecord($par + 0);
-		$this->record->dumpfields();
+#		$this->record->dumpfields();
 	}
 }
 
@@ -2640,7 +2642,7 @@ class	recordholder_stableid extends recordholder {
 		
 		$t = @$tablelist["simple"]->gettable($tablename);
 		$this->record = $t->getrecord($par + 0);
-		$this->record->dumpfields();
+#		$this->record->dumpfields();
 	}
 }
 
@@ -2664,6 +2666,20 @@ class	selectrecord {
 	}
 	function	getfield($field) {
 		return @$this->fields[$field];
+	}
+	function	dumpfields($title = "") {
+		global	$sys;
+		global	$debuglog;
+		
+		if (@$sys->debugdir == "")
+			return;
+		$debuglog .= '<table border><tr><th colspan="2" style="background:#aff;">'."{$title}{$this->tablename}\n";
+		foreach ($this->fields as $key => $val) {
+			$s = htmlspecialchars($key, ENT_QUOTES);
+			$s2 = htmlspecialchars($val);
+			$debuglog .= "<tr><th>{$s}<td>{$s2}\n";
+		}
+		$debuglog .= "</table>\n";
 	}
 }
 
@@ -2776,6 +2792,17 @@ class	commandparser {		# volatile object
 		global	$coverage_count;
 		
 		@$coverage_count[$coverage_id]++;
+		
+		if ($rh === null)
+			;
+		else if ($rh->record === null)
+			;
+		else if (($s = $rh->prefix) != "")
+			$rh->record->dumpfields("recordholder(".htmlspecialchars($s)."): ");
+		else
+			$rh->record->dumpfields("recordholder: ");
+		if ($record !== null)
+			$record->dumpfields("record: ");
 		
 		$ret = "";
 		foreach ($this->children as $index => $child)
