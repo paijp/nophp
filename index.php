@@ -708,8 +708,8 @@ EOO;
 		return;
 	}
 	function	createtable() {
-# tables.phpでフィールドを追加した場合は、最初のアクセス時か、?mode=createをおこなったときに、生成済みのテーブルについてもalter table addや、create indexをおこなう。
-# このとき、mixedに同名のフィールドが登録されていた時は、そちらから実フィールドにデータを移動する。
+# If you have added fields in tables.php, you should also use "alter table add" or "create index" on the first access or when you use ?mode=create for the already created tables.
+# At this time, if a field with the same name is registered in mixed, the data is moved from that field to the actual field.
 		global	$db0;
 		
 		$s = implode(",", $this->configlist);
@@ -780,15 +780,15 @@ EOO;
 
 class	a_table extends table {
 	function	t_id__id__field($rh0, $record, $s1, $s3) {
-## スタックから文字列を3つ取り出し、1番目をレコードID、2番目をフィールド名、3番目をテーブル名とみなし、テーブルのレコードIDのフィールド値をスタックに積みます。
-## 例えば`1__name__user__:t_id`は、userテーブルのレコード1のnameフィールドの値になります。
+## Take three strings from the stack, consider the first as the record ID, the second as the field name, and the third as the table name, and stack the field value of the record ID of the table on the stack.
+## For example, `1__name__user__:t_id` is the value of the name field in record 1 of the user table.
 		$r = $this->getrecord($s1 + 0);
 		return array($r->getfield($s3)."");
 	}
 	function	t_find__val__field($rh0, $record, $s1, $s3) {
-## スタックから文字列を3つ取り出し、1番目をフィールド値、2番目をフィールド名、3番目をテーブル名とみなし、テーブルにフィールド値が入っているレコードIDを検索してスタックに積みます。
-## フィールド値が見つからなかった場合は空文字列を返します。複数のレコードがマッチした場合は、もっともIDの小さいものが返ります。
-## 例えば`john__name__user__:t_find`は、userテーブルのnameフィールドの値がjohnであるレコードのレコードIDになります。
+## Take three strings from the stack, consider the first as a field value, the second as a field name, and the third as a table name, and find the record ID whose table contains the field value and stack it on the stack.
+## Returns an empty string if no field value was found. If multiple records match, the one with the smallest ID is returned.
+## For example, `john__name__user__:t_find` is the record ID of the record whose value in the name field of the user table is john.
 		foreach ($this->getrecordidlist() as $id) {
 			$r = $this->getrecord($id);
 			if (@$r->getfield($s3) == $s1)
@@ -797,9 +797,9 @@ class	a_table extends table {
 		return array("");
 	}
 	function	h_set__val__field($rh0, $record, $s1, $s3) {
-## スタックから文字列を3つ取り出して、それぞれフィールド値とフィールド名、テーブル名とみなし、指定したテーブルのカレントレコードに設定します。
-## テーブル名は、あらかじめ「<!--{tableid」などで宣言されている必要があります。
-## 例えば`1__id__user__:t_set`は、userテーブルのカレントレコードのIDに1を設定します。
+## Take three strings from the stack, consider them as field value, field name, and table name, respectively, and set them to the current record of the specified table.
+## Table names must be declared in advance with "<!--{tableid" etc. must be declared beforehand.
+## For example, `1__id__user__:t_set` sets the ID of the current record in the user table to 1.
 		if ($s3 == "id")
 			$s4 = $s3;
 		else
@@ -808,8 +808,8 @@ class	a_table extends table {
 		return array();
 	}
 	function	hs_update($rh0, $record = null) {
-## スタックから文字列を1つ取り出し、テーブル名とみなして、そのテーブルのレコードをupdateまたはinsertします。
-## テーブルは「<!--{tableid」などに指定したものを使用します。
+## Take a string from the stack, consider it a table name, and UPDATE or INSERT a record in that table.
+## The table must be specified as "<!--{tableid", etc.
 		$s = "";
 		if ($this->update() == 0)
 			$s = $this->id;
@@ -823,9 +823,9 @@ class	a_table extends table {
 		return array("");
 	}
 	function	tv_len($par, $s) {
-# <!--{valid len3-5 v1-->カレントレコードのv1のフィールドが、0,1,2,6,7文字の場合に表示されます。<!--}--> 
-# <!--{valid len3- v1-->カレントレコードのv1のフィールドが、0,1,2文字の場合に表示されます。<!--}--> 
-# <!--{valid len-5 v1-->カレントレコードのv1のフィールドが、6,7文字の場合に表示されます。<!--}--> 
+# <!--{valid len3-5 v1--> if the v1 field of the current record is 0,1,2,6,7 characters. <!--}-->
+# <!--{valid len3- v1--> Displayed if the v1 field of the current record is 0, 1, or 2 characters. <!--}-->
+# <!--{valid len-5 v1--> Displayed when the v1 field of the current record is 6 or 7 characters long. <!--}-->
 		if (!preg_match('/^(-?[0-9]*)-(-?[0-9]*)/', $par, $a2))
 			return 0;
 		if ((($i = $a2[1]) != "")&&(strlen($s) < $i + 0))
@@ -835,17 +835,17 @@ class	a_table extends table {
 		return 0;
 	}
 	function	tv_lenopt($par, $s) {
-# <!--{valid lenopt3-5 v1-->カレントレコードのv1のフィールドが、1,2,6,7文字の場合に表示されます。<!--}--> 
-# <!--{valid lenopt3- v1-->カレントレコードのv1のフィールドが、1,2文字の場合に表示されます。<!--}--> 
+# <!--{valid lenopt3-5 v1--> Displayed if the v1 field of the current record is 1,2,6,7 characters. <!--}-->
+# <!--{valid lenopt3- v1--> Displayed if the v1 field of the current record is 1 or 2 characters. <!--}-->
 		if ($s == "")
 			return 0;
 		return $this->tv_len($par, $s);
 	}
 	function	tv_num($par, $s) {
-# <!--{valid num3-5 v1-->カレントレコードのv1のフィールドが、整数の3-5でない場合に表示されます。<!--}--> 
-# <!--{valid num3- v1-->カレントレコードのv1のフィールドが、整数の3以上でない場合に表示されます。<!--}--> 
-# <!--{valid num-5 v1-->カレントレコードのv1のフィールドが、整数の5以下でない場合に表示されます。<!--}--> 
-# <!--{valid num-5--3 v1-->カレントレコードのv1のフィールドが、整数の-5から-3でない場合に表示されます。<!--}--> 
+# <!--{valid num3-5 v1--> Displayed if the v1 field of the current record is not an integer 3-5. <!--}-->
+# <!--{valid num3- v1-->This is displayed if the v1 field of the current record is not greater than or equal to the integer 3. <!--}-->
+# <!--{valid num-5 v1-->This is displayed if the v1 field of the current record is not less than or equal to the integer 5. <!--}-->
+# <!--{valid num-5--3 v1--> if the v1 field of the current record is not an integer -5 to -3. <!--}-->
 		if (!preg_match('/^(-?[0-9]*)-(-?[0-9]*)/', $par, $a2))
 			return 0;
 		if (!preg_match('/^-?[0-9]+$/', $s))
@@ -857,9 +857,9 @@ class	a_table extends table {
 		return 0;
 	}
 	function	tv_numopt($par, $s) {
-# <!--{valid numopt3-5 v1-->カレントレコードのv1のフィールドが、空でなく、整数の3-5でもない場合に表示されます。<!--}--> 
-# <!--{valid numopt3- v1-->カレントレコードのv1のフィールドが、空でなく、整数の3以上でもない場合に表示されます。<!--}--> 
-# <!--{valid numopt-5 v1-->カレントレコードのv1のフィールドが、空でなく、整数の5以下でもない場合に表示されます。<!--}--> 
+# <!--{valid numopt3-5 v1--> Displayed if the v1 field of the current record is neither empty nor an integer 3-5. <!--}-->
+# <!--{valid numopt3- v1--> Displayed if the v1 field of the current record is neither empty nor greater than or equal to the integer 3. <!--}-->
+# <!--{valid numopt-5 v1--> Displayed if the v1 field of the current record is neither empty nor less than the integer 5. <!--}-->
 		if ($s == "")
 			return 0;
 		return $this->tv_num($par, $s);
@@ -962,9 +962,9 @@ class	simpletable {
 		$debuglog .= "</TABLE>\n";
 	}
 	function	h_set__val__field($rh0, $record, $s1, $s3) {
-## スタックから文字列を3つ取り出して、それぞれフィールド値とフィールド名、テーブル名とみなし、指定したテーブルのカレントレコードに設定します。
-## テーブル名は、あらかじめ「<!--{tableid」などで宣言されている必要があります。
-## 例えば`1__id__user__:t_set`は、userテーブルのカレントレコードのIDに1を設定します。
+## Take three strings from the stack, consider them as field value, field name, and table name, respectively, and set them to the current record of the specified table.
+## Table names must be declared in advance with "<!--{tableid" etc. must be declared beforehand.
+## For example, `1__id__user__:t_set` sets the ID of the current record in the user table to 1.
 		if ($s3 == "id")
 			$s4 = $s3;
 		else
@@ -993,15 +993,15 @@ class	simpletable {
 		return array();
 	}
 	function	s_id__id__field($rh0, $record, $s1, $s3) {
-## スタックから文字列を3つ取り出し、1番目をレコードID、2番目をフィールド名、3番目をシンプルテーブル名とみなし、シンプルテーブルのレコードIDのフィールド値をスタックに積みます。
-## 例えば`1__name__user__:s_id`は、userシンプルテーブルのレコード1のnameフィールドの値になります。
+## Take three strings from the stack, consider the first as the record ID, the second as the field name, and the third as the simple table name, and stack the field value of the record ID of the simple table on the stack.
+## For example, `1__name__user__:s_id` is the value of the name field of record 1 in the user simple table.
 		$r = $this->getrecord($s1 + 0);
 		return array($r->getfield($s3)."");
 	}
 	function	s_find__val__field($rh0, $record, $s1, $s3) {
-## スタックから文字列を3つ取り出し、1番目をフィールド値、2番目をフィールド名、3番目をシンプルテーブル名とみなし、シンプルテーブルにフィールド値が入っているレコードID検索してをスタックに積みます。
-## フィールド値が見つからなかった場合は空文字列になります。。複数のレコードがマッチした場合は、もっともIDの小さいものになります。
-## 例えば`john__name__user__:s_find`は、userテーブルのnameフィールドの値がjohnであるレコードのレコードIDになります。
+## Take three strings from the stack, consider the first as a field value, the second as a field name, and the third as a simple table name, search for a record ID whose field value is in the simple table, and stack them on the stack.
+## If no field value is found, it will be an empty string. If multiple records match, it will be the one with the smallest ID.
+## For example, `john__name__user__:s_find` is the record ID of the record whose value in the name field of the user table is john.
 		foreach ($this->getlist() as $k3 => $v3) {
 			if (@$v3[$s3] == $s1)
 				return array($k3 + 1);
@@ -1641,41 +1641,41 @@ class	recordholder {
 						break;
 #* bq
 					case	"dot":
-## 「.」をスタックに積みます。
-## 例えば`index__:dot__html__:cat:cat`は「index.html」になります。
-## 通常は、これを使う必要はありません。
+## "." on the stack.
+## For example, `index__:dot__html__:cat:cat` becomes "index.html".
+## Normally, this is not necessary.
 						$this->popstack($cmd, "");
 						$this->pushstack(array("."));
 						break;
 					case	"col":
-## 「:」をスタックに積みます。
-## 例えば`12__:col__00__:cat:cat`は「12:00」になります。
-## 先頭が「:」の記述はコマンドとみなされるため、文字としての「:」を入力したい時に使用します。
+## Stack the ":" on the stack.
+## For example, `12__:col__00__:cat:cat` would be "12:00".
+## Use when you want to enter ":" as a character, since a description prefixed with ":" is considered a command.
 						$this->popstack($cmd, "");
 						$this->pushstack(array(":"));
 						break;
 					case	"sp":
-## 「 」をスタックに積みます。
-## 例えば`abc__:sp__def__:cat:cat`は「abc def」になります。
-## inputタグのname中など、スペースが使えない場合に使用します。
+## " " on the stack.
+## For example, `abc__:sp__def__:cat:cat` becomes "abc def".
+## Use when spaces are not allowed, such as during the name of the input tag.
 						$this->popstack($cmd, "");
 						$this->pushstack(array(" "));
 						break;
 					case	"bq":
-## 「`」をスタックに積みます。
-## 例えば`:bq`は「`」になります。
+## "`" on the stack.
+## For example, `:bq` becomes "`".
 						$this->popstack($cmd, "");
 						$this->pushstack(array("`"));
 						break;
 					case	"null":
-## 空文字列(長さ0の文字列)をスタックに積みます。
+## Empty string (zero-length string) on stack.
 						$this->popstack($cmd, "");
 						$this->pushstack(array(""));
 						break;
 					case	"hex":
-## スタックから文字列を1つ取り出して16進数の並びとみなし、文字列に変換してスタックに積みます。
-## 例えば`414243__:hex`は「ABC」になります。
-## 上記の方法で入力できない特殊文字を入力するのに使用します。
+## Take one string from the stack, consider it as a sequence of hexadecimal numbers, convert it to a string, and stack it on the stack.
+## For example, `414243__:hex` would be "ABC".
+## Use to enter special characters that cannot be entered using the above methods.
 						list($s1) = $this->popstack($cmd, "hex");
 						$s = "";
 						for ($i=0; $i<strlen($s1); $i+=2)
@@ -1683,52 +1683,52 @@ class	recordholder {
 						$this->pushstack(array($s.""));
 						break;
 					case	"curid":
-## 現在のレコードIDをスタックに積みます。
-## 例えば「<!--{tableid user 1-->」内部では、「1」がスタックに積まれます。
+## Stack the current record ID on the stack.
+## For example, inside "<!--{tableid user 1-->" inside, "1" is stacked on the stack.
 						$this->popstack($cmd, "");
 						$s = @$this->record->id + 0;
 						$this->pushstack(array($s));
 						break;
 					case	"curtable":
-## 現在のテーブル名をスタックに積みます。
-## 例えば「<!--{tableid user 1-->」内部では、「user」がスタックに積まれます。
+## Stack the current table name on the stack.
+## For example, inside "<!--{tableid user 1-->" inside, "user" is stacked on the stack.
 						$this->popstack($cmd, "");
 						$s = @$this->record->tablename."";
 						$this->pushstack(array($s));
 						break;
 					case	"curpage":
-## URLから得た現在のページ名をスタックに積みます。
-## 例えば「g0000.html」がアクセスされたときは、「g0000」がスタックに積まれます。
+## Stack the current page name obtained from the URL.
+## For example, when "g0000.html" is accessed, "g0000" is stacked on the stack.
 						$this->popstack($cmd, "");
 						$this->pushstack(array($sys->target));
 						break;
 					case	"ispost":
-## 現在のリクエストがPOSTであれば1を、POSTでなければ空文字列をスタックに積みます。
+## Stack 1 if the current request is a POST, or empty string if it is not a POST.
 						$this->popstack($cmd, "");
 						$this->pushstack(array((ispost())? "1" : ""));
 						break;
 					case	"isvalid":
-## バリデーションでエラーがなければ「1」を、エラーがあれば空文字列をスタックに積みます。
+## Validation stacks "1" if there are no errors, or an empty string if there are errors.
 						$this->popstack($cmd, "");
 						$this->pushstack(array(($invalid)? "" : "1"));
 						break;
 					case	"g":
-## スタックから文字列を1つ取り出してGET名とみなし、得られたGET値をスタックに積みます。
-## 例えば、URLが「?id=1」となっている場合には、`id__:g`は「1」になります。
-## 「?id」が指定されていない場合は、`id__:g`は空文字列になります。
-## GETでは、セキュリティ上の理由により、空文字列か数字とコンマの並びしか得ることができません。
+## Take one string from the stack, consider it a GET name, and stack the resulting GET value on the stack.
+## For example, if the URL is "?id=1", then `id__:g` is "1".
+## If "?id" is not specified, `id__:g` will be an empty string.
+## GET can only yield an empty string or a sequence of numbers and commas for security reasons.
 						list($s1) = $this->popstack($cmd, "name");
 						$s = @$_GET[$s1]."";
 						$s = preg_replace("/[^,0-9]/", "", $s);
 						$this->pushstack(array($s));
 						break;
 					case	"p":
-## スタックから文字列を1つ取り出してPOST名とみなし、得られたPOST値をスタックに積みます。
-## 例えば、<form method="post"><input name="s1"><input type="submit">で送信された値は`s1__:p`で得ることができます。
-## POSTでない場合や、POST名が存在しない場合は、空文字列になります。
-## POSTでは、(GETとは異なり)任意の文字列を得ることができます。
-## ただしSQL中での``は、数値と(190429追加)「,」しか出力できません。
-# 参照: parsewithbqinsql()
+## Take one string from the stack and consider it as a POST name, and pile the resulting POST value on the stack.
+## For example, the value submitted with <form method="post"><input name="s1"><input type="submit"> can be obtained with `s1__:p`.
+## If it is not a POST or the POST name does not exist, it will be an empty string.
+## With POST, you can get an arbitrary string (unlike GET, which has a submitkey).
+## However, `` in SQL can only output numbers and (added 190429) ",".
+# See also: parsewithbqinsql()
 						list($s1) = $this->popstack($cmd, "name");
 						if ((ispost())) {
 							$postkey = $this->prefix.str_replace(array(" ", "."), "_", $s1);
@@ -1737,160 +1737,160 @@ class	recordholder {
 							$this->pushstack(array(""));
 						break;
 					case	"r":
-## スタックから文字列を1つ取り出してフィールド名とみなし、現在のレコードからフィールドを取得してスタックに積みます。
-## 例えば「<!--{tableid user 1-->」内部では、`id__:r`は、userテーブルのレコード1の「id」フィールドの値が得られます。
-## レコードが定義されていない場合や、指定したフィールド名が存在しない場合は、空文字列になります。
+## Take one string from the stack and consider it a field name, then retrieve the field from the current record and stack it on the stack.
+## For example, "<!--{tableid user 1-->" inside, `id__:r` will yield the value of the "id" field of record 1 in the user table.
+## If no record is defined or the specified field name does not exist, it will be an empty string.
 						list($s1) = $this->popstack($cmd, "field");
 						$s = $record->getfield($s1)."";
 						$this->pushstack(array($s));
 						break;
 					case	"int":
-## スタックから文字列を1つ取り出し、数値とみなして四捨五入し、スタックに積みます。
-## 例えば`3.8__:int`は「4」になります。
+## Take one string from the stack, round it off as a number, and stack it on the stack.
+## For example, `3.8__:int` is "4".
 						list($s1) = $this->popstack($cmd, "val");
 						$this->pushstack(array(round($s1 + 0)));
 						break;
 					case	"isnull":
-## スタックから文字列を1つ取り出し、空文字列であれば「1」を、そうでなければ空文字列をスタックに積みます。
-## `id__:g:isnull:andbreak`とすると、「?id=1」のような指定がなければ、breakします。
-## `:isvalid:isnull`のような形で、論理の反転に使用することもできます。
+## Take one string from the stack and stack "1" if it is an empty string, otherwise empty string on the stack.
+## `id__:g:isnull:andbreak` will break if there is no specification such as "?id=1".
+## It can also be used for logic inversion, in the form `:isvalid:isnull`.
 						list($s1) = $this->popstack($cmd, "val");
 						$this->pushstack(array(($s1 == "")? "1" : ""));
 						break;
 					case	"h2z":
-## スタックから文字列を1つ取り出し、半角英数字を全角英数字に変換してスタックに積みます。
+## Take a string from the stack, convert half-width alphanumeric characters to full-width alphanumeric characters, and stack them on the stack.
 						list($s1) = $this->popstack($cmd, "hankaku");
 						$this->pushstack(array(mb_convert_kana($s1, "ASKV", "UTF-8")));
 						break;
 					case	"z2h":
-## スタックから文字列を1つ取り出し、全角英数字を半角英数字に変換してスタックに積みます。
+## Take a string from the stack, convert full-width alphanumeric characters to half-width alphanumeric characters, and stack them on the stack.
 						list($s1) = $this->popstack($cmd, "zenkaku");
 						$this->pushstack(array(mb_convert_kana($s1, "as", "UTF-8")));
 						break;
 					case	"sys":
-## スタックから文字列を1つ取り出し、システム変数名とみなして、その変数値をスタックに積みます。
-## 例えばenv.php内で$sys->v_limit = 100;という記述があれば、`limit__:sys`は「100」になります。
+## Take a string from the stack, consider it a system variable name, and stack the variable value on the stack.
+## For example, if there is a statement in env.php that $sys->v_limit = 100;, then `limit__:sys` will be "100".
 						list($s1) = $this->popstack($cmd, "name");
 						$s ="v_{$s1}";
 						$this->pushstack(array(@$sys->$s.""));
 						break;
 					case	"now":
-## 現在時刻値(1970年1月1日0:00:00GMTからの秒数)を、スタックに積みます。
-## 一般的な日時に変換するには、:todateを使います。
-## 例えば`:now__y/m/d H:i:s__:todate`は、「19/02/10 19:52:13」などになります。
+## Place the current time value (in seconds since January 1, 1970 0:00:00 GMT) on the stack.
+## Use :todate to convert to a generic date and time.
+## For example, `:now__y/m/d H:i:s__:todate` would be "19/02/10 19:52:13", etc.
 						$this->popstack($cmd, "");
 						$this->pushstack(array($sys->now));
 						break;
 					case	"ymd2t":
-## スタックから文字列を3つ取り出し、それぞれ年・月・日とみなして、現在時刻値(1970年1月1日0:00:00GMTからの秒数)をスタックに積みます。
-## 一般的な日時に変換するには、:todateを使います。
+## Take three strings from the stack and stack the current time value (seconds since 0:00:00 GMT on Jan 1, 1970), considering them as year, month, and day, respectively.
+## Use :todate to convert to a generic date and time.
 						list($s1, $s2, $s3) = $this->popstack($cmd, "year month day");
 						$t = mktime(0, 0, 0, $s2, $s3, $s1);
 						$this->pushstack(array($t));
 						break;
 					case	"age2t":
-## スタックから文字列を1つ取り出し、年数とみなして、現在時刻値(1970年1月1日0:00:00GMTからの秒数)から年数を引いた値を、スタックに積みます。
-## 一般的な日時に変換するには、:todateを使います。
+## Take a string from the stack, consider it as a number of years, and add it to the stack as the current time value (seconds since 0:00:00 GMT, Jan 1, 1970) minus the number of years.
+## Use :todate to convert to a generic date and time.
 						list($s1) = $this->popstack($cmd, "year");
 						$t = mktime(date("H", $sys->now), date("i", $sys->now), date("s", $sys->now), date("n", $sys->now), date("j", $sys->now), date("Y", $sys->now) - $s1);
 						$this->pushstack(array($t));
 						break;
 					case	"todate":
-## スタックから、時刻値(1970年1月1日0:00:00GMTからの秒数)と、書式文字列を取り出し、時刻を書式にあてはめた文字列をスタックに積みます。
-## 書式文字列は、phpのdate()関数のものが使えます。
-## 現在時刻値を得るには、:nowを使います。
-## 例えば`:now__y/m/d H:i:s__:todate`は、「19/02/10 19:52:13」などになります。
+## Take a time value (seconds since January 1, 1970 0:00:00 GMT) and a format string from the stack, and put the string with the time in the format on the stack.
+## The format string can be from the php date() function.
+## Use :now to get the current time value.
+## For example, `:now__y/m/d H:i:s__:todate` would be "19/02/10 19:52:13", etc.
 						list($s1, $s2) = $this->popstack($cmd, "time dateformat");
 						$this->pushstack(array(date($s2, $s1 + 0)));
 						break;
 					case	"html":
-## 出力をHTMLエスケープすることを示します。
-## スタックは変化しませんので、どこに置いても構いません。
-## 例えば`:html__<`も、`<__:html`も、どちらも「&lt;」になります。
+## Indicates HTML escaping of output.
+## The stack does not change and can be placed anywhere.
+## For example, both `:html__<` and `<__:html` are "&lt;".
 					case	"url":
-## 出力をrawurlエンコードすることを示します。
-## スタックは変化しませんので、どこに置いても構いません。
-## 例えば`:url__<`も、`<__:url`も、どちらも「%3C」になります。
+## Indicates rawurl encoding of output.
+## The stack does not change and can be placed anywhere.
+## For example, both `:url__<` and `<__:url` are "%3C".
 					case	"js":
-## 出力を、JavaScriptに直接埋め込める形の文字列に変換することを示します。
-## スタックは変化しませんので、どこに置いても構いません。
-## 具体的には、例えば`:js__<`や、`<__:js`は、どちらも「decodeURIComponent("%3C")」になります。
-## また、`:js__A`や、`A__:js`は、どちらも「"A"」になります。
-## このため、JavaScript内で「var a = `name__:r:js`;」のように、引用符をつけずに扱うことができます。
-## また、すべてをrawurlエンコードする場合よりも、出力を少なくすることが可能です。
+## Indicates that the output is to be converted to a string in a form that can be directly embedded in JavaScript.
+## The stack does not change and can be placed anywhere.
+## Specifically, for example, `:js__<` and `<__:js` are both "decodeURIComponent("%3C")".
+## Also, `:js__A` and `A__:js` are both ""A"".
+## This allows us to handle it in JavaScript without quotes, as in "var a = `name__:r:js`;".
+## It also allows for less output than if everything were rawurl encoded.
 					case	"raw":
 						$outputmode = $cmd;
 						$this->pushstack(array());
 						break;
 					case	"cat":
-## スタックから、文字列を2つ取り出して、結合し、それをスタックに積みます。
-## 例えば`a__b__:cat`は「ab」になります。
+## Take two strings from the stack, concatenate them, and stack them on the stack.
+## For example, `a__b__:cat` would be "ab".
 						list($s1, $s2) = $this->popstack($cmd, "s0 s1");
 						$this->pushstack(array($s1.$s2));
 						break;
 					case	"rcat":
-## スタックから、文字列を2つ取り出して、逆順に結合し、それをスタックに積みます。
-## 例えば`a__b__:rcat`は「ba」になります。
+## Take two strings from the stack, combine them in reverse order, and stack them on the stack.
+## For example, `a__b__:rcat` would be "ba".
 						list($s1, $s2) = $this->popstack($cmd, "s0 s1");
 						$this->pushstack(array($s2.$s1));
 						break;
 					case	"scat":
-## スタックから、文字列を2つ取り出して、結合し、それをスタックに積みます。
-## 例えば`a__b__:scat`は「a b」になります。
+## Take two strings from the stack, concatenate them, and stack them on the stack.
+## For example, `a__b__:scat` becomes "a b".
 						list($s1, $s2) = $this->popstack($cmd, "s0 s1");
 						$this->pushstack(array("{$s1} {$s2}"));
 						break;
 					case	"rscat":
-## スタックから、文字列を2つ取り出して、逆順に結合し、それをスタックに積みます。
-## 例えば`a__b__:rscat`は「b a」になります。
+## Take two strings from the stack, combine them in reverse order, and stack them on the stack.
+## For example, `a__b__:rscat` becomes "b a".
 						list($s1, $s2) = $this->popstack($cmd, "s0 s1");
 						$this->pushstack(array("{$s2} {$s1}"));
 						break;
 					case	"ismatch":
-## スタックから、文字列を2つ取り出し、1番目の文字列の中に2番目の文字列があれば「1」を、なければ空文字列をスタックに積みます。
-## 例えば`abc__b__:match`は、「abc」の中に「b」があるので、「1」になります。
-## 逆に、`abc__cb__:match`は、「abc」の中に「cb」がないので、空文字列になります。
+## Take two strings from the stack and stack "1" if the second string is in the first string, otherwise empty string on the stack.
+## For example, `abc__b__:match` is "1" because there is a "b" in "abc".
+## Conversely, `abc__cb__:match` is an empty string because there is no "cb" in "abc".
 						list($s1, $s2) = $this->popstack($cmd, "s0 s1");
 						$this->pushstack(array((strpos($s1, $s2) !== FALSE)? 1 : ""));
 						break;
 					case	"addzero":
-## スタックから文字列を2つ取り出し、2番目の文字数で指定された長さになるまで、1番目の文字列の先頭に「0」を付加したものをスタックに積みます。
-## 例えば`123__6__:addzero`は、「000123」になります。
-## また、`123__2__:addzero`は、「123」になります。
-## なお、数値として扱うわけではありませんので、`-123__6__:addzero`は「00-123」になります。
+## Take two strings from the stack and stack them on the stack with the first string prefixed with "0" until the length specified by the second character count is reached.
+## For example, `123__6__:addzero` would be "000123".
+## Also, `123__2__:addzero`.
+## Note that `-123__6__:addzero` will be "00-123" since it is not treated as a number.
 						list($s, $v) = $this->popstack($cmd, "num digits");
 						if (($i = strlen($s)) < $v + 0)
 							$s = str_repeat("0", $v - $i).$s;
 						$this->pushstack(array($s));
 						break;
 					case	"add":
-## スタックから文字列を2つ取り出し、それぞれを数値とみなして加算したものをスタックに積みます。
-## たとえば`123__456__:add`は「579」になります。
+## Take two strings from the stack, consider each to be a number, and add them to the stack.
+## For example, `123__456__:add` would be "579".
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						$this->pushstack(array($s1 + $s2));
 						break;
 					case	"sub":
-## スタックから文字列を2つ取り出し、それぞれを数値とみなして減算したものをスタックに積みます。
-## たとえば`123__456__:sub`は「-333」になります。
+## Take two strings from the stack and subtract each as a number and stack them on the stack.
+## For example, `123__456__:sub` would be "-333".
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						$this->pushstack(array($s1 - $s2));
 						break;
 					case	"rsub":
-## スタックから文字列を2つ取り出し、それぞれを数値とみなして逆順に減算したものをスタックに積みます。
-## たとえば`123__456__:rsub`は「333」になります。
+## Take two strings from the stack, consider each as a number and subtract them in reverse order, and stack them on the stack.
+## For example, `123__456__:rsub` would be "333".
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						$this->pushstack(array($s2 - $s1));
 						break;
 					case	"mul":
-## スタックから文字列を2つ取り出し、それぞれを数値とみなして積算したものをスタックに積みます。
-## たとえば`123__456__:mul`は「56088」になります。
+## Take two strings from the stack, consider each to be a number, and stack them on the stack, adding them up.
+## For example, `123__456__:mul` would be "56088".
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						$this->pushstack(array($s1 * $s2));
 						break;
 					case	"div":
-## スタックから文字列を2つ取り出し、それぞれを数値とみなして除算して切り捨てたものをスタックに積みます。
-## たとえば`123__456__:div`は「0」になります。
-## 除数が0の場合は、0になります。
+## Take two strings from the stack, divide each of them as a number, and stack them on the stack rounded down.
+## For example, `123__456__:div` would be "0".
+## If the divisor is 0, the divisor is 0.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						if ($s2 == 0)
 							$this->pushstack(array(0));
@@ -1898,9 +1898,9 @@ class	recordholder {
 							$this->pushstack(array(floor($s1 / $s2)));
 						break;
 					case	"rdiv":
-## スタックから文字列を2つ取り出し、それぞれを数値とみなして逆順に除算して切り捨てたものをスタックに積みます。
-## たとえば`123__456__:rdiv`は「3」になります。
-## 除数が0の場合は、0になります。
+## Take two strings from the stack, consider each as a number, divide them in reverse order, and round down to the nearest whole number, and stack them on the stack.
+## For example, `123__456__:rdiv` would be "3".
+## If the divisor is 0, the divisor is 0.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						if ($s1 == 0)
 							$this->pushstack(array(0));
@@ -1908,9 +1908,9 @@ class	recordholder {
 							$this->pushstack(array(floor($s2 / $s1)));
 						break;
 					case	"mod":
-## スタックから文字列を2つ取り出し、それぞれを数値とみなして除算した剰余をスタックに積みます。
-## たとえば`123__456__:mod`は「123」になります。
-## 除数が0の場合は、0になります。
+## Take two strings from the stack, consider each to be a number, and stack the remainder of the division on the stack.
+## For example, `123__456__:mod` would be "123".
+## If the divisor is 0, the divisor is 0.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						if ($s2 == 0)
 							$this->pushstack(array(0));
@@ -1918,9 +1918,9 @@ class	recordholder {
 							$this->pushstack(array($s1 % $s2));
 						break;
 					case	"rmod":
-## スタックから文字列を2つ取り出し、それぞれを数値とみなして逆順に除算した剰余をスタックに積みます。
-## たとえば`123__456__:rmod`は「87」になります。
-## 除数が0の場合は、0になります。
+## Take two strings from the stack, consider each to be a number, divide them in reverse order, and stack the remainder on the stack.
+## For example, `123__456__:rmod` would be "87".
+## If the divisor is 0, the divisor is 0.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						if ($s1 == 0)
 							$this->pushstack(array(0));
@@ -1932,15 +1932,15 @@ class	recordholder {
 						$this->pushstack(array(($s1 == $s2)? 1 : ""));
 						break;
 					case	"ieq":
-## スタックから文字列を2つ取り出し、それぞれを数値とみなして、等しければ「1」を、等しくなければ空文字列をスタックに積みます。
-## 例えば`1__1__:ieq`や`1__01__:ieq`や`0__ __:ieq`や`0x1__1__:ieq`は「1」になります。
+## Take two strings from the stack and regard each as a number, stacking them on the stack with a "1" if they are equal or an empty string if they are not.
+## For example, `1__1__:ieq` or `1__01__:ieq` or `0__ __:ieq` or `0x1__1__:ieq` is "1".
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						$this->pushstack(array(($s1 + 0 == $s2 + 0)? 1 : ""));
 						break;
 					case	"seq":
-## スタックから文字列を2つ取り出し、それぞれを文字列とみなして、等しければ「1」を、等しくなければ空文字列をスタックに積みます。
-## 例えば`1__1__:seq`は「1」になります。
-## `1__01__:seq`や`0__ __:seq`は空文字列になります。
+## Take two strings from the stack, consider each as a string, and pile "1" on the stack if they are equal, or an empty string if they are not equal.
+## For example, `1__1__:seq` would be "1".
+## The `1__01__:seq` or `0__ __:seq` will be an empty string.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						$this->pushstack(array(($s1."" === $s2."")? 1 : ""));
 						break;
@@ -1949,15 +1949,15 @@ class	recordholder {
 						$this->pushstack(array(($s1 != $s2)? 1 : ""));
 						break;
 					case	"ine":
-## スタックから文字列を2つ取り出し、それぞれを数値とみなして、等しくなければ「1」を、等しければ空文字列をスタックに積みます。
-## 例えば`1__1__:ieq`や`1__01__:ieq`や`0__ __:ieq`や`0x1__1__:ieq`は空文字列になります。
+## Take two strings from the stack and regard each as a number, stacking them on the stack with a "1" if they are not equal, or an empty string if they are equal.
+## For example, `1__1__:ieq` or `1__01__:ieq` or `0__ __:ieq` or `0x1__1__:ieq` is an empty string.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						$this->pushstack(array(($s1 + 0 != $s2 + 0)? 1 : ""));
 						break;
 					case	"sne":
-## スタックから文字列を2つ取り出し、それぞれを文字列とみなして、等しくなければ「1」を、等しければ空文字列をスタックに積みます。
-## 例えば`1__1__:seq`は空文字列になります。
-## `1__01__:seq`や`0__ __:seq`は「1」になります。
+## Take two strings from the stack and consider each to be a string, stacking them on the stack with a "1" if they are not equal and an empty string if they are.
+## For example, `1__1__:seq` will be an empty string.
+## 1__01__:seq` or `0__ __:seq` will be "1".
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						$this->pushstack(array(($s1."" !== $s2."")? 1 : ""));
 						break;
@@ -1966,16 +1966,16 @@ class	recordholder {
 						$this->pushstack(array(($s1 < $s2)? 1 : ""));
 						break;
 					case	"ilt":
-## スタックから文字列を2つ取り出し、それぞれを数値とみなして、2番目が大きければ「1」を、そうでなければ空文字列をスタックに積みます。
-## 例えば`1__2__:ilt`は「1」になります。
-## `1__1__:ilt`や`1__0__:ilt`は空文字列になります。
+## Take two strings from the stack, consider each as a number, and pile "1" on the stack if the second one is larger, otherwise empty string.
+## For example, `1__2__:ilt` would be "1".
+## `1__1__:ilt` or `1__0__:ilt` will be an empty string.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						$this->pushstack(array(($s1 + 0 < $s2 + 0)? 1 : ""));
 						break;
 					case	"slt":
-## スタックから文字列を2つ取り出し、それぞれを文字列とみなして、2番目が大きければ「1」を、そうでなければ空文字列をスタックに積みます。
-## 例えば`1__2__:slt`は「1」になります。
-## `1__1__:slt`や`1__0__:slt`は空文字列になります。
+## Take two strings from the stack, consider each as a string, and pile "1" on the stack if the second one is larger, otherwise empty string.
+## For example, `1__2__:slt` would be "1".
+## `1__1__:slt` and `1__0__:slt` will be empty strings.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						$this->pushstack(array(("_".$s1 < "_".$s2)? 1 : ""));
 						break;
@@ -1984,16 +1984,16 @@ class	recordholder {
 						$this->pushstack(array(($s1 > $s2)? 1 : ""));
 						break;
 					case	"igt":
-## スタックから文字列を2つ取り出し、それぞれを数値とみなして、1番目が大きければ「1」を、そうでなければ空文字列をスタックに積みます。
-## 例えば`1__0__:igt`は「1」になります。
-## `1__1__:igt`や`1__2__:igt`は空文字列になります。
+## Take two strings from the stack, consider each as a number, and pile "1" on the stack if the first is larger, otherwise empty string.
+## For example, `1__0__:igt` would be "1".
+## `1__1__:igt` and `1__2__:igt` will be empty strings.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						$this->pushstack(array(($s1 + 0 > $s2 + 0)? 1 : ""));
 						break;
 					case	"sgt":
-## スタックから文字列を2つ取り出し、それぞれを文字列とみなして、1番目が大きければ「1」を、そうでなければ空文字列をスタックに積みます。
-## 例えば`1__0__:sgt`は「1」になります。
-## `1__1__:sgt`や`1__2__:sgt`は空文字列になります。
+## Take two strings from the stack and consider each to be a string, stacking "1" on the stack if the first is larger, otherwise an empty string.
+## For example, `1__0__:sgt` would be "1".
+## `1__1__:sgt` and `1__2__:sgt` will be empty strings.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						$this->pushstack(array(("_".$s1 > "_".$s2)? 1 : ""));
 						break;
@@ -2002,16 +2002,16 @@ class	recordholder {
 						$this->pushstack(array(($s1 <= $s2)? 1 : ""));
 						break;
 					case	"ile":
-## スタックから文字列を2つ取り出し、それぞれを数値とみなして、等しいか2番目が大きければ「1」を、そうでなければ空文字列をスタックに積みます。
-## 例えば`1__2__:ile`や`1__1__:ile`は「1」になります。
-## `1__0__:ile`は空文字列になります。
+## Take two strings from the stack, consider each as a number, and stack "1" if they are equal or the second is greater, otherwise empty string on the stack.
+## For example, `1__2__:ile` or `1__1__:ile` would be "1".
+## `1__0__:ile` will be an empty string.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						$this->pushstack(array(($s1 + 0 <= $s2 + 0)? 1 : ""));
 						break;
 					case	"sle":
-## スタックから文字列を2つ取り出し、それぞれを文字列とみなして、等しいか2番目が大きければ「1」を、そうでなければ空文字列をスタックに積みます。
-## 例えば`1__2__:sle`や`1__1__:sle`は「1」になります。
-## `1__0__:sle`は空文字列になります。
+## Take two strings from the stack, consider each as a string, and pile "1" on the stack if they are equal or the second is greater, otherwise empty string.
+## For example, `1__2__:sle` or `1__1__:sle` would be "1".
+## `1__0__:sle` will be an empty string.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						$this->pushstack(array(("_".$s1 <= "_".$s2)? 1 : ""));
 						break;
@@ -2020,31 +2020,31 @@ class	recordholder {
 						$this->pushstack(array(($s1 >= $s2)? 1 : ""));
 						break;
 					case	"ige":
-## スタックから文字列を2つ取り出し、それぞれを数値とみなして、等しいか1番目が大きければ「1」を、そうでなければ空文字列をスタックに積みます。
-## 例えば`1__0__:ige`や`1__1__:ige`は「1」になります。
-## `1__2__:ige`は空文字列になります。
+## Take two strings from the stack, consider each as a number, and stack "1" if they are equal or the first is greater, otherwise empty string on the stack.
+## For example, `1__0__:ige` or `1__1__:ige` is "1".
+## `1__2__:ige` will be an empty string.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						$this->pushstack(array(($s1 + 0 >= $s2 + 0)? 1 : ""));
 						break;
 					case	"sge":
-## スタックから文字列を2つ取り出し、それぞれを文字列とみなして、等しいか1番目が大きければ「1」を、そうでなければ空文字列をスタックに積みます。
-## 例えば`1__0__:sge`や`1__1__:sge`は「1」になります。
-## `1__2__:sge`は空文字列になります。
+## Take two strings from the stack, consider each as a string, and stack "1" if they are equal or the first is larger, otherwise empty string on the stack.
+## For example, `1__0__:sge` or `1__1__:sge` would be "1".
+## `1__2__:sge` will be an empty string.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						$this->pushstack(array(("_".$s1 >= "_".$s2)? 1 : ""));
 						break;
 					case	"dup":
-## スタックから文字列を1つ取り出し、同じものを2つスタックに積みます。
-## これは例えば、`id__:g:dup:isnull:andbreak__table__field__:tableid`のような使い方で、一度取得した「id__:g」を、「:isnull」と「:tableid」の両方で使いたい場合等に使用します。
+## Take one string from the stack and stack two identical ones on the stack.
+## This is used, for example, in `id__:g:dup:isnull:andbreak__table__field__:tableid`, when you want to use "id__:g" once obtained for both ":isnull" and ":tableid".
 						$this->popstack($cmd, "");
 						$s1 = $this->stack[count($this->stack) - 1];
 						$this->pushstack(array($s1));
 						break;
 					case	"andbreak":
-## スタックから文字列を1つ取り出し、空文字列か「0」ならばそのまま継続し、そうでなければそこで式の評価を終了して空文字列を返します。
-## 例えば`0__:andbreak__a`は「a」になります。
-## 一方、`1__:andbreak__a`は空文字列になります(__a以降は評価されません)。
-## これは例えば、`id__:g:dup:isnull:andbreak__table__field__:tableid`のような使い方で、「id__:g」が空文字列であったら、そこで評価を終了するのに使われます。
+## Retrieve a string from the stack and continue if it is an empty string or "0", otherwise terminate evaluation of the expression there and return an empty string.
+## For example, `0__:andbreak__a` would be "a".
+## On the other hand, `1__:andbreak__a` will be an empty string (no evaluation after __a).
+## This is used, for example, `id__:g:dup:isnull:andbreak__table__field__:tableid` to terminate evaluation there if "id__:g" is an empty string.
 						list($s1) = $this->popstack($cmd, "val");
 						if ($s1 != 0) {
 							$this->pushstack(array("BREAK"));
@@ -2054,10 +2054,10 @@ class	recordholder {
 						$this->pushstack(array());
 						break;
 					case	"iandbreak":
-## スタックの文字列が、空文字列か「0」ならばそのまま継続し、そうでなければそこで式の評価を終了して空文字列を返します。
-## 例えば`0__:iandbreak`は「0」になります。
-## 一方、`1__:iandbreak`は空文字列になります(以降は評価されません)。
-## これは例えば、`id__:g:dup:isnull:andbreak__table__field__:tableid`のような使い方で、「id__:g」が空文字列であったら、そこで評価を終了するのに使われます。
+## If the string in the stack is an empty string or "0", continue; otherwise, terminate evaluation of the expression there and return an empty string.
+## For example, `0__:iandbreak` would be "0".
+## On the other hand, `1__:iandbreak` will be an empty string (not evaluated thereafter).
+## This is used, for example, `id__:g:dup:isnull:andbreak__table__field__:tableid` to terminate evaluation there if "id__:g" is an empty string.
 						list($s1) = $this->popstack($cmd, "val");
 						if ($s1 != 0) {
 							$this->pushstack(array("BREAK"));
@@ -2067,10 +2067,10 @@ class	recordholder {
 						$this->pushstack(array());
 						break;
 					case	"orbreak":
-## スタックから文字列を1つ取り出し、空文字列か「0」ならばそこで式の評価を終了して空文字列を返し、そうでなければそのまま継続します。
-## 例えば`1__:orbreak__a`は「a」になります。
-## 一方、`0__:orbreak__a`は空文字列になります(__a以降は評価されません)。
-## これは例えば、`id__:g:int:dup:orbreak__id__:set`のような使い方で、「id__:g:int」が0か空文字列であったら、そこで評価を終了するのに使われます。
+## Retrieve a string from the stack, and if it is an empty string or "0", terminate evaluation of the expression there and return an empty string, otherwise continue.
+## For example, `1__:orbreak__a` would be "a".
+## On the other hand, `0__:orbreak__a` will be an empty string (no evaluation after __a).
+## This is used, for example, in `id__:g:int:dup:orbreak__id__:set` to terminate evaluation there if "id__:g:int" is zero or an empty string.
 						list($s1) = $this->popstack($cmd, "val");
 						if ($s1 == 0) {
 							$this->pushstack(array("BREAK"));
@@ -2080,10 +2080,10 @@ class	recordholder {
 						$this->pushstack(array());
 						break;
 					case	"iorbreak":
-## スタックの文字列が、空文字列か「0」ならばそこで式の評価を終了して空文字列を返し、そうでなければそのまま継続します。
-## 例えば`1__:iorbreak`は「1」になります。
-## 一方、`0__:iorbreak`は空文字列になります(以降は評価されません)。
-## これは例えば、`id__:g:int:dup:orbreak__id__:set`のような使い方で、「id__:g:int」が0か空文字列であったら、そこで評価を終了するのに使われます。
+## If the string in the stack is an empty string or "0", then the evaluation of the expression ends there and an empty string is returned, otherwise it continues.
+## For example, `1__:iorbreak` would be "1".
+## On the other hand, `0__:iorbreak` will be an empty string (and will not be evaluated thereafter).
+## This is used, for example, in `id__:g:int:dup:orbreak__id__:set` to terminate evaluation there if "id__:g:int" is zero or an empty string.
 						list($s1) = $this->popstack($cmd, "val");
 						if ($s1 == 0) {
 							$this->pushstack(array("BREAK"));
@@ -2093,31 +2093,31 @@ class	recordholder {
 						$this->pushstack(array());
 						break;
 					case	"break":
-## そこで式の評価を終了して空文字列を返します。
+## So it terminates evaluation of the expression and returns an empty string.
 						$this->popstack($cmd, "");
 						$this->pushstack(array("BREAK"));
 						$this->flush_coverage();
 						return "";
 					case	"andreturn0":
-## スタックから文字列を1つ取り出し、空文字列か「0」ならばそのまま継続し、そうでなければそこで式の評価を終了して「0」を返します。
-## 例えば`0__:andreturn0__a`は「a」になります。
-## 一方、`1__:andreturn0__a`は「0」になります(__a以降は評価されません)。
+## Takes one string from the stack and continues if it is an empty string or "0", otherwise terminates evaluation of the expression there and returns "0".
+## For example, `0__:andreturn0__a` would be "a".
+## On the other hand, `1__:andreturn0__a` will result in "0" (no evaluation after __a).
 					case	"andreturn1":
-## スタックから文字列を1つ取り出し、空文字列か「0」ならばそのまま継続し、そうでなければそこで式の評価を終了して「1」を返します。
-## 例えば`0__:andreturn1__a`は「a」になります。
-## 一方、`1__:andreturn1__a`は「1」になります(__a以降は評価されません)。
+## Takes one string from the stack and continues if it is an empty string or "0", otherwise terminates evaluation of the expression there and returns "1".
+## For example, `0__:andreturn1__a` would be "a".
+## On the other hand, `1__:andreturn1__a` will result in "1" (no evaluation after __a).
 					case	"andreturn2":
-## スタックから文字列を1つ取り出し、空文字列か「0」ならばそのまま継続し、そうでなければそこで式の評価を終了して「2」を返します。
-## 例えば`0__:andreturn2__a`は「a」になります。
-## 一方、`1__:andreturn2__a`は「2」になります(__a以降は評価されません)。
+## Takes one string from the stack and continues if it is an empty string or "0", otherwise terminates evaluation of the expression there and returns "2".
+## For example, `0__:andreturn2__a` would be "a".
+## On the other hand, `1__:andreturn2__a` would be "2" (no evaluation after __a).
 					case	"andreturn3":
-## スタックから文字列を1つ取り出し、空文字列か「0」ならばそのまま継続し、そうでなければそこで式の評価を終了して「3」を返します。
-## 例えば`0__:andreturn3__a`は「a」になります。
-## 一方、`1__:andreturn3__a`は「3」になります(__a以降は評価されません)。
+## Takes one string from the stack and continues if it is an empty string or "0", otherwise terminates evaluation of the expression there and returns "3".
+## For example, `0__:andreturn3__a` would be "a".
+## On the other hand, `1__:andreturn3__a` would be "3" (no evaluation after __a).
 					case	"andreturn4":
-## スタックから文字列を1つ取り出し、空文字列か「0」ならばそのまま継続し、そうでなければそこで式の評価を終了して「4」を返します。
-## 例えば`0__:andreturn4__a`は「a」になります。
-## 一方、`1__:andreturn4__a`は「4」になります(__a以降は評価されません)。
+## Takes one string from the stack and continues if it is an empty string or "0", otherwise terminates evaluation of the expression there and returns "4".
+## For example, `0__:andreturn4__a` would be "a".
+## On the other hand, `1__:andreturn4__a` would be "4" (no evaluation after __a).
 						list($s1) = $this->popstack($cmd, "val");
 						if ($s1 != 0) {
 							$val = substr($cmd, -1) + 0;
@@ -2128,25 +2128,25 @@ class	recordholder {
 							$this->pushstack(array());
 						break;
 					case	"orreturn0":
-## スタックから文字列を1つ取り出し、空文字列か「0」ならばそこで式の評価を終了して「0」を返し、そうでなければそのまま継続します。
-## 例えば`1__:orreturn0__a`は「a」になります。
-## 一方、`0__:orreturn0__a`は「0」になります(__a以降は評価されません)。
+## Retrieve a string from the stack, and if it is an empty string or "0", terminate evaluation of the expression there and return "0", otherwise continue.
+## For example, `1__:orreturn0__a` would be "a".
+## On the other hand, `0__:orreturn0__a` will be "0" (no evaluation after __a).
 					case	"orreturn1":
-## スタックから文字列を1つ取り出し、空文字列か「0」ならばそこで式の評価を終了して「1」を返し、そうでなければそのまま継続します。
-## 例えば`1__:orreturn1__a`は「a」になります。
-## 一方、`0__:orreturn1__a`は「1」になります(__a以降は評価されません)。
+## Retrieve a string from the stack, and if it is an empty string or "0", terminate evaluation of the expression there and return "1", otherwise continue.
+## For example, `1__:orreturn1__a` would be "a".
+## On the other hand, `0__:orreturn1__a` will result in "1" (no evaluation after __a).
 					case	"orreturn2":
-## スタックから文字列を1つ取り出し、空文字列か「0」ならばそこで式の評価を終了して「2」を返し、そうでなければそのまま継続します。
-## 例えば`1__:orreturn2__a`は「a」になります。
-## 一方、`0__:orreturn2__a`は「2」になります(__a以降は評価されません)。
+## Retrieve a string from the stack, and if it is an empty string or "0", terminate evaluation of the expression there and return "2", otherwise continue.
+## For example, `1__:orreturn2__a` would be "a".
+## On the other hand, `0__:orreturn2__a` would be "2" (no evaluation after __a).
 					case	"orreturn3":
-## スタックから文字列を1つ取り出し、空文字列か「0」ならばそこで式の評価を終了して「3」を返し、そうでなければそのまま継続します。
-## 例えば`1__:orreturn3__a`は「a」になります。
-## 一方、`0__:orreturn3__a`は「3」になります(__a以降は評価されません)。
+## Retrieve a string from the stack, and if it is an empty string or "0", terminate evaluation of the expression there and return "3", otherwise continue.
+## For example, `1__:orreturn3__a` would be "a".
+## On the other hand, `0__:orreturn3__a` would be "3" (no evaluation after __a).
 					case	"orreturn4":
-## スタックから文字列を1つ取り出し、空文字列か「0」ならばそこで式の評価を終了して「4」を返し、そうでなければそのまま継続します。
-## 例えば`1__:orreturn4__a`は「a」になります。
-## 一方、`0__:orreturn4__a`は「4」になります(__a以降は評価されません)。
+## Retrieve a string from the stack, and if it is an empty string or "0", terminate evaluation of the expression there and return "4", otherwise continue.
+## For example, `1__:orreturn4__a` would be "a".
+## On the other hand, `0__:orreturn4__a` would be "4" (no evaluation after __a).
 						list($s1) = $this->popstack($cmd, "val");
 						if ($s1 == 0) {
 							$val = substr($cmd, -1) + 0;
@@ -2157,16 +2157,16 @@ class	recordholder {
 							$this->pushstack(array());
 						break;
 					case	"home":
-## 式の評価を終了してルートページにリダイレクトします。
+## Finish evaluating the expression and redirect to the root page.
 						$this->popstack($cmd, "");
 						$this->pushstack(array("HOME"));
 						$this->flush_coverage();
 						header("Location: {$sys->urlbase}/nofmt/{$sys->rootpage}.html");
 						log_die();
 					case	"andhome":
-## スタックから文字列を1つ取り出し、空文字列か「0」ならばそのまま継続し、そうでなければそこで式の評価を終了してルートページにリダイレクトします。
-## 例えば`0__:andhome__a`は「a」になります。
-## 一方、`1__:andhome__a`はルートページにリダイレクトします(__a以降は評価されません)。
+## Take one string from the stack and continue if it is an empty string or "0", otherwise terminate evaluation of the expression there and redirect to the root page.
+## For example, `0__:andhome__a` would be "a".
+## On the other hand, `1__:andhome__a` redirects to the root page (no evaluation after __a).
 						list($s1) = $this->popstack($cmd, "val");
 						if ($s1 != 0) {
 							$this->pushstack(array("HOME"));
@@ -2177,9 +2177,9 @@ class	recordholder {
 							$this->pushstack(array());
 						break;
 					case	"iandhome":
-## スタックの文字列が、空文字列か「0」ならばそのまま継続し、そうでなければそこで式の評価を終了してルートページにリダイレクトします。
-## 例えば`0__:iandhome`は「0」になります。
-## 一方、`1__:iandhome`はルートページにリダイレクトします(以降は評価されません)。
+## If the string in the stack is an empty string or "0", continue as is; otherwise, terminate expression evaluation there and redirect to the root page.
+## For example, `0__:iandhome` would be "0".
+## On the other hand, `1__:iandhome` redirects to the root page (and is not evaluated thereafter).
 						list($s1) = $this->popstack($cmd, "val");
 						if ($s1 != 0) {
 							$this->pushstack(array("HOME"));
@@ -2190,9 +2190,9 @@ class	recordholder {
 							$this->pushstack(array($s1));
 						break;
 					case	"orhome":
-## スタックから文字列を1つ取り出し、空文字列か「0」ならばそこで式の評価を終了してルートページにリダイレクトし、そうでなければそのまま継続します。
-## 例えば`1__:orhome__a`は「a」になります。
-## 一方、`0__:orhome__a`はルートページにリダイレクトします(__a以降は評価されません)。
+## Take one string from the stack and if it is an empty string or "0", terminate evaluation of the expression there and redirect to the root page, otherwise continue.
+## For example, `1__:orhome__a` would be "a".
+## On the other hand, `0__:orhome__a` redirects to the root page (no evaluation after __a).
 						list($s1) = $this->popstack($cmd, "val");
 						if ($s1 == 0) {
 							$this->pushstack(array("HOME"));
@@ -2203,9 +2203,9 @@ class	recordholder {
 							$this->pushstack(array());
 						break;
 					case	"iorhome":
-## スタックの文字列が、空文字列か「0」ならばそこで式の評価を終了してルートページにリダイレクトし、そうでなければそのまま継続します。
-## 例えば`1__:iorhome`は「1」になります。
-## 一方、`0__:iorhome`はルートページにリダイレクトします(以降は評価されません)。
+## If the string in the stack is an empty string or "0", then stop evaluating the expression there and redirect to the root page, otherwise continue.
+## For example, `1__:iorhome` would be "1".
+## On the other hand, `0__:iorhome` redirects to the root page (and is not evaluated thereafter).
 						list($s1) = $this->popstack($cmd, "val");
 						if ($s1 == 0) {
 							$this->pushstack(array("HOME"));
@@ -2216,25 +2216,25 @@ class	recordholder {
 							$this->pushstack(array($s1));
 						break;
 					case	"pop":
-## スタックから文字列を1つ取り出して、捨てます。
-## これは例えば:h_updateなどで、得られたレコードIDを使わない場合に使用します。
+## Take one string from the stack and discard it.
+## This is used when the record ID obtained is not used, for example in :h_update.
 						$this->popstack($cmd, "drop");
 						$this->pushstack(array());
 						break;
 					case	"authwithpass":
 					case	"reportbody":
 					case	"popall":
-## スタックをすべて捨てて空にします。
+## Empty the stack by discarding the entire stack.
 						$this->popstack($cmd, "");
 						$this->stack = array();
 						$this->pushstack(array());
 						break;
 					case	"jump":
-## スタックから全要素を取り出し、URLに変換して、そのURLにジャンプします。
-## 例えば`a0__:jump`は「a0.html」にジャンプします。
-## また、`a0__id__1__:jump`は「a0.html?id=1」にジャンプします。
-## さらに、`a0__id__1__mode__new__:jump`は「a0.html?id=1&mode=new」にジャンプします。
-## これは必要なだけ続けることができます。
+## Take all elements from the stack, convert them to URLs, and jump to those URLs.
+## For example, `a0__:jump` will jump to "a0.html".
+## Also, `a0__id__1__:jump` will jump to "a0.html?id=1".
+## Furthermore, `a0__id__1__mode__new__:jump` jumps to "a0.html?id=1&mode=new".
+## This can continue for as long as needed.
 						$this->popstack($cmd, "");
 						$s = "";
 						foreach ($this->stack as $k3 => $v3) {
@@ -2252,8 +2252,8 @@ class	recordholder {
 						header("Location: {$s}");
 						log_die();
 					case	"sor":
-## スタックから文字列を2つ取り出し、2番目の文字列が空文字列なら1番目の文字列を、そうでなければ2番目の文字列をスタックに積みます。
-## 例えば`empty__name__:g:sor`は、`name__:g`が空文字列なら「empty」に、そうでなければ`name__:g`になります。
+## Take two strings from the stack and stack the first string if the second string is empty, otherwise stack the second string on the stack.
+## For example, `empty__name__:g:sor` is "empty" if `name__:g` is an empty string, otherwise `name__:g`.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						if ($s2 == "")
 							$s2 = $s1;
@@ -2266,8 +2266,8 @@ class	recordholder {
 						$this->pushstack(array($s2));
 						break;
 					case	"ior":
-## スタックから文字列を2つ取り出し、それぞれを数値とみなして、2番目の数値が0なら1番目の数値を、そうでなければ2番目の数値をスタックに積みます。
-## 例えば`2__1__:ior`は「1」に、`2__0__:ior`は「2」になります。
+## Take two strings from the stack, consider each as a number, and pile the first number on the stack if the second number is 0, otherwise the second number.
+## For example, `2__1__:ior` becomes "1" and `2__0__:ior` becomes "2".
 						list($s1, $s2) = $this->popstack($cmd, "i j");
 						if ($s2 == 0)
 							$s2 = $s1;
@@ -2280,9 +2280,9 @@ class	recordholder {
 						$this->pushstack(array($s2 + 0));
 						break;
 					case	"loginrecord":
-## スタックから文字列を1つ取り出してフィールド名とみなし、このセッションのログインユーザーに対応する、ログインテーブルのレコードのフィールド値をスタックに積みます。
-## このセッションでログインがおこなわれていない場合は、空文字列になります。
-## 例えば`login__:loginrecord`は、このセッションのログイン名になります。
+## Take one string from the stack, consider it a field name, and stack the field values of the record in the login table corresponding to the logged-in user for this session.
+## Empty string if there is no login for this session.
+## For example, `login__:loginrecord` will be the login name for this session.
 						list($s1) = $this->popstack($cmd, "field");
 						$s = "";
 						if ($loginrecord !== null)
@@ -2290,8 +2290,8 @@ class	recordholder {
 						$this->pushstack(array($s));
 						break;
 					case	"set":
-## スタックから文字列を2つ取り出して、それぞれフィールド値とフィールド名とみなし、カレントレコードに設定します。
-## 例えば`1__id__:set`は、カレントレコードのIDに1を設定します。
+## Take two strings from the stack, consider them as field values and field names, respectively, and set them to the current record.
+## For example, `1__id__:set` sets the ID of the current record to 1.
 						list($s1, $s2) = $this->popstack($cmd, "val field");
 						if ($s2 == "id")
 							$s3 = $s2;
@@ -2301,107 +2301,107 @@ class	recordholder {
 						$this->pushstack(array());
 						break;
 					case	"sqlisnull":
-## スタックから文字列を1つ取り出して、フィールド名とみなし、対応するSQL文に「and フィールド名 is null」を追加します。
-## これは、「<!--{tablegrid」のパラメータ部と「<!--}--」までの区間、そして「<!--{selectrows」のパラメータ部で使用することができます。
+## Take one string from the stack, consider it a field name, and add "and field name is null" to the corresponding SQL statement.
+## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
 						list($s1) = $this->popstack($cmd, "field");
 						$this->whereargs["{$s1} is null"] = array();
 						$this->pushstack(array());
 						break;
 					case	"sqlisnotnull":
-## スタックから文字列を1つ取り出して、フィールド名とみなし、対応するSQL文に「and フィールド名 is not null」を追加します。
-## これは、「<!--{tablegrid」のパラメータ部と「<!--}--」までの区間、そして「<!--{selectrows」のパラメータ部で使用することができます。
+## Take one string from the stack, consider it a field name, and add "and field name is not null" to the corresponding SQL statement.
+## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
 						list($s1) = $this->popstack($cmd, "field");
 						$this->whereargs["{$s1} is not null"] = array();
 						$this->pushstack(array());
 						break;
 					case	"sqlisempty":
-## スタックから文字列を1つ取り出して、フィールド名とみなし、対応するSQL文に「and (フィールド名 is null or フィールド名 = "")」を追加します。
-## これは、「<!--{tablegrid」のパラメータ部と「<!--}--」までの区間、そして「<!--{selectrows」のパラメータ部で使用することができます。
+## Take one string from the stack, consider it a field name, and add "and (field name is null or field name = "")" to the corresponding SQL statement.
+## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
 						list($s1) = $this->popstack($cmd, "field");
 						$this->whereargs["({$s1} is null or {$s1} = ?)"] = array("");
 						$this->pushstack(array());
 						break;
 					case	"sqlisnotempty":
-## スタックから文字列を1つ取り出して、フィールド名とみなし、対応するSQL文に「and フィールド名 is not null and フィールド名 <> ""」を追加します。
-## これは、「<!--{tablegrid」のパラメータ部と「<!--}--」までの区間、そして「<!--{selectrows」のパラメータ部で使用することができます。
+## Take one string from the stack, consider it a field name, and add "and field name is not null and field name <> "" to the corresponding SQL statement.
+## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
 						list($s1) = $this->popstack($cmd, "field");
 						$this->whereargs["{$s1} is not null"] = array();
 						$this->whereargs["{$s1} <> ?"] = array("");
 						$this->pushstack(array());
 						break;
 					case	"sqllike":
-## スタックから文字列を2つ取り出して、それぞれを検索文字列とフィールド名とみなし、対応するSQL文に「and フィールド名 like "%検索文字列%"」を追加します。
-## これは、「<!--{tablegrid」のパラメータ部と「<!--}--」までの区間、そして「<!--{selectrows」のパラメータ部で使用することができます。
+## Take two strings from the stack, consider each to be a search string and a field name, and add "and field name like "%search string%"" to the corresponding SQL statement.
+## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
 						list($s1, $s2) = $this->popstack($cmd, "val field");
 						$this->whereargs["{$s2} like ?"] = array("%{$s1}%");
 						$this->pushstack(array());
 						break;
 					case	"sqllike2":
-## スタックから文字列を3つ取り出して、それぞれを検索文字列、フィールド名1、フィールド名2とみなし、対応するSQL文に「and (フィールド名1 like "%検索文字列%" or フィールド名2 like "%検索文字列%")」を追加します。
-## これは、「<!--{tablegrid」のパラメータ部と「<!--}--」までの区間、そして「<!--{selectrows」のパラメータ部で使用することができます。
+## Take three strings from the stack, consider each as a search string, field name 1, and field name 2, and add "and (field name 1 like "%search string%" or field name 2 like "%search string%")" to the corresponding SQL statement.
+## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
 						list($s1, $s2, $s3) = $this->popstack($cmd, "val field1 field2");
 						$this->whereargs["({$s2} like ? or {$s3} like ?)"] = array("%{$s1}%", "%{$s1}%");
 						$this->pushstack(array());
 						break;
 					case	"sqllike3":
-## スタックから文字列を4つ取り出して、それぞれを検索文字列、フィールド名1、フィールド名2、フィールド名3とみなし、対応するSQL文に「and (フィールド名1 like "%検索文字列%" or フィールド名2 like "%検索文字列%" or フィールド名3 like "%検索文字列%")」を追加します。
-## これは、「<!--{tablegrid」のパラメータ部と「<!--}--」までの区間、そして「<!--{selectrows」のパラメータ部で使用することができます。
+## Take four strings from the stack, consider each as a search string, field name 1, field name 2, and field name 3, and add "and (field name 1 like "%Search String%" or field name 2 like "%Search String%" or field name 3 like "% Search String%")" is added.
+## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
 						list($s1, $s2, $s3, $s4) = $this->popstack($cmd, "val field1 field2 field3");
 						$this->whereargs["({$s2} like ? or {$s3} like ? or {$s4} like ?)"] = array("%{$s1}%", "%{$s1}%", "%{$s1}%");
 						$this->pushstack(array());
 						break;
 					case	"sqllike4":
-## スタックから文字列を5つ取り出して、それぞれを検索文字列、フィールド名1、フィールド名2、フィールド名3、フィールド名4とみなし、対応するSQL文に「and (フィールド名1 like "%検索文字列%" or フィールド名2 like "%検索文字列%" or フィールド名3 like "%検索文字列%" or フィールド名4 like "%検索文字列")」を追加します。
-## これは、「<!--{tablegrid」のパラメータ部と「<!--}--」までの区間、そして「<!--{selectrows」のパラメータ部で使用することができます。
+## Take 5 strings from the stack and consider each as a search string, field name 1, field name 2, field name 3, field name 4, and add "and (field name 1 like "%search string%" or field name 2 like "%search string%" or field name 3 like "%search string%" or field name 4 like "%search string")".
+## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
 						list($s1, $s2, $s3, $s4, $s5) = $this->popstack($cmd, "val field1 field2 field3 field4");
 						$this->whereargs["({$s2} like ? or {$s3} like ? or {$s4} like ? or {$s5} like ?)"] = array("%{$s1}%", "%{$s1}%", "%{$s1}%", "%{$s1}%");
 						$this->pushstack(array());
 						break;
 					case	"sqlnotlike":
-## スタックから文字列を2つ取り出して、それぞれを検索文字列とフィールド名とみなし、対応するSQL文に「and フィールド名 not like "%検索文字列%"」を追加します。
-## これは、「<!--{tablegrid」のパラメータ部と「<!--}--」までの区間、そして「<!--{selectrows」のパラメータ部で使用することができます。
+## Take two strings from the stack, consider them as a search string and a field name, respectively, and add "and field name not like "%search string%"" to the corresponding SQL statement.
+## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
 						list($s1, $s2) = $this->popstack($cmd, "val field");
 						$this->whereargs["{$s2} not like ?"] = array("%{$s1}%");
 						$this->pushstack(array());
 						break;
 					case	"sqleq":
-## スタックから文字列を2つ取り出して、それぞれを文字列とフィールド名とみなし、対応するSQL文に「and "文字列" = フィールド名」を追加します。
-## これは、「<!--{tablegrid」のパラメータ部と「<!--}--」までの区間、そして「<!--{selectrows」のパラメータ部で使用することができます。
+## Take two strings from the stack, consider each to be a string and a field name, and add "and "string" = field name" to the corresponding SQL statement.
+## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
 						list($s1, $s2) = $this->popstack($cmd, "val field");
 						$this->whereargs["? = {$s2}"] = array($s1);
 						$this->pushstack(array());
 						break;
 					case	"sqlne":
-## スタックから文字列を2つ取り出して、それぞれを文字列とフィールド名とみなし、対応するSQL文に「and "文字列" <> フィールド名」を追加します。
-## これは、「<!--{tablegrid」のパラメータ部と「<!--}--」までの区間、そして「<!--{selectrows」のパラメータ部で使用することができます。
+## Take two strings from the stack, consider each to be a string and a field name, and add "and "string" <> field name" to the corresponding SQL statement.
+## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
 						list($s1, $s2) = $this->popstack($cmd, "val field");
 						$this->whereargs["? <> {$s2}"] = array($s1);
 						$this->pushstack(array());
 						break;
 					case	"sqllt":
-## スタックから文字列を2つ取り出して、それぞれを文字列とフィールド名とみなし、対応するSQL文に「and "文字列" < フィールド名」を追加します。
-## これは、「<!--{tablegrid」のパラメータ部と「<!--}--」までの区間、そして「<!--{selectrows」のパラメータ部で使用することができます。
+## Take two strings from the stack, consider each to be a string and a field name, and add "and "string" < field name" to the corresponding SQL statement.
+## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
 						list($s1, $s2) = $this->popstack($cmd, "val field");
 						$this->whereargs["? < {$s2}"] = array($s1);
 						$this->pushstack(array());
 						break;
 					case	"sqlle":
-## スタックから文字列を2つ取り出して、それぞれを文字列とフィールド名とみなし、対応するSQL文に「and "文字列" <= フィールド名」を追加します。
-## これは、「<!--{tablegrid」のパラメータ部と「<!--}--」までの区間、そして「<!--{selectrows」のパラメータ部で使用することができます。
+## Take two strings from the stack, consider each to be a string and a field name, and add "and "string" <= field name" to the corresponding SQL statement.
+## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
 						list($s1, $s2) = $this->popstack($cmd, "val field");
 						$this->whereargs["? <= {$s2}"] = array($s1);
 						$this->pushstack(array());
 						break;
 					case	"sqlgt":
-## スタックから文字列を2つ取り出して、それぞれを文字列とフィールド名とみなし、対応するSQL文に「and "文字列" > フィールド名」を追加します。
-## これは、「<!--{tablegrid」のパラメータ部と「<!--}--」までの区間、そして「<!--{selectrows」のパラメータ部で使用することができます。
+## Take two strings from the stack, consider each to be a string and a field name, and add "and "string" > field name" to the corresponding SQL statement.
+## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
 						list($s1, $s2) = $this->popstack($cmd, "val field");
 						$this->whereargs["? > {$s2}"] = array($s1);
 						$this->pushstack(array());
 						break;
 					case	"sqlge":
-## スタックから文字列を2つ取り出して、それぞれを文字列とフィールド名とみなし、対応するSQL文に「and "文字列" >= フィールド名」を追加します。
-## これは、「<!--{tablegrid」のパラメータ部と「<!--}--」までの区間、そして「<!--{selectrows」のパラメータ部で使用することができます。
+## Take two strings from the stack, consider each to be a string and a field name, and add "and "string" >= field name" to the corresponding SQL statement.
+## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
 						list($s1, $s2) = $this->popstack($cmd, "val field");
 						$this->whereargs["? >= {$s2}"] = array($s1);
 						$this->pushstack(array());
@@ -2612,14 +2612,14 @@ class	recordholder {
 
 
 class	recordholder_tableid extends recordholder {
-# 「<!--{tableid テーブル名 id-->」の直後から「<!--}-->」までは、テーブル名とidで指定したレコードが「現在レコード」となる。
-# idにはプレイスホルダー(``)を使って式を記述できる。
-# idを省略するか0にすると、(下記の)update時に新規レコードを作成する。
-# tableidはネストできる。例えば「<!--{tableid customer `CD__:r`-->」は、外側の現在レコードのCDフィールドが、customerテーブルのidとなる。
-# submitのnameに「テーブル名__:h_update」を指定すると、指定したテーブルを入力した内容でupdateできる。
-# なお、submitは複数のテーブルを指定できるので、tableidの内部に置く必要はない。
-# また、1つのページ中で、tableidをいくつも使うと、フィールド名(「<INPUT name="フィールド名">」で入力を受け付けている)が衝突してしまう。この場合は、「<!--{tableid 別名あ=テーブル名 id-->」と「<!--{tableid 別名い=テーブル名 id-->」のようにすると、それぞれのnameに自動でプレフィックス「別名あ_」「別名い_」が追加され、衝突を避けることができる。これは、異なるテーブルに同じ名前のフィールドがある場合だけでなく、1つのテーブルの異なるレコードを1つのページで扱う場合にも利用できる。
-# 2箇所以上のtableidで、同じテーブル名(別名を指定した場合は別名)を指定したときは、最初のtableidで指定したレコードが対象となる。これを利用して、1つのページで、2つのレコードを切り替えながらフィールドを記述することができる。
+# The "<!--{tableid Table name id-->" to "<!--}-->", the record specified by the table name and id becomes the "current record".
+# The id can contain expressions using placeholders (``).
+# If id is omitted or set to 0, a new record is created on UPDATE (below).
+# Tableids can be nested. For example, "<!--{tableid customer `CD__:r`-->" will make the CD field of the outer current record the id of the customer table.
+# If "table name__:h_update" is specified in the submit name, the specified table can be updated with the input contents.
+# Note that SUBMIT can specify multiple tables, so there is no need to place it inside tableid.
+# Also, if you use several tableids in one page, the field names (which accept input with "<INPUT name="field name">") will conflict. In this case, use "<!--{tableid alias a=table name id-->" and "<!--{tableid alias_a=table name id-->", the prefix "alias_a" and "alias_i" will be automatically added to each name to avoid the conflict. This can be used not only when there are fields with the same name in different tables, but also when different records from one table are handled on one page.
+# When the same table name (or alias if an alias is specified) is specified in two or more tableids, the record specified in the first tableid is the target. This can be used to describe a field while switching between two records on a single page.
 	function	__construct($rh = null, $record = null, $tablename = "", $prefix = "", $par = "") {
 		global	$tablelist;
 		
@@ -2634,10 +2634,10 @@ class	recordholder_tableid extends recordholder {
 
 
 class	recordholder_stableid extends recordholder {
-# 「<!--{stableid テーブル名 id-->」の直後から「<!--}-->」までは、テーブル名とidで指定したシンプルレコードが「現在レコード」となる。
-# idにはプレイスホルダー(``)を使って式を記述できる。
-# submitのnameに「テーブル名__:h_update」を指定すると、指定したテーブルを入力した内容でupdateできる。
-# また、1つのページ中で、stableidをいくつも使うと、フィールド名(「<INPUT name="フィールド名">」で入力を受け付けている)が衝突してしまう。この場合は、「<!--{stableid 別名あ=テーブル名 id-->」と「<!--{stableid 別名い=テーブル名 id-->」のようにすると、それぞれのnameに自動でプレフィックス「別名あ_」「別名い_」が追加され、衝突を避けることができる。これは、異なるテーブルに同じ名前のフィールドがある場合だけでなく、1つのテーブルの異なるレコードを1つのページで扱う場合にも利用できる。
+# The "<!--{stableid Table name id-->" to "<!--}-->", the simple record specified by the table name and id becomes the "current record".
+# The id can contain expressions using placeholders (``).
+# If "table name__:h_update" is specified in the submit name, the specified table can be updated with the input contents.
+# Also, if you use several stableids in one page, the field names (which accept input with "<INPUT name="field name">") will conflict. In this case, use "<!--{stableid alias a=table name id-->" and "<!--{stableid alias_" and "--{stableid alias_i=table_name id-->" will automatically add the prefix "alias_a_" and "alias_i_" to each name to avoid the conflict. This can be used not only when there are fields with the same name in different tables, but also when different records from one table are handled on one page.
 	function	__construct($rh = null, $record = null, $tablename = "", $prefix = "", $par = "") {
 		global	$tablelist;
 		
@@ -2970,9 +2970,9 @@ class	commandparser__else extends commandparser {
 
 
 class	commandparser_selectrows extends commandparser {
-# 「<!--{selectrows SQL句-->」の直後から「<!--}-->」までの範囲は、指定したSQL句で得られた検索結果の数だけ繰り返される。
-# 例えば「<!--{selectrows from customer limit 10-->`id__:r`<!--}-->」とすると、「select * from customer limit 10」を実行し、得られた1行1行に「`id__:r`」がおこなわれて出力される。
-# プレイスホルダーでは、検索結果の行が現在レコードとして扱われるが、「:curtable」や「:set」などは、外側の現在レコードがアクセスされる。
+# The "<!--{selectrows SQL clause-->" to "<!--}-->" is repeated as many times as the number of search results obtained with the specified SQL clause.
+# For example, "<!--{selectrows from customer limit 10-->`id__:r`<!--}-->", "select * from customer limit 10" is executed and each line obtained is output with "`id__:r`".
+# In placeholders, the row of the search result is treated as the current record, but for ":curtable", ":set", etc., the outer current record is accessed.
 	function	parsehtmlinner($rh = null, $record = null) {
 		$rh2 = new recordholder();
 		$sql = "select * ".$rh2->parsewithbqinsql($this->par, $record);
@@ -2987,8 +2987,8 @@ class	commandparser_selectrows extends commandparser {
 
 
 class	commandparser_stablerows extends commandparser {
-# 「<!--{stablerows シンプルテーブル名-->」の直後から「<!--}-->」までの範囲は、指定したシンプルテーブルのレコードの数だけ繰り返される。
-# SQLでなくシンプルテーブル名を扱う以外は、selectrowsコマンドと同じである。
+# The "<!--{stablerows simple table name-->" to "<!--}-->" is repeated for the number of records in the specified simple table.
+# It is the same as the selectrows command, except that it handles simple table names instead of SQL.
 	function	parsehtmlinner($rh = null, $record = null) {
 		global	$tablelist;
 		
