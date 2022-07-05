@@ -20,6 +20,9 @@ class	sys {
 	var	$mailexpire = 1800;
 	var	$forcelogoutonupdate = 1;
 	var	$noredirectonlogin = 0;		# 1: don't redirect from index.html to rootpage on login status.
+	
+	var	$urlbase = null;
+	var	$target = null;
 }
 $sys = new sys();
 
@@ -2785,7 +2788,7 @@ class	commandparser {		# volatile object
 		$coverage_id = $this->coverage_id;
 		
 		$debuglog .= $rootparser->gettree($this->index);
-		return $this->parsehtmlinner($rh, $record);
+		$this->parsehtmlinner($rh, $record);
 	}
 	function	parsehtmlinner($rh = null, $record = null) {
 		global	$coverage_id;
@@ -2804,10 +2807,23 @@ class	commandparser {		# volatile object
 		if ($record !== null)
 			$record->dumpfields("record: ");
 		
-		$ret = "";
 		foreach ($this->children as $index => $child)
-			$ret .= $child->parsehtml($rh, $record, $index);
-		return $ret;
+			$child->parsehtml($rh, $record, $index);
+	}
+	function	output($html = "", $htmlhighlight = "") {
+		global	$htmloutput;
+		global	$debuglog;
+		
+		if ($html == "")
+			return;
+		if ($this->parent !== null) {
+			$this->parent->output($html, $htmlhighlight);
+			return;
+		}
+		if ($htmlhighlight == "")
+			$htmlhighlight = htmlspecialchars($html);
+		$htmloutput .= $html;
+		$debuglog .= $htmlhighlight;
 	}
 }
 
@@ -2844,12 +2860,13 @@ class	commandparserhtml extends commandparser {
 		else
 			$debuglog .= '<pre class="outphase1" style="margin:0; background:#ffffc0;">';
 		
-		$ret = "";
+		$html = "";
+		$htmlhighlight = "";
 		$flag = 0;
 		foreach (explode("`", $highlight) as $key => $val) {
 			if ($key == 0) {
-				$debuglog .= htmlspecialchars($val);
-				$ret .= $val;
+				$html .= $val;
+				$htmlhighlight .= htmlspecialchars($val);
 				continue;
 			}
 			$s = "";
@@ -2868,20 +2885,19 @@ class	commandparserhtml extends commandparser {
 			switch ($flag) {
 				case	1:
 				case	3:
-					$debuglog .= '<b style="color: #ff0000;">';
+					$htmlhighlight .= '<b style="color: #ff0000;">';
 					$sclose = "</b>";
 					break;
 				case	2:
-					$debuglog .= '<span style="color: #0000ff;">';
+					$htmlhighlight .= '<span style="color: #0000ff;">';
 					$sclose = "</span>";
 					break;
 			}
-			$debuglog .= htmlspecialchars($s.substr($val, 1)).$sclose;
-			$ret .= $s.substr($val, 1);
+			$html .= $s.substr($val, 1);
+			$htmlhighlight .= htmlspecialchars($s.substr($val, 1)).$sclose;
 		}
+		$this->output($html, $htmlhighlight);
 		$debuglog .= '</pre>';
-		
-		return $ret;
 	}
 }
 
@@ -2906,7 +2922,7 @@ class	commandparserrecordholder extends commandparser {
 			$s = "recordholder_".$this->name;
 			$h = $recordholderlist[$alias] = new $s($rh, $record, $tablename, $prefix, trim(@$a[1]));
 		}
-		return parent::parsehtmlinner($h);
+		parent::parsehtmlinner($h);
 	}
 }
 
@@ -2915,8 +2931,8 @@ class	commandparser_if extends commandparser {
 	function	parsehtmlinner($rh = null, $record = null) {
 		$this->cond = ($rh->parsewithbq($this->par, $record) == 0)? 0 : 1;
 		if ($this->cond < 1)
-			return "";
-		return parent::parsehtmlinner($rh, $record);
+			return;
+		parent::parsehtmlinner($rh, $record);
 	}
 }
 
@@ -2929,12 +2945,12 @@ class	commandparser__elseif extends commandparser {
 			;
 		else {
 			$this->cond = -1;
-			return "";
+			return;
 		}
 		$this->cond = ($rh->parsewithbq($this->par, $record) == 0)? 0 : 1;
 		if ($this->cond < 1)
-			return "";
-		return parent::parsehtmlinner($rh, $record);
+			return;
+		parent::parsehtmlinner($rh, $record);
 	}
 }
 
@@ -2947,10 +2963,10 @@ class	commandparser__else extends commandparser {
 			;
 		else {
 			$this->cond = -1;
-			return "";
+			return;
 		}
 		$this->cond = 1;
-		return parent::parsehtmlinner($rh, $record);
+		parent::parsehtmlinner($rh, $record);
 	}
 }
 
@@ -2963,13 +2979,11 @@ class	commandparser_selectrows extends commandparser {
 		$rh2 = new recordholder();
 		$sql = "select * ".$rh2->parsewithbqinsql($this->par, $record);
 		list($s, $list) = $rh2->parsewhere($sql);
-		$ret = "";
 		$this->cond = 0;
 		foreach (execsql($s, $list, 0, 1) as $val) {
 			$this->cond = 1;
-			$ret .= parent::parsehtmlinner($rh, new selectrecord($val));
+			parent::parsehtmlinner($rh, new selectrecord($val));
 		}
-		return $ret;
 	}
 }
 
@@ -2984,12 +2998,10 @@ class	commandparser_stablerows extends commandparser {
 		$stable = @$tablelist["simple"]->gettable(trim($this->par.""));
 		if ($stable === null)
 			return "";
-		$ret = "";
 		foreach ($stable->getrecordidlist() as $recordid) {
 			$this->cond = 1;
-			$ret .= parent::parsehtmlinner($rh, $stable->getrecord($recordid));
+			parent::parsehtmlinner($rh, $stable->getrecord($recordid));
 		}
-		return $ret;
 	}
 }
 
@@ -3018,18 +3030,16 @@ class	commandparser_dayrows extends commandparser {
 		if (($count = @$a[1]) == 0)
 			$count = 1;
 		
-		$ret = "";
 		while ($count > 0) {
-			$ret .= parent::parsehtmlinner($rh, new daterecord($t, @$a[2]));
+			parent::parsehtmlinner($rh, new daterecord($t, @$a[2]));
 			$t += 86400;
 			$count--;
 		}
 		while ($count < 0) {
-			$ret .= parent::parsehtmlinner($rh, new daterecord($t, @$a[2]));
+			parent::parsehtmlinner($rh, new daterecord($t, @$a[2]));
 			$t -= 86400;
 			$count++;
 		}
-		return $ret;
 	}
 }
 
@@ -3049,21 +3059,19 @@ class	commandparser_wdayrows extends commandparser {
 			$t -= 86400;
 		}
 		
-		$ret = "";
 		while ($count > 0) {
-			$ret .= parent::parsehtmlinner($rh, new daterecord($t, @$a[3]));
+			parent::parsehtmlinner($rh, new daterecord($t, @$a[3]));
 			$t += 86400;
 			$count--;
 		}
 		while ($count < 0) {
 			for ($i=0; $i<7; $i++) {
-				$ret .= parent::parsehtmlinner($rh, new daterecord($t, @$a[3]));
+				parent::parsehtmlinner($rh, new daterecord($t, @$a[3]));
 				$t += 86400;
 				$count++;
 			}
 			$t -= 86400 * 14;
 		}
-		return $ret;
 	}
 }
 
@@ -3075,21 +3083,21 @@ class	commandparser_valid extends commandparser {
 		
 		$this->cond = 0;
 		if (!ispost())
-			return "";
+			return;
 		
 		$a = explode(" ", $this->par, 2);
 		if (($s0 = @$a[1]) == "")
 			$s0 = $beforename;
 		$s = $rh->record->getfield($s0);
 		if (!preg_match('/^([_A-Za-z]+)(.*)/', $a[0], $a2))
-			return "";
+			return;
 		$cmd = "tv_".$a2[1];
 		if (!method_exists($rh->record, $cmd))
-			return "";
+			return;
 		if (!($rh->record->$cmd($a2[2], $s)))
-			return "";
+			return;
 		$invalid = $this->cond = 1;
-		return parent::parsehtmlinner($rh, $record);
+		parent::parsehtmlinner($rh, $record);
 	}
 }
 
@@ -3659,7 +3667,7 @@ for ($phase=0; $phase<2; $phase++) {
 	$coverage_nextid++;
 	$parserstack = array($rootparser = new commandparser("", null, null, "(phase{$phase})"));
 	$currenttablename = "";
-	$output = "";
+	$htmloutput = "";
 	
 	foreach (explode("<!--{", $targethtml) as $key => $chunk) {
 		if ($key == 0) {
@@ -3699,20 +3707,20 @@ for ($phase=0; $phase<2; $phase++) {
 			}
 		}
 	}
-	$output = $rootparser->parsehtml(new recordholder());
+	$rootparser->parsehtml(new recordholder());
 }
 if (@$sys->debugdir === null)
 	;
-else if (count($a = preg_split("/<HEAD>/i", $output, 2)) == 2) {
+else if (count($a = preg_split("/<HEAD>/i", $htmloutput, 2)) == 2) {
 	list($s0, $s1) = $a;
-	$output = <<<EOO
+	$htmloutput = <<<EOO
 {$s0}<HEAD><BASE href="{$sys->urlbase}/{$sys->debugfn}/{$sys->target}.html">
 {$s1}
 EOO;
 } else {
-	$output = <<<EOO
+	$htmloutput = <<<EOO
 <HEAD><BASE href="{$sys->urlbase}/{$sys->debugfn}/{$sys->target}.html"></HEAD>
-{$output}
+{$htmloutput}
 EOO;
 }
 
@@ -3729,6 +3737,6 @@ $debuglog .= "\n\n<H2>".str_repeat(" |  ", 1).get_class($actionrecordholder)."("
 	$actionrecordholder->action();
 }
 adddebuglog();
-print $output;
+print $htmloutput;
 log_die();
 

@@ -8,8 +8,8 @@ new login_table();
 
 
 class	commandparser_htmlsrc	extends	commandparser {
-	function	parsehtml($tableholder = null, $record = null) {
-		return nl2br(htmlspecialchars(parent::parsehtml($tableholder, $record), ENT_QUOTES));
+	function	output($s = "") {
+		parent::output(nl2br(htmlspecialchars($s, ENT_QUOTES)));
 	}
 }
 
