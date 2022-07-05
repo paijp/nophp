@@ -469,9 +469,9 @@ function	execsql($sql, $array = null, $returnid = 0, $ignoreerror = 0)
 		$array = array();
 	
 	if (@$sys->debugdir !== null) {
-		$debuglog .= "<table>\n";
+		$debuglog .= '<table style="background:#fca;">'."\n";
 		foreach (explode("?", $sql) as $key => $val) {
-			$debuglog .= '<tr><th align="right"><span style="color:#a00;">'.htmlspecialchars($val, ENT_QUOTES)."</span>";
+			$debuglog .= '<tr><th align="right">'.htmlspecialchars($val, ENT_QUOTES)."</span>";
 			$debuglog .= '<td>'.nl2br(htmlspecialchars(@$array[$key], ENT_QUOTES));
 		}
 		$debuglog .= "</table>\n";
@@ -765,7 +765,7 @@ EOO;
 		
 		if (@$sys->debugdir == "")
 			return;
-		$debuglog .= '<table border><tr><th colspan="2" style="background:#aff;">'."{$title}{$this->tablename}\n";
+		$debuglog .= '<table border><tr><th colspan="2" style="background:#fca;">'."{$title}{$this->tablename}\n";
 		$debuglog .= "<tr><th>id<td>".htmlspecialchars($this->id)."\n";
 		foreach (get_object_vars($this) as $key => $val)
 			if (preg_match('/^v_(.*)/', $key, $a2)) {
@@ -1495,7 +1495,7 @@ class	recordholder {
 			$remaincmds = explode(":", $block);
 			array_shift($remaincmds);
 			foreach ($remaincmds as $cmd) {
-				$head .= '<th><span style="color: #f8f;">'.htmlspecialchars($pars);
+				$head .= '<th style="background:#ff8;"><span style="color: #888;">'.htmlspecialchars($pars);
 				$pars = "";
 				$head .= "</span>:".htmlspecialchars($cmd);
 			}
@@ -1503,7 +1503,7 @@ class	recordholder {
 		$debuglog .= "<table border><tr>{$head}\n<tr>";
 		foreach ($this->coveragelist as $key => $val)
 			if ($key > 0)
-				$debuglog .= "\t".'<td style="text-align: right;">'.@$this->debugpoplist[$key].nl2br(htmlspecialchars($val));
+				$debuglog .= "\t".'<td style="text-align: right;">'.@$this->debugpoplist[$key].nl2br(htmlspecialchars($val))."<br />";
 		$debuglog .= "\n</table>\n";
 	}
 	function	parsebq($text = "", $record = null, $issubmit = 0, $initstack = null) {
@@ -2676,7 +2676,7 @@ class	selectrecord {
 		
 		if (@$sys->debugdir == "")
 			return;
-		$debuglog .= '<table border><tr><th colspan="2" style="background:#aff;">'."{$title}{$this->tablename}\n";
+		$debuglog .= '<table border><tr><th colspan="2" style="background:#fca;">'."{$title}{$this->tablename}\n";
 		foreach ($this->fields as $key => $val) {
 			$s = htmlspecialchars($key, ENT_QUOTES);
 			$s2 = htmlspecialchars($val);
@@ -2720,6 +2720,10 @@ class	commandparser {		# volatile object
 		$this->children[] = $commandparser;
 	}
 	function	gettree($index) {
+		global	$phase;
+		global	$coverage_id;
+		global	$coverage_count;
+		
 		if ($index == 0)
 			return "";
 		if ($index < $this->index)
@@ -2727,8 +2731,9 @@ class	commandparser {		# volatile object
 		$ret = "";
 		if ($this->parent === null) {
 			$ret .= '<ul style="background:#c0c0ff">';
+			$ret .= "\n<li><b>phase{$phase}</b>";
 			$id = $this->gettreecoverageid($index);
-			$ret .= '<a href="?coverage=1#'.$id.'" name="'.$id.'">coverage</a>';
+			$ret .= ' <a href="?coverage=1#'.$id.'" name="'.$id.'">coverage</a>';
 			foreach ($this->children as $child)
 				$ret .= $child->gettree($index);
 			$ret .= "</ul>\n";
@@ -2746,9 +2751,11 @@ class	commandparser {		# volatile object
 		if ($this->name != "")
 			$ret .= '<li style="'.$cond.'">'.$this->name." ".$this->par;
 		if ($index == $this->index) {
-			if ($ret == "")
-				return '<li>...';
-			return $ret;
+			if ($ret != "")
+				return $ret;
+			if (($count = @$coverage_count[@$coverage_id] + 0) > 1)
+				return "<li>... #{$count}";
+			return "<li>...";
 		}
 		
 		if (count($this->children) > 0) {
@@ -2789,6 +2796,7 @@ class	commandparser {		# volatile object
 		
 		$debuglog .= $rootparser->gettree($this->index);
 		$this->parsehtmlinner($rh, $record);
+		$debuglog .= "<hr />\n";
 	}
 	function	parsehtmlinner($rh = null, $record = null) {
 		global	$coverage_id;
@@ -2829,7 +2837,6 @@ class	commandparser {		# volatile object
 
 
 class	commandparserhtml extends commandparser {
-	var	$first = 1;
 	function	parsehtml($rh = null, $record = null, $index = 1) {
 		global	$sys;
 		global	$phase;
@@ -2838,12 +2845,7 @@ class	commandparserhtml extends commandparser {
 		
 		$debuglog .= $rootparser->gettree($this->index);
 		
-		if (($this->first)) {
-			$debuglog .= '<pre class="srcpartfirst" style="margin:0; background:#c0ffc0;">';
-			$this->first = 0;
-		} else {
-			$debuglog .= '<pre class="srcpartnotfirst" style="margin:0; background:#c0c0c0;">';
-		}
+		$debuglog .= '<pre class="srcpartfirst" style="margin:0; background:#c0c0ff;">';
 		foreach (explode("`", $this->par) as $key => $chunk) {
 			$chunk = htmlspecialchars($chunk);
 			if (($key & 1))
@@ -2854,11 +2856,7 @@ class	commandparserhtml extends commandparser {
 		$debuglog .= '</pre>';
 		
 		$highlight = $rh->parsehtmlhighlight($rh->parsewithbqhighlight($this->par, $record));
-		
-		if ($phase == 0)
-			$debuglog .= '<pre class="outphase0" style="margin:0; background:#ffc0c0;">';
-		else
-			$debuglog .= '<pre class="outphase1" style="margin:0; background:#ffffc0;">';
+		$debuglog .= '<pre class="outphase'.$phase.'" style="margin:0; background:#c0ffc0;">';
 		
 		$html = "";
 		$htmlhighlight = "";
@@ -2897,7 +2895,7 @@ class	commandparserhtml extends commandparser {
 			$htmlhighlight .= htmlspecialchars($s.substr($val, 1)).$sclose;
 		}
 		$this->output($html, $htmlhighlight);
-		$debuglog .= '</pre>';
+		$debuglog .= "</pre><hr />\n";
 	}
 }
 
@@ -3663,7 +3661,6 @@ for ($phase=0; $phase<2; $phase++) {
 	$commandparserindex = 0;
 	
 	$invalid = 0;
-	$debuglog .= "\n\n<H1>* phase{$phase}</H1>\n\n";
 	$coverage_nextid++;
 	$parserstack = array($rootparser = new commandparser("", null, null, "(phase{$phase})"));
 	$currenttablename = "";
