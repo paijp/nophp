@@ -277,9 +277,9 @@ function	adddebuglog($debugdir = null, $debugfn = null)
 	global	$targethash;
 	global	$tableshash;
 	
-	if (@$sys->debugdir !== null) {
-		if ($debugdir === null)
-			$debugdir = $sys->debugdir;
+	if ($debugdir === null)
+		$debugdir = @$sys->debugdir;
+	if ($debugdir !== null) {
 		if ($debugfn === null)
 			$debugfn = "{$sys->debugfn}.php";
 		$fn = "{$debugdir}/{$debugfn}";
