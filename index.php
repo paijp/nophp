@@ -155,10 +155,32 @@ EOO;
 			$replacelist[] = '<span style="color:#f00;">'."{$s}</span>";
 		
 		ksort($list);
+		$lastid = 0;
 		foreach ($list as $id => $val) {
 			if ($id == 0)
 				continue;
-			print '<h2><a name="'.$id.'">'.htmlspecialchars(@$titlelist[$id])."</a></h2>\n";
+			print '<ul style="background:#ccf;">'."\n";
+			while ($lastid < $id)
+				print '<a name="'.(++$lastid).'"> </a>'; 
+			$level = 1;
+			foreach ($titlelist as $k => $v) {
+				if ($k > $id)
+					break;
+				preg_match("/^(\t*)(.*)/", @$titlelist[$k], $a);
+				while ($level < strlen($a[1])) {
+					print "<ul>\n";
+					$level++;
+				}
+				while ($level > strlen($a[1])) {
+					print "</ul>\n";
+					$level--;
+				}
+				print "<li>".htmlspecialchars($a[2])."\n";
+			}
+			while ($level > 0) {
+				print "</ul>\n";
+				$level--;
+			}
 			foreach ($val as $key2 => $val2) {
 				if ($id == $actionid)
 					$actionlist[$key2] = 0;
@@ -172,7 +194,7 @@ EOO;
 					$remaincmds = explode(":", $block);
 					array_shift($remaincmds);
 					foreach ($remaincmds as $cmd) {
-						$head .= '<th><span style="color: #f8f;">'.htmlspecialchars($pars);
+						$head .= '<th style="background:#ff8;"><span style="color: #888;">'.htmlspecialchars($pars);
 						$pars = "";
 						$head .= "</span>:".str_replace($searchlist, $replacelist, htmlspecialchars($cmd));
 					}
@@ -181,16 +203,39 @@ EOO;
 				foreach ($val2 as $key3 => $val3) {
 					$a = explode("#", $val3);
 					$fn = htmlspecialchars($a[0], ENT_QUOTES);
-					$frag = htmlspecialchars($a[1], ENT_QUOTES);
-					print '<tr><th style="text-align: left;"><a href="'.$fn.'.php#'.$id.".".$frag.'">'."{$fn}#{$frag}\n";
+					if (($v = $a[1] + 0) < 0)
+						$v = 1;
+					print '<tr><th style="text-align: left;"><a href="'.$fn.'.php#'.$id.".".$v.'">'."{$fn}#{$v}\n";
 					foreach (explode("\t", $key3) as $k => $v)
 						print "\t".'<td style="text-align: right;">'.htmlspecialchars(base64_decode($v));
 				}
 				print "<tr><th>\n{$head}</table>\n<p></p>\n";
 			}
 		}
-		if ($id != $actionid)
-			print '<h2><a name="'.$actionid.'">'."(action)</a></h2>\n";
+		if ($id != $actionid) {
+			print '<ul style="background:#ccf;">'."\n";
+			while ($lastid < $actionid)
+				print '<a name="'.(++$lastid).'"> </a>'; 
+			$level = 1;
+			foreach ($titlelist as $k => $v) {
+				if ($k > $actionid)
+					break;
+				preg_match("/^(\t*)(.*)/", @$titlelist[$k], $a);
+				while ($level < strlen($a[1])) {
+					print "<ul>\n";
+					$level++;
+				}
+				while ($level > strlen($a[1])) {
+					print "</ul>\n";
+					$level--;
+				}
+				print "<li>".htmlspecialchars($a[2])."\n";
+			}
+			while ($level > 0) {
+				print "</ul>\n";
+				$level--;
+			}
+		}
 		foreach ($actionlist as $key2 => $val2) {
 			if ($val2 == 0)
 				continue;
@@ -210,7 +255,6 @@ EOO;
 				}
 			}
 			print '<table border><tr><th><span style="color: #aaa;">(no log)</span>'."\n{$head}";
-#			print '<tr><th><span style="color: #aaa;">(no log)</span>'."\n{$head}</table>\n<p></p>\n";
 			print "</table>\n<p></p>\n";
 		}
 		die();
@@ -224,7 +268,6 @@ EOO;
 	return;
 }
 $coverage_list = null;
-$coverage_nextid = 0;
 $coverage_id = 0;
 $coverage_title = array();
 $coverage_count = array();
@@ -323,26 +366,26 @@ function	addcoveragelog($fn, $s = null)
 	
 	if ($s === null)
 		;
-	else if (strlen($coveragelogbuffer) + strlen($s) < $sys->debugchunksize) {
+	else if (($coveragelogbuffer == "")||(strlen($coveragelogbuffer) + strlen($s) < $sys->debugchunksize)) {
 		$coveragelogbuffer .= $s;
 		return;
 	}
 	
 	if ($sys->debuggz == 0) {
 		file_put_contents($fn, $coveragelogbuffer, FILE_APPEND);
-		$coveragelogbuffer = "";
+		$coveragelogbuffer = $s."";
 		return;
 	}
 	$fn .= ".gz";
 	if (function_exists("gzencode")) {
 		file_put_contents($fn, gzencode($coveragelogbuffer), FILE_APPEND);
-		$coveragelogbuffer = "";
+		$coveragelogbuffer = $s."";
 		return;
 	}
 	$fp = popen("gzip >>".escapeshellarg($fn), "w");
 	fputs($fp, $coveragelogbuffer);
 	pclose($fp);
-	$coveragelogbuffer = "";
+	$coveragelogbuffer = $s."";
 }
 
 
@@ -1482,8 +1525,11 @@ class	recordholder {
 			$s .= "\t".base64_encode($val);
 		if ($s == "")
 			return;
-		if (@$coverage_list[$coverage_id][$s] === null)
-			$coverage_list[$coverage_id][$s] = @$coverage_count[$coverage_id] + 0;
+		if (@$coverage_list[$coverage_id][$s] === null) {
+			if (($v = @$coverage_count[$coverage_id] + 0) < 1)
+				$v = 1;
+			$coverage_list[$coverage_id][$s] = $v;
+		}
 		
 		$head = "";
 		$pars = "";
@@ -2697,10 +2743,8 @@ class	commandparser {		# volatile object
 	var	$name;
 	var	$children;
 	var	$index;
-	var	$coverage_id;
 	function	__construct($par = "", $parent = null, $before = null, $name = "") {
 		global	$commandparserindex;
-		global	$coverage_nextid;
 		global	$coverage_title;
 		
 		$this->par = $par;
@@ -2709,10 +2753,13 @@ class	commandparser {		# volatile object
 		$this->name = $name;
 		$this->children = array();
 		$this->index = $commandparserindex++;
-		$this->coverage_id = $coverage_nextid;
-		if ($name != "")
-			$coverage_title[$coverage_nextid] = "{$coverage_nextid}_{$name} {$par}";
-		
+		if ($name != "") {
+			$s = "";
+			$p = $this;
+			while (($p = $p->parent))
+				$s .= "\t";
+			$coverage_title[$this->index] = "{$this->index}_{$s}{$name} {$par}";
+		}
 		if ($this->parent !== null)
 			$this->parent->addchild($this);
 	}
@@ -2731,9 +2778,9 @@ class	commandparser {		# volatile object
 		$ret = "";
 		if ($this->parent === null) {
 			$ret .= '<ul style="background:#c0c0ff">';
-			$ret .= "\n<li><b>phase{$phase}</b>";
-			$id = $this->gettreecoverageid($index);
-			$ret .= ' <a href="?coverage=1#'.$id.'" name="'.$id.'">coverage</a>';
+			if (($frag = @$coverage_count[$index] + 0) <= 0)
+				$frag = 1;
+			$ret .= ' <a href="?coverage=1#'.$index.'" name="'."{$index}.{$frag}".'">coverage</a>';
 			foreach ($this->children as $child)
 				$ret .= $child->gettree($index);
 			$ret .= "</ul>\n";
@@ -2748,12 +2795,16 @@ class	commandparser {		# volatile object
 			}
 			$p = $p->parent;
 		}
-		if ($this->name != "")
-			$ret .= '<li style="'.$cond.'">'.$this->name." ".$this->par;
+		if ($this->name == "")
+			;
+		else if (preg_match('/^[(]/', $this->name))
+			$ret .= '<li style="color:#f00; '.$cond.'">'.htmlspecialchars($this->name." ".$this->par)."</li>";
+		else
+			$ret .= '<li style="'.$cond.'">'.htmlspecialchars($this->name." ".$this->par)."</li>";
 		if ($index == $this->index) {
 			if ($ret != "")
 				return $ret;
-			if (($count = @$coverage_count[@$coverage_id] + 0) > 1)
+			if (($count = @$coverage_count[@$index] + 0) > 1)
 				return "<li>... #{$count}";
 			return "<li>...";
 		}
@@ -2766,33 +2817,13 @@ class	commandparser {		# volatile object
 		}
 		return $ret;
 	}
-	function	gettreecoverageid($index) {
-		if ($index == 0)
-			return 0;
-		if ($index < $this->index)
-			return 0;
-		$ret = $this->coverage_id;
-		foreach ($this->children as $child) {
-			$id = $child->gettreecoverageid($index);
-			if ($ret < $id)
-				$ret = $id;
-		}
-		return $ret;
-	}
-	function	getdebuglog($s = "") {
-		if ($this->parent === null)
-			return '<ul style="background:#c0c0ff"><li>root'.$s."</ul>\n";
-		$a = preg_split('/_+/', get_class($this), 2);
-		if ($this->before !== null)
-			return $this->before->getdebuglog("<li>".@$a[1]." ".$this->par."\n{$s}");
-		return $this->parent->getdebuglog("<ul><li>".@$a[1]." ".$this->par."\n{$s}</ul>\n");
-	}
 	function	parsehtml($rh = null, $record = null) {
 		global	$debuglog;
 		global	$rootparser;
 		global	$coverage_id;
+		global	$coverage_count;
 		
-		$coverage_id = $this->coverage_id;
+		$coverage_id = $this->index;
 		
 		$debuglog .= $rootparser->gettree($this->index);
 		$this->parsehtmlinner($rh, $record);
@@ -2802,6 +2833,7 @@ class	commandparser {		# volatile object
 		global	$coverage_id;
 		global	$coverage_count;
 		
+		$coverage_id = $this->index;
 		@$coverage_count[$coverage_id]++;
 		
 		if ($rh === null)
@@ -2842,6 +2874,11 @@ class	commandparserhtml extends commandparser {
 		global	$phase;
 		global	$debuglog;
 		global	$rootparser;
+		global	$coverage_id;
+		global	$coverage_count;
+		
+		$coverage_id = $this->index;
+		@$coverage_count[$coverage_id]++;
 		
 		$debuglog .= $rootparser->gettree($this->index);
 		
@@ -3590,22 +3627,22 @@ $ua = htmlspecialchars(@$_SERVER["HTTP_USER_AGENT"], ENT_QUOTES);
 $debuglog = <<<EOO
 orgdebuglog: <A href="{$orgdebugfn}.php">{$orgdebugfn}.php</A> from {$ip} ({$ua})
 <br /><a href="?coverage=1">coverage</a> <a href="?snapshot=1">view snapshot</a>
-<TABLE border>
-<TR><TH colspan=2>GET
+<table border>
+<tr><th colspan="2" style="background:#8f8;">GET
 
 EOO;
 
 foreach (@$_GET as $key => $val) {
 	$debuglog .= <<<EOO
-<TR><TH>{$key}<TD>{$val}
+<tr><th>{$key}<td>{$val}
 	
 EOO;
 }
 $debuglog .= <<<EOO
-</TABLE>
+</table>
 
-<TABLE border>
-<TR><TH colspan=2>POST
+<table border>
+<tr><th colspan="2" style="background:#8f8;">POST
 
 EOO;
 foreach (@$_POST as $key => $val) {
@@ -3655,20 +3692,20 @@ if (@$sys->debugdir !== null) {
 	$debuglog .= "</div>\n";
 }
 
+$rootparser = new commandparser();
+$lastparser = null;
+
 for ($phase=0; $phase<2; $phase++) {
 	$beforename = "";
 	$beforenopost = null;
-	$commandparserindex = 0;
 	
 	$invalid = 0;
-	$coverage_nextid++;
-	$parserstack = array($rootparser = new commandparser("", null, null, "(phase{$phase})"));
+	$parserstack = array($lastparser = new commandparser("", $rootparser, null, "(phase{$phase})"));
 	$currenttablename = "";
 	$htmloutput = "";
 	
 	foreach (explode("<!--{", $targethtml) as $key => $chunk) {
 		if ($key == 0) {
-			$coverage_nextid++;
 			new commandparserhtml($chunk, $parserstack[0]);
 			continue;
 		}
@@ -3676,7 +3713,6 @@ for ($phase=0; $phase<2; $phase++) {
 			if ($key2 == 0) {
 				$a = explode("-->", $chunk2, 2);
 				$a2 = explode(" ", $a[0], 2);
-				$coverage_nextid++;
 				if (class_exists($s = "commandparser_".$a2[0]))
 					$obj = new $s(@$a2[1]."", $parserstack[0], null, $a2[0]);
 				else if (class_exists($s = "recordholder_".$a2[0]))
@@ -3692,7 +3728,6 @@ for ($phase=0; $phase<2; $phase++) {
 			else
 				$beforeparser = $parserstack[0];
 			$a = explode("-->", $chunk2, 2);
-			$coverage_nextid++;
 			if (substr($a[0], 0, 1) == "{") {
 				$a2 = explode(" ", $a[0], 2);
 				if (!class_exists($s = "commandparser__".substr($a2[0], 1)))
@@ -3704,7 +3739,7 @@ for ($phase=0; $phase<2; $phase++) {
 			}
 		}
 	}
-	$rootparser->parsehtml(new recordholder());
+	$lastparser->parsehtml(new recordholder());
 }
 if (@$sys->debugdir === null)
 	;
@@ -3721,16 +3756,13 @@ EOO;
 EOO;
 }
 
-$coverage_nextid++;
-$rootparser = new commandparser("", null, null, "(action)");
+$lastparser = new commandparser("", $rootparser, null, "(action)");
 if ($coverage_list !== null)
 	foreach ($coverage_actionlist as $key => $val)
-		$coverage_list[$coverage_nextid]["\t".base64_encode($key)] = 0;
+		$coverage_list[$lastparser->index]["\t".base64_encode($key)] = 0;
 
 if ($actionrecordholder !== null) {
-	$rootparser->parsehtml();
-	$debuglog .= "\n\n<H1>(action)</H1>\n\n";
-$debuglog .= "\n\n<H2>".str_repeat(" |  ", 1).get_class($actionrecordholder)."(".$actionrecordholder->record->tablename.") ".$parserstack[0]->cond."</H2>\n";
+	$lastparser->parsehtml($actionrecordholder);
 	$actionrecordholder->action();
 }
 adddebuglog();
