@@ -251,7 +251,7 @@ EOO;
 				$remaincmds = explode(":", $block);
 				array_shift($remaincmds);
 				foreach ($remaincmds as $cmd) {
-					$head .= '<th><span style="color: #f8f;">'.htmlspecialchars($pars);
+					$head .= '<th style="background:#ff8;"><span style="color: #888;">'.htmlspecialchars($pars);
 					$pars = "";
 					$head .= "</span>:".str_replace($searchlist, $replacelist, htmlspecialchars($cmd));
 				}
