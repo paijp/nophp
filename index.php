@@ -1456,6 +1456,7 @@ class	recordholder {
 	}
 	function	callfunc($rh, $cmd, $record = null, $issubmit = 0) {
 		global	$recordholderlist;
+		global	$debuglog;
 		
 		if ($rh === null) {
 			list($s1) = $this->popstack($cmd, "recordholder");
@@ -1527,6 +1528,7 @@ class	recordholder {
 	}
 	function	callfunctable($t, $cmd, $record = null, $issubmit = 0) {
 		global	$tablelist;
+		global	$debuglog;
 		
 		if ($t === null) {
 			list($s1) = $this->popstack($cmd, "table:t");
@@ -1573,6 +1575,7 @@ class	recordholder {
 	}
 	function	callfuncstable($cmd, $record = null, $issubmit = 0) {
 		global	$tablelist;
+		global	$debuglog;
 		
 		list($s1) = $this->popstack($cmd, "stable");
 		
@@ -2234,7 +2237,7 @@ class	recordholder {
 							$this->flush_coverage();
 							return "";
 						}
-						$this->pushstack(array());
+						$this->pushstack(array($s1));
 						break;
 					case	"break":
 ## So it terminates evaluation of the expression and returns an empty string.
