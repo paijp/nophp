@@ -16,6 +16,8 @@ class	sys {
 	var	$debugmaxlogrecords = 500;
 	var	$debugchunksize = 4000;	# atomic writable size: 4000 for linux, 900 for windows.
 	var	$debuggz = 1;		# 1:compress debuglog and coveragelog
+	var	$debugdiff = 1;		# 1:show diff on debuglog
+	
 	var	$mailinterval = 60;
 	var	$mailexpire = 1800;
 	var	$forcelogoutonupdate = 1;
@@ -59,7 +61,7 @@ if ((@$logview_fn !== null)) {
 			$content = file_get_contents("{$logview_fn}.php");
 		else {
 			$content = stream_get_contents($log_fp);
-			pclose($fp_log);
+			pclose($log_fp);
 			$log_fp = null;
 		}
 		$output = "";
@@ -261,6 +263,102 @@ EOO;
 	}
 	print "<pre><b>".htmlspecialchars(@file_get_contents("{$logview_fn}.errorlog"))."</b></pre>\n";
 	
+	if ((@$sys->debugdiff)) {
+		if ($log_fp === null)
+			$content = file_get_contents("{$logview_fn}.php");
+		else {
+			$content = stream_get_contents($log_fp);
+			pclose($log_fp);
+			$log_fp = null;
+		}
+		list($part0, $s) = explode('<div class="srcall">', $content, 2);
+		list($part1, $part2) = explode('</div>', $s, 2);
+		print $part0;
+		
+		$a = array(
+			0 => array("pipe", "r"), 
+			1 => array("pipe", "w")
+		);
+		$p0 = proc_open("diff -U 99999999 - ".escapeshellarg(@$logview_targetpath), $a, $plist);
+		$sinput = substr(html_entity_decode(strip_tags($part1)), 0, -1);
+		fputs($plist[0], $sinput);
+		fclose($plist[0]);
+		$soutput = stream_get_contents($plist[1]);
+		proc_close($p0);
+		
+		$mode = 0;
+		if ($soutput == "") {
+			$mode = 1;
+			$soutput = $sinput;
+		}
+		
+#		print nl2br(htmlspecialchars($soutput));
+	print "<pre>\n";
+		foreach (preg_split("/\r\n|\r|\n/", $soutput) as $key => $line) {
+#			$style = " background:#ccc;";
+			$style = "";
+			if ($mode == 0) {
+				switch ($key) {
+					case	0:
+						$line = "-Removed at newest file.";
+						break;
+					case	1:
+						$line = "+Added at newest file.";
+						break;
+					case	2:
+						$line = " ";
+						break;
+				}
+				switch (substr($line, 0, 1)) {
+					case	"+":
+						$style = " background:#cfc; color:#888;";
+						print '<p style="margin:0;'.$style.'">';
+						print htmlspecialchars($line)."</p>";
+						continue 2;
+					case	"-":
+						$style = " background:#ccc;";
+#						$style .= " text-decoration: line-through;";
+						break;
+					case	" ":
+						$line = substr($line, 1);
+						break;
+				}
+			}
+			print '<p style="margin:0;'.$style.'">';
+			if ($line == "") {
+				print " </p>";
+				continue;
+			}
+			foreach (explode("<!--{", $line) as $k0 => $v0) {
+				if ($k0 > 0)
+					print '<b style="color:#0000ff;">&lt;!--{';
+				foreach (explode("<!--}", $v0) as $k1 => $v1) {
+					if ($k1 > 0)
+						print '<b style="color:#0000ff;">&lt;!--}';
+					foreach (explode("-->", $v1, 2) as $k2 => $v2) {
+						if ($k2 > 0)
+							print "--&gt;</b>";
+						foreach (explode('`', $v2) as $k3 => $v3) {
+							if ($k3 > 0)
+								print '<b style="color:#ff0000;">`</b>';
+							if (($k3 & 1))
+								print '<b style="color:#ff0000;">';
+							print htmlspecialchars($v3);
+							if (($k3 & 1))
+								print "</b>";
+						}
+					}
+				}
+			}
+			print "</p>";
+		}
+	print "</pre>\n";
+		
+		print $part2;
+		
+		die();
+	}
+	
 	if ($log_fp !== null) {
 		print stream_get_contents($log_fp);
 		die();
@@ -329,7 +427,7 @@ function	adddebuglog($debugdir = null, $debugfn = null)
 		
 		if (!file_exists($fn)) {
 			$fn_self = __FILE__;
-			
+			$targetpath = realpath("{$sys->htmlbase}/{$sys->target}.html");
 			$s = <<<EOO
 <?php
 if ((@\$isinclude))
@@ -337,7 +435,7 @@ if ((@\$isinclude))
 \$logview_fn = "{$sys->debugfn}";
 \$logview_coverage = "{$targethash}.{$tableshash}";
 \$logview_urlbase = "{$sys->urlbase}";
-\$logview_targetpath = "{$sys->htmlbase}/{$sys->target}.html";
+\$logview_targetpath = "{$targetpath}";
 \$logview_self = __FILE__;
 require("{$fn_self}");
 
