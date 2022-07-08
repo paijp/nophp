@@ -15,6 +15,7 @@ Welcome `login__:loginrecord`!
 <TH>HTML sent to the browser
 <TH>Display on the browser(can be operated)
 <TR><TD width="33%">&lt;FORM method=POST&gt;<br />
+&lt;!--{tableid t0=test2--&gt;<br />
 &lt;UL&gt;<br />
 &lt;LI&gt;&lt;SELECT name=&quot;check0&quot; x-value=&quot;x&quot; size=0&gt;<br />
 	&lt;OPTION value=&quot;x&quot;&gt;-&lt;/OPTION&gt;<br />
@@ -24,10 +25,13 @@ Welcome `login__:loginrecord`!
 &lt;LI&gt;from: &lt;INPUT type=&quot;text&quot; name=&quot;from&quot; x-value=&quot;`:bq`:now__90__86400__:mul:sub__y/m/d__:todate`:bq`&quot;&gt;<br />
 &lt;LI&gt;to: &lt;INPUT type=&quot;text&quot; name=&quot;to&quot; x-value=&quot;`:bq`:now__y/m/d__:todate`:bq`&quot;&gt;<br />
 &lt;LI&gt;&lt;INPUT type=&quot;submit&quot;&gt;<br />
+&lt;/UL&gt;<br />
+&lt;!--}--&gt;<br />
 &lt;/FORM&gt;<br />
 <br />
 
 <TD width="34%"><!--{htmlsrc--><FORM method=POST>
+<!--{tableid t0=test2-->
 <UL>
 <LI><SELECT name="check0" x-value="x" size=0>
 	<OPTION value="x">-</OPTION>
@@ -37,10 +41,13 @@ Welcome `login__:loginrecord`!
 <LI>from: <INPUT type="text" name="from" x-value="`:now__90__86400__:mul:sub__y/m/d__:todate`">
 <LI>to: <INPUT type="text" name="to" x-value="`:now__y/m/d__:todate`">
 <LI><INPUT type="submit">
+</UL>
+<!--}-->
 </FORM>
 
 <!--}-->
 <TD width="33%"><FORM method=POST>
+<!--{tableid t0=test2-->
 <UL>
 <LI><SELECT name="check0" x-value="x" size=0>
 	<OPTION value="x">-</OPTION>
@@ -50,6 +57,8 @@ Welcome `login__:loginrecord`!
 <LI>from: <INPUT type="text" name="from" x-value="`:now__90__86400__:mul:sub__y/m/d__:todate`">
 <LI>to: <INPUT type="text" name="to" x-value="`:now__y/m/d__:todate`">
 <LI><INPUT type="submit">
+</UL>
+<!--}-->
 </FORM>
 
 
