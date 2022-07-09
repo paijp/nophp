@@ -34,15 +34,19 @@ class	recordholder_sendmail extends recordholder {
 }
 
 
-class	commandparser_sendmail extends	commandparser{
+class	commandparser_sendmail extends	commandparser {
+	var	$buf = "";
 	function	parsehtml($tableholder = null, $record = null) {
 		global	$recordholderlist;
 		
 		$a = explode(" ", trim($this->par));
 		$rh = new recordholder_sendmail();
-		$rh->mailbody = parent::parsehtml($tableholder, $record);
+		$this->buf = "";
+		parent::parsehtml($tableholder, $record);
+		$rh->mailbody = $tihs->buf;
 		$recordholderlist[@$a[0]] = $rh;
 	}
-	function	output() {
+	function	output($s = "") {
+		$this->buf .= $s;
 	}
 }
