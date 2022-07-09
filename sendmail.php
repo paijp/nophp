@@ -43,7 +43,7 @@ class	commandparser_sendmail extends	commandparser {
 		$rh = new recordholder_sendmail();
 		$this->buf = "";
 		parent::parsehtml($tableholder, $record);
-		$rh->mailbody = $tihs->buf;
+		$rh->mailbody = $this->buf;
 		$recordholderlist[@$a[0]] = $rh;
 	}
 	function	output($s = "") {
