@@ -12,7 +12,7 @@ class	sys {
 #	var	$htmlbase = "/html/user/v1/";
 #	var	$sqlpath = "sqlite:/var/www/html/db/v1.sq3";
 ##	var	$sqlpath = "mysql:dbname=test";
-	var	$debugdir = "debuglog";
+	var	$debugdir = null;
 	var	$debugmaxlogrecords = 500;
 	var	$debugchunksize = 4000;	# atomic writable size: 4000 for linux, 900 for windows.
 	var	$debuggz = 1;		# 1:compress debuglog and coveragelog
@@ -25,6 +25,12 @@ class	sys {
 	
 	var	$urlbase = null;
 	var	$target = null;
+	function	__construct() {
+		foreach (glob("debuglog???????*", GLOB_ONLYDIR) as $val) {
+			$this->debugdir = $val;
+			break;
+		}
+	}
 }
 $sys = new sys();
 
