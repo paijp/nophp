@@ -3126,6 +3126,8 @@ class	commandparser_selectrows extends commandparser {
 # For example, "<!--{selectrows from customer limit 10-->`id__:r`<!--}-->", "select * from customer limit 10" is executed and each line obtained is output with "`id__:r`".
 # In placeholders, the row of the search result is treated as the current record, but for ":curtable", ":set", etc., the outer current record is accessed.
 	function	parsehtmlinner($rh = null, $record = null) {
+		if (($record === null)&&($rh !== null))
+			$record = $rh->record;
 		$rh2 = new recordholder();
 		$sql = "select * ".$rh2->parsewithbqinsql($this->par, $record);
 		list($s, $list) = $rh2->parsewhere($sql);
