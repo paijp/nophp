@@ -46,7 +46,8 @@ class	commandparser_sendmail extends	commandparser {
 		$rh->mailbody = $this->buf;
 		$recordholderlist[@$a[0]] = $rh;
 	}
-	function	output($s = "") {
-		$this->buf .= $s;
+	function	output($html = "", $htmlhighlight = "") {
+		parent::output(" ", '<span style="color:#888;">'."{$htmlhighlight}<span>");
+		$this->buf .= $html;
 	}
 }
