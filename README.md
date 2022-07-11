@@ -6,6 +6,11 @@
 - Powerful log for debug.
 - Javascript not required.
 
+## Important changes.
+
+- 2022/07/11 Return value of commandparser::parsehtml() is discarded. Please call commandparser::output() for output.
+- 2022/07/11 debuglog directory changed to 'debuglog???????*'. Please create a directory with at least 7 characters that is hard to guess after 'debuglog'.
+
 ## How to use.
 
 - The sample below, in your HTML, means 'select name from userlist where id=1;' and escape it.
