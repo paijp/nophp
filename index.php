@@ -2575,11 +2575,11 @@ class	recordholder {
 		$s = @$this->stack[0]."";
 		switch ($outputmode) {
 			default:
-			case	"nl2br":
-				$output .= nl2br(htmlspecialchars($s, ENT_QUOTES));
-				break;
 			case	"html":
 				$output .= htmlspecialchars($s, ENT_QUOTES);
+				break;
+			case	"nl2br":
+				$output .= nl2br(htmlspecialchars($s, ENT_QUOTES));
 				break;
 			case	"url":
 				$output .= rawurlencode($s);
