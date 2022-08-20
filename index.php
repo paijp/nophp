@@ -1956,6 +1956,7 @@ class	recordholder {
 						list($s1, $s2) = $this->popstack($cmd, "time dateformat");
 						$this->pushstack(array(date($s2, $s1 + 0)));
 						break;
+					case	"nl2br":
 					case	"html":
 ## Indicates HTML escaping of output.
 ## The stack does not change and can be placed anywhere.
@@ -2574,6 +2575,9 @@ class	recordholder {
 		$s = @$this->stack[0]."";
 		switch ($outputmode) {
 			default:
+			case	"nl2br":
+				$output .= nl2br(htmlspecialchars($s, ENT_QUOTES));
+				break;
 			case	"html":
 				$output .= htmlspecialchars($s, ENT_QUOTES);
 				break;
