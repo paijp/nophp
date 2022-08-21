@@ -3862,8 +3862,10 @@ for ($phase=0; $phase<2; $phase++) {
 			}
 			if (count($parserstack) > 1)
 				$beforeparser = array_shift($parserstack);
-			else
+			else {
+				trigger_error("stack empty.");
 				$beforeparser = $parserstack[0];
+			}
 			$a = explode("-->", $chunk2, 2);
 			if (substr($a[0], 0, 1) == "{") {
 				$a2 = explode(" ", $a[0], 2);
