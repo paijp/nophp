@@ -510,7 +510,7 @@ function	log_die($message = "")
 	global	$coverage_count;
 	
 	if (($loginrecord))
-		execsql("commit;");
+		execsql("commit;", null, 0, 1);
 	
 	if (@$sys->debugdir === null)
 		die($message);
