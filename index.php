@@ -1480,6 +1480,8 @@ class	recordholder {
 				if (!preg_match('/^[a-z]s?_/', $name))
 					continue;
 				$a = explode("__", $name);
+				if (@$rh->methodlist[$a[0]] !== null)
+					trigger_error("duplexed method({$name} in ".get_class($rh).")");
 				$rh->methodlist[$a[0]] = $name;
 			}
 		}
@@ -1489,6 +1491,8 @@ class	recordholder {
 				if (!preg_match('/^[a-z]s?_/', $name))
 					continue;
 				$a = explode("__", $name);
+				if (@$rh->record->methodlist[$a[0]] !== null)
+					trigger_error("duplexed method({$name} in ".get_class($rh->record).")");
 				$rh->record->methodlist[$a[0]] = $name;
 			}
 		}
@@ -1552,6 +1556,8 @@ class	recordholder {
 				if (!preg_match('/^[a-z]s?_/', $name))
 					continue;
 				$a = explode("__", $name);
+				if (@$t->methodlist[$a[0]] !== null)
+					trigger_error("duplexed method({$name} in ".get_class($t).")");
 				$t->methodlist[$a[0]] = $name;
 			}
 		}
@@ -1592,6 +1598,8 @@ class	recordholder {
 				if (!preg_match('/^[a-z]s?_/', $name))
 					continue;
 				$a = explode("__", $name);
+				if (@$t->methodlist[$a[0]] !== null)
+					trigger_error("duplexed method({$name} in ".get_class($t).")");
 				$t->methodlist[$a[0]] = $name;
 			}
 		}
@@ -1775,6 +1783,8 @@ class	recordholder {
 								if (!preg_match('/^bq_/', $s))
 									continue;
 								$a0 = explode("__", $s);
+								if (@$funclist[$a0[0]] !== null)
+									trigger_error("duplexed function({$s})");
 								$funclist[$a0[0]] = $s;
 							}
 						}
