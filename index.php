@@ -110,7 +110,7 @@ EOO;
 		foreach (preg_split("/\r\n|\r|\n/", $content) as $line) {
 			if (count($a = explode("\t", $line, 4)) < 3)
 				continue;
-			$key = $a[1] + 0;
+			$key = (int)$a[1];
 			$key2 = "_".$a[2];
 			if (count($a) == 3) {
 				$actionid = $key;
@@ -211,7 +211,7 @@ EOO;
 				foreach ($val2 as $key3 => $val3) {
 					$a = explode("#", $val3);
 					$fn = htmlspecialchars($a[0], ENT_QUOTES);
-					if (($v = $a[1] + 0) < 0)
+					if (($v = (int)$a[1]) < 0)
 						$v = 1;
 					print '<tr><th style="text-align: left;"><a href="'.$fn.'.php#'.$id.".".$v.'">'."{$fn}#{$v}\n";
 					foreach (explode("\t", $key3) as $k => $v)
@@ -380,7 +380,7 @@ $coverage_actionlist = array();
 $sys->importlist = array();
 
 list($m, $s) = explode(" ", microtime());
-$sys->debugfn = date("ymd_His_", $s + 0).substr($m, 2);
+$sys->debugfn = date("ymd_His_", (int)$s).substr($m, 2);
 $sys->now = $s;
 
 if (@$sys->rootpage === null)
@@ -454,7 +454,7 @@ EOO;
 			file_put_contents($fn, $s, FILE_APPEND);
 		}
 		$a = explode(" ", microtime());
-		file_add_contents($fn, "<!-- ".date("ymd_His", $a[1] + 0).substr($a[0], 1)." -->{$debuglog}", $sys->debuggz);
+		file_add_contents($fn, "<!-- ".date("ymd_His", (int)$a[1]).substr($a[0], 1)." -->{$debuglog}", $sys->debuggz);
 	}
 	$debuglog = "";
 }
@@ -494,6 +494,7 @@ function	addcoveragelog($fn, $s = null)
 
 
 $db0 = new PDO($sys->sqlpath);
+$db0->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
 
 
 function	log_die($message = "")
@@ -595,7 +596,7 @@ EOO;
 		$s0 = $sys->debugfn."\t0\t0";
 		foreach ($coverage_title as $k => $v)
 			if ($v != "")
-				$s0 .= "\t".base64_encode($v)."\t".base64_encode(@$coverage_count[$k] + 0);
+				$s0 .= "\t".base64_encode($v)."\t".base64_encode((int)@$coverage_count[$k]);
 		addcoveragelog($fn, $s0."\n");
 		foreach ($coverage_list as $key => $val)
 			foreach ($val as $key2 => $val2)
@@ -741,7 +742,7 @@ class	table {
 					$this->$s = $val;
 					continue 2;
 				case	"id":
-					$this->id = $val + 0;
+					$this->id = (int)$val;
 					continue 2;
 				case	"mixed":
 					$mixed = $val;
@@ -775,7 +776,7 @@ EOO;
 			return array();
 		$idlist = array();
 		foreach ($list as $record)
-			$idlist[] = $record["id"] + 0;
+			$idlist[] = (int)$record["id"];
 		return $idlist;
 	}
 	function	getlist() {
@@ -834,7 +835,7 @@ EOO;
 			$svals = implode(", ", array_fill(0, count($fieldlist), "?"));
 			$sql = "insert into {$this->tablename}($skeys) values($svals);";
 			$a = array_values($fieldlist);
-			$this->id = execsql($sql, $a, 1) + 0;
+			$this->id = (int)execsql($sql, $a, 1);
 		} else {
 			$a = array();
 			foreach ($fieldlist as $key => $val)
@@ -929,7 +930,7 @@ class	a_table extends table {
 	function	t_id__id__field($rh0, $record, $s1, $s3) {
 ## Take three strings from the stack, consider the first as the record ID, the second as the field name, and the third as the table name, and stack the field value of the record ID of the table on the stack.
 ## For example, `1__name__user__:t_id` is the value of the name field in record 1 of the user table.
-		$r = $this->getrecord($s1 + 0);
+		$r = $this->getrecord((int)$s1);
 		return array($r->getfield($s3)."");
 	}
 	function	t_find__val__field($rh0, $record, $s1, $s3) {
@@ -958,7 +959,7 @@ class	a_table extends table {
 ## Take a string from the stack, consider it a table name, and UPDATE or INSERT a record in that table.
 ## The table must be specified as "<!--{tableid", etc.
 		$s = "";
-		if ($this->update() == 0)
+		if ((int)$this->update() == 0)
 			$s = $this->id;
 		return array($s);
 	}
@@ -975,9 +976,9 @@ class	a_table extends table {
 # <!--{valid len-5 v1--> Displayed when the v1 field of the current record is 6 or 7 characters long. <!--}-->
 		if (!preg_match('/^(-?[0-9]*)-(-?[0-9]*)/', $par, $a2))
 			return 0;
-		if ((($i = $a2[1]) != "")&&(strlen($s) < $i + 0))
+		if ((($i = $a2[1]) != "")&&(strlen($s) < (int)$i))
 			return 1;
-		if ((($i = $a2[2]) != "")&&(strlen($s) > $i + 0))
+		if ((($i = $a2[2]) != "")&&(strlen($s) > (int)$i))
 			return 1;
 		return 0;
 	}
@@ -997,9 +998,9 @@ class	a_table extends table {
 			return 0;
 		if (!preg_match('/^-?[0-9]+$/', $s))
 			return 1;
-		if ((($i = $a2[1]) != "")&&($s + 0 < $i + 0))
+		if ((($i = $a2[1]) != "")&&((int)$s < (int)$i))
 			return 1;
-		if ((($i = $a2[2]) != "")&&($s + 0 > $i + 0))
+		if ((($i = $a2[2]) != "")&&((int)$s > (int)$i))
 			return 1;
 		return 0;
 	}
@@ -1142,7 +1143,7 @@ class	simpletable {
 	function	s_id__id__field($rh0, $record, $s1, $s3) {
 ## Take three strings from the stack, consider the first as the record ID, the second as the field name, and the third as the simple table name, and stack the field value of the record ID of the simple table on the stack.
 ## For example, `1__name__user__:s_id` is the value of the name field of record 1 in the user simple table.
-		$r = $this->getrecord($s1 + 0);
+		$r = $this->getrecord((int)$s1);
 		return array($r->getfield($s3)."");
 	}
 	function	s_find__val__field($rh0, $record, $s1, $s3) {
@@ -1251,7 +1252,7 @@ EOO;
 		global	$cookiepath;
 		
 		if (($ismaillogin)) {
-			if (@$this->v_ismaillogin == 0)
+			if ((int)@$this->v_ismaillogin == 0)
 				log_die("ismaillogin but not v_ismaillogin");
 		} else if ((@$this->v_ismaillogin))
 			log_die("v_ismaillogin but not ismaillogin");
@@ -1281,11 +1282,11 @@ EOO;
 		header("Location: {$sys->url}");
 		
 		if (@$_GET["mode"] == "1login") {
-			$uid = @$_GET["uid"] + 0;
+			$uid = (int)@$_GET["uid"];
 			$key = @$_GET["key"]."";
 			
 			$r = $this->getrecord($uid);
-			if (@$r->v_ismaillogin != 0)
+			if ((int)@$r->v_ismaillogin != 0)
 				log_die("ismaillogin.");
 			if (@$r->v_mailkey == "")
 				log_die("mailkey empty.");
@@ -1328,11 +1329,11 @@ EOO;
 		
 		if (@$_GET["mode"] != "1login")
 			return 0;
-		$uid = @$_GET["uid"] + 0;
+		$uid = (int)@$_GET["uid"];
 		$key = @$_GET["key"]."";
 		
 		$r = $this->getrecord($uid);
-		if (@$r->v_ismaillogin == 0)
+		if ((int)@$r->v_ismaillogin == 0)
 			return 0;
 		
 		header("Location: {$sys->url}");
@@ -1641,7 +1642,7 @@ class	recordholder {
 		if ($s == "")
 			return;
 		if (@$coverage_list[$coverage_id][$s] === null) {
-			if (($v = @$coverage_count[$coverage_id] + 0) < 1)
+			if (($v = (int)@$coverage_count[$coverage_id]) < 1)
 				$v = 1;
 			$coverage_list[$coverage_id][$s] = $v;
 		}
@@ -1750,7 +1751,7 @@ class	recordholder {
 										$id2 = $loginrecord->getfield($cmd);
 									break;
 							}
-							$id2 = round($id2 + 0);
+							$id2 = round((float)$id2);
 							$this->pushstack(array($id2, $tablename2));
 							break;
 						}
@@ -1849,7 +1850,7 @@ class	recordholder {
 ## Stack the current record ID on the stack.
 ## For example, inside "<!--{tableid user 1-->" inside, "1" is stacked on the stack.
 						$this->popstack($cmd, "");
-						$s = @$this->record->id + 0;
+						$s = (int)@$this->record->id;
 						$this->pushstack(array($s));
 						break;
 					case	"curtable":
@@ -1911,7 +1912,7 @@ class	recordholder {
 ## Take one string from the stack, round it off as a number, and stack it on the stack.
 ## For example, `3.8__:int` is "4".
 						list($s1) = $this->popstack($cmd, "val");
-						$this->pushstack(array(round($s1 + 0)));
+						$this->pushstack(array(round((float)$s1)));
 						break;
 					case	"isnull":
 ## Take one string from the stack and stack "1" if it is an empty string, otherwise empty string on the stack.
@@ -1964,7 +1965,7 @@ class	recordholder {
 ## Use :now to get the current time value.
 ## For example, `:now__y/m/d H:i:s__:todate` would be "19/02/10 19:52:13", etc.
 						list($s1, $s2) = $this->popstack($cmd, "time dateformat");
-						$this->pushstack(array(date($s2, $s1 + 0)));
+						$this->pushstack(array(date($s2, (int)$s1)));
 						break;
 					case	"nl2br":
 					case	"html":
@@ -2023,7 +2024,7 @@ class	recordholder {
 ## Also, `123__2__:addzero`.
 ## Note that `-123__6__:addzero` will be "00-123" since it is not treated as a number.
 						list($s, $v) = $this->popstack($cmd, "num digits");
-						if (($i = strlen($s)) < $v + 0)
+						if (($i = strlen($s)) < (int)$v)
 							$s = str_repeat("0", $v - $i).$s;
 						$this->pushstack(array($s));
 						break;
@@ -2056,7 +2057,7 @@ class	recordholder {
 ## For example, `123__456__:div` would be "0".
 ## If the divisor is 0, the divisor is 0.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						if ($s2 == 0)
+						if ((int)$s2 == 0)
 							$this->pushstack(array(0));
 						else
 							$this->pushstack(array(floor($s1 / $s2)));
@@ -2066,7 +2067,7 @@ class	recordholder {
 ## For example, `123__456__:rdiv` would be "3".
 ## If the divisor is 0, the divisor is 0.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						if ($s1 == 0)
+						if ((int)$s1 == 0)
 							$this->pushstack(array(0));
 						else
 							$this->pushstack(array(floor($s2 / $s1)));
@@ -2076,7 +2077,7 @@ class	recordholder {
 ## For example, `123__456__:mod` would be "123".
 ## If the divisor is 0, the divisor is 0.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						if ($s2 == 0)
+						if ((int)$s2 == 0)
 							$this->pushstack(array(0));
 						else
 							$this->pushstack(array($s1 % $s2));
@@ -2086,7 +2087,7 @@ class	recordholder {
 ## For example, `123__456__:rmod` would be "87".
 ## If the divisor is 0, the divisor is 0.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						if ($s1 == 0)
+						if ((int)$s1 == 0)
 							$this->pushstack(array(0));
 						else
 							$this->pushstack(array($s2 % $s1));
@@ -2099,7 +2100,7 @@ class	recordholder {
 ## Take two strings from the stack and regard each as a number, stacking them on the stack with a "1" if they are equal or an empty string if they are not.
 ## For example, `1__1__:ieq` or `1__01__:ieq` or `0__ __:ieq` or `0x1__1__:ieq` is "1".
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(($s1 + 0 == $s2 + 0)? 1 : ""));
+						$this->pushstack(array(((int)$s1 == (int)$s2)? 1 : ""));
 						break;
 					case	"seq":
 ## Take two strings from the stack, consider each as a string, and pile "1" on the stack if they are equal, or an empty string if they are not equal.
@@ -2116,7 +2117,7 @@ class	recordholder {
 ## Take two strings from the stack and regard each as a number, stacking them on the stack with a "1" if they are not equal, or an empty string if they are equal.
 ## For example, `1__1__:ieq` or `1__01__:ieq` or `0__ __:ieq` or `0x1__1__:ieq` is an empty string.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(($s1 + 0 != $s2 + 0)? 1 : ""));
+						$this->pushstack(array(((int)$s1 != (int)$s2)? 1 : ""));
 						break;
 					case	"sne":
 ## Take two strings from the stack and consider each to be a string, stacking them on the stack with a "1" if they are not equal and an empty string if they are.
@@ -2134,7 +2135,7 @@ class	recordholder {
 ## For example, `1__2__:ilt` would be "1".
 ## `1__1__:ilt` or `1__0__:ilt` will be an empty string.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(($s1 + 0 < $s2 + 0)? 1 : ""));
+						$this->pushstack(array(((int)$s1 < (int)$s2)? 1 : ""));
 						break;
 					case	"slt":
 ## Take two strings from the stack, consider each as a string, and pile "1" on the stack if the second one is larger, otherwise empty string.
@@ -2152,7 +2153,7 @@ class	recordholder {
 ## For example, `1__0__:igt` would be "1".
 ## `1__1__:igt` and `1__2__:igt` will be empty strings.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(($s1 + 0 > $s2 + 0)? 1 : ""));
+						$this->pushstack(array(((int)$s1 > (int)$s2)? 1 : ""));
 						break;
 					case	"sgt":
 ## Take two strings from the stack and consider each to be a string, stacking "1" on the stack if the first is larger, otherwise an empty string.
@@ -2170,7 +2171,7 @@ class	recordholder {
 ## For example, `1__2__:ile` or `1__1__:ile` would be "1".
 ## `1__0__:ile` will be an empty string.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(($s1 + 0 <= $s2 + 0)? 1 : ""));
+						$this->pushstack(array(((int)$s1 <= (int)$s2)? 1 : ""));
 						break;
 					case	"sle":
 ## Take two strings from the stack, consider each as a string, and pile "1" on the stack if they are equal or the second is greater, otherwise empty string.
@@ -2188,7 +2189,7 @@ class	recordholder {
 ## For example, `1__0__:ige` or `1__1__:ige` is "1".
 ## `1__2__:ige` will be an empty string.
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(($s1 + 0 >= $s2 + 0)? 1 : ""));
+						$this->pushstack(array(((int)$s1 >= (int)$s2)? 1 : ""));
 						break;
 					case	"sge":
 ## Take two strings from the stack, consider each as a string, and stack "1" if they are equal or the first is larger, otherwise empty string on the stack.
@@ -2210,7 +2211,7 @@ class	recordholder {
 ## On the other hand, `1__:andbreak__a` will be an empty string (no evaluation after __a).
 ## This is used, for example, `id__:g:dup:isnull:andbreak__table__field__:tableid` to terminate evaluation there if "id__:g" is an empty string.
 						list($s1) = $this->popstack($cmd, "val");
-						if ($s1 != 0) {
+						if ((int)$s1 != 0) {
 							$this->pushstack(array("BREAK"));
 							$this->flush_coverage();
 							return "";
@@ -2223,7 +2224,7 @@ class	recordholder {
 ## On the other hand, `1__:iandbreak` will be an empty string (not evaluated thereafter).
 ## This is used, for example, `id__:g:dup:isnull:andbreak__table__field__:tableid` to terminate evaluation there if "id__:g" is an empty string.
 						list($s1) = $this->popstack($cmd, "val");
-						if ($s1 != 0) {
+						if ((int)$s1 != 0) {
 							$this->pushstack(array("BREAK"));
 							$this->flush_coverage();
 							return "";
@@ -2236,7 +2237,7 @@ class	recordholder {
 ## On the other hand, `0__:orbreak__a` will be an empty string (no evaluation after __a).
 ## This is used, for example, in `id__:g:int:dup:orbreak__id__:set` to terminate evaluation there if "id__:g:int" is zero or an empty string.
 						list($s1) = $this->popstack($cmd, "val");
-						if ($s1 == 0) {
+						if ((int)$s1 == 0) {
 							$this->pushstack(array("BREAK"));
 							$this->flush_coverage();
 							return "";
@@ -2249,7 +2250,7 @@ class	recordholder {
 ## On the other hand, `0__:iorbreak` will be an empty string (and will not be evaluated thereafter).
 ## This is used, for example, in `id__:g:int:dup:orbreak__id__:set` to terminate evaluation there if "id__:g:int" is zero or an empty string.
 						list($s1) = $this->popstack($cmd, "val");
-						if ($s1 == 0) {
+						if ((int)$s1 == 0) {
 							$this->pushstack(array("BREAK"));
 							$this->flush_coverage();
 							return "";
@@ -2283,8 +2284,8 @@ class	recordholder {
 ## For example, `0__:andreturn4__a` would be "a".
 ## On the other hand, `1__:andreturn4__a` would be "4" (no evaluation after __a).
 						list($s1) = $this->popstack($cmd, "val");
-						if ($s1 != 0) {
-							$val = substr($cmd, -1) + 0;
+						if ((int)$s1 != 0) {
+							$val = (int)substr($cmd, -1);
 							$this->pushstack(array($val));
 							$this->flush_coverage();
 							return $val;
@@ -2312,8 +2313,8 @@ class	recordholder {
 ## For example, `1__:orreturn4__a` would be "a".
 ## On the other hand, `0__:orreturn4__a` would be "4" (no evaluation after __a).
 						list($s1) = $this->popstack($cmd, "val");
-						if ($s1 == 0) {
-							$val = substr($cmd, -1) + 0;
+						if ((int)$s1 == 0) {
+							$val = (int)substr($cmd, -1);
 							$this->pushstack(array($val));
 							$this->flush_coverage();
 							return $val;
@@ -2332,7 +2333,7 @@ class	recordholder {
 ## For example, `0__:andhome__a` would be "a".
 ## On the other hand, `1__:andhome__a` redirects to the root page (no evaluation after __a).
 						list($s1) = $this->popstack($cmd, "val");
-						if ($s1 != 0) {
+						if ((int)$s1 != 0) {
 							$this->pushstack(array("HOME"));
 							$this->flush_coverage();
 							header("Location: {$sys->urlbase}/nofmt/{$sys->rootpage}.html");
@@ -2345,7 +2346,7 @@ class	recordholder {
 ## For example, `0__:iandhome` would be "0".
 ## On the other hand, `1__:iandhome` redirects to the root page (and is not evaluated thereafter).
 						list($s1) = $this->popstack($cmd, "val");
-						if ($s1 != 0) {
+						if ((int)$s1 != 0) {
 							$this->pushstack(array("HOME"));
 							$this->flush_coverage();
 							header("Location: {$sys->urlbase}/nofmt/{$sys->rootpage}.html");
@@ -2358,7 +2359,7 @@ class	recordholder {
 ## For example, `1__:orhome__a` would be "a".
 ## On the other hand, `0__:orhome__a` redirects to the root page (no evaluation after __a).
 						list($s1) = $this->popstack($cmd, "val");
-						if ($s1 == 0) {
+						if ((int)$s1 == 0) {
 							$this->pushstack(array("HOME"));
 							$this->flush_coverage();
 							header("Location: {$sys->urlbase}/nofmt/{$sys->rootpage}.html");
@@ -2371,7 +2372,7 @@ class	recordholder {
 ## For example, `1__:iorhome` would be "1".
 ## On the other hand, `0__:iorhome` redirects to the root page (and is not evaluated thereafter).
 						list($s1) = $this->popstack($cmd, "val");
-						if ($s1 == 0) {
+						if ((int)$s1 == 0) {
 							$this->pushstack(array("HOME"));
 							$this->flush_coverage();
 							header("Location: {$sys->urlbase}/nofmt/{$sys->rootpage}.html");
@@ -2433,15 +2434,15 @@ class	recordholder {
 ## Take two strings from the stack, consider each as a number, and pile the first number on the stack if the second number is 0, otherwise the second number.
 ## For example, `2__1__:ior` becomes "1" and `2__0__:ior` becomes "2".
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						if ($s2 == 0)
+						if ((int)$s2 == 0)
 							$s2 = $s1;
-						$this->pushstack(array($s2 + 0));
+						$this->pushstack(array((int)$s2));
 						break;
 					case	"iand":
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						if ($s2 != 0)
+						if ((int)$s2 != 0)
 							$s2 = $s1;
-						$this->pushstack(array($s2 + 0));
+						$this->pushstack(array((int)$s2));
 						break;
 					case	"loginrecord":
 ## Take one string from the stack, consider it a field name, and stack the field values of the record in the login table corresponding to the logged-in user for this session.
@@ -2722,7 +2723,7 @@ class	recordholder {
 					$tablelist["login"]->check_maillogin();
 				else if (($loginrecord === null)&&($a[1] == ":login")) {
 					if (@$_POST["pass"] == "")
-						bq_login(0);
+						bq_login("emptypass");
 					else
 						$tablelist["login"]->check_loginform();
 					log_die();
@@ -2808,7 +2809,7 @@ class	recordholder_tableid extends recordholder {
 		
 		if (($t = @$tablelist[$tablename]) === null)
 			return;
-		$this->record = $t->getrecord($par + 0);
+		$this->record = $t->getrecord((int)$par);
 #		$this->record->dumpfields();
 	}
 }
@@ -2825,7 +2826,7 @@ class	recordholder_stableid extends recordholder {
 		parent::__construct($rh, $record, $tablename, $prefix, $par);
 		
 		$t = @$tablelist["simple"]->gettable($tablename);
-		$this->record = $t->getrecord($par + 0);
+		$this->record = $t->getrecord((int)$par);
 #		$this->record->dumpfields();
 	}
 }
@@ -2913,7 +2914,7 @@ class	commandparser {		# volatile object
 		$ret = "";
 		if ($this->parent === null) {
 			$ret .= '<ul style="background:#c0c0ff">';
-			if (($frag = @$coverage_count[$index] + 0) <= 0)
+			if (($frag = (int)@$coverage_count[$index]) <= 0)
 				$frag = 1;
 			$ret .= ' <a href="?coverage=1#'.$index.'" name="'."{$index}.{$frag}".'">coverage</a>';
 			foreach ($this->children as $child)
@@ -2939,7 +2940,7 @@ class	commandparser {		# volatile object
 		if ($index == $this->index) {
 			if ($ret != "")
 				return $ret;
-			if (($count = @$coverage_count[@$index] + 0) > 1)
+			if (($count = (int)@$coverage_count[@$index]) > 1)
 				return "<li>... #{$count}";
 			return "<li>...";
 		}
@@ -3099,7 +3100,7 @@ class	commandparserrecordholder extends commandparser {
 
 class	commandparser_if extends commandparser {
 	function	parsehtmlinner($rh = null, $record = null) {
-		$this->cond = ($rh->parsewithbq($this->par, $record) == 0)? 0 : 1;
+		$this->cond = ((int)$rh->parsewithbq($this->par, $record) == 0)? 0 : 1;
 		if ($this->cond < 1)
 			return;
 		parent::parsehtmlinner($rh, $record);
@@ -3117,7 +3118,7 @@ class	commandparser__elseif extends commandparser {
 			$this->cond = -1;
 			return;
 		}
-		$this->cond = ($rh->parsewithbq($this->par, $record) == 0)? 0 : 1;
+		$this->cond = ((int)$rh->parsewithbq($this->par, $record) == 0)? 0 : 1;
 		if ($this->cond < 1)
 			return;
 		parent::parsehtmlinner($rh, $record);
@@ -3198,8 +3199,8 @@ class	daterecord extends rootrecord {
 class	commandparser_dayrows extends commandparser {
 	function	parsehtmlinner($rh = null, $record = null) {
 		$a = explode(" ", $rh->parsewithbq($this->par, $record), 3);
-		$t = $a[0] + 0;
-		if (($count = @$a[1]) == 0)
+		$t = (int)$a[0];
+		if (($count = (int)@$a[1]) == 0)
 			$count = 1;
 		
 		while ($count > 0) {
@@ -3219,10 +3220,10 @@ class	commandparser_dayrows extends commandparser {
 class	commandparser_wdayrows extends commandparser {
 	function	parsehtmlinner($rh = null, $record = null) {
 		$a = explode(" ", $rh->parsewithbq($this->par, $record), 4);
-		$t = $a[0] + 0;
-		if (($count = @$a[1]) == 0)
+		$t = (int)$a[0];
+		if (($count = (int)@$a[1]) == 0)
 			$count = 1;
-		$start = @$a[2] + 0;
+		$start = (int)@$a[2];
 		
 		for ($i=0; $i<7; $i++) {
 			$r = new daterecord($t);
@@ -3351,7 +3352,7 @@ class	im_tables {
 				$cache[@$a[$field]] = $key + 1;
 			$findtableidscache[$cachename] = $cache;
 		}
-		return @$cache[$val] + 0;
+		return (int)@$cache[$val];
 	}
 	function	findtableidsa($field, $val) {
 		global	$tablelist;
@@ -3373,7 +3374,7 @@ class	im_tables {
 			$cache[$val] = count($list);
 			$findtableidscache[$cachename] = $cache;
 		}
-		return @$cache[$val] + 0;
+		return (int)@$cache[$val];
 	}
 	function	findtableidsz($field, $val) {
 		global	$tablelist;
@@ -3521,10 +3522,10 @@ EOO;
 						$obj->del();
 						continue 2;
 					case	"table{":
-						$obj = new im_table($s = trim($a[0]), @$a[2] + 0);
+						$obj = new im_table($s = trim($a[0]), (int)@$a[2]);
 						$list[$s] = $obj;
 						array_unshift($stack, $obj);
-						if (@$a[2] + 0 == 0)
+						if ((int)@$a[2] == 0)
 							continue 2;
 						if ($obj->get("id") > 0)
 							continue 2;
