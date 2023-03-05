@@ -8,6 +8,7 @@
 
 ## Important changes.
 
+- 2023/03/05 The argument '$par' in recordholder::__construct() is no longer parsed with parsewithbq(). Please parse argument in constructor in user class.
 - 2022/07/11 Return value of commandparser::parsehtml() is discarded. Please call commandparser::output() for output.
 - 2022/07/11 debuglog directory changed to 'debuglog???????*'. Please create a directory with at least 7 characters that is hard to guess after 'debuglog'.
 

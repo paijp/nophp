@@ -2809,7 +2809,7 @@ class	recordholder_tableid extends recordholder {
 		
 		if (($t = @$tablelist[$tablename]) === null)
 			return;
-		$this->record = $t->getrecord((int)$par);
+		$this->record = $t->getrecord((int)$rh->parsewithbq($par, $record));
 #		$this->record->dumpfields();
 	}
 }
@@ -2826,7 +2826,7 @@ class	recordholder_stableid extends recordholder {
 		parent::__construct($rh, $record, $tablename, $prefix, $par);
 		
 		$t = @$tablelist["simple"]->gettable($tablename);
-		$this->record = $t->getrecord((int)$par);
+		$this->record = $t->getrecord((int)$rh->parsewithbq($par, $record));
 #		$this->record->dumpfields();
 	}
 }
@@ -3078,10 +3078,12 @@ class	commandparserrecordholder extends commandparser {
 		global	$recordholderlist;
 		
 #		$a = explode(" ", trim($rh->parsewithbqinsql($this->par, $record)), 2);
-		$a = explode(" ", trim($rh->parsewithbq($this->par, $record)), 2);
+#		$a = explode(" ", trim($rh->parsewithbq($this->par, $record)), 2);
+		$a = explode(" ", $this->par, 2);
+		$s0 = $rh->parsewithbq($a[0], $record);
 		
-		if (count($a2 = explode("=", $a[0], 2)) == 1) {
-			$tablename = $alias = $a[0];
+		if (count($a2 = explode("=", $s0, 2)) == 1) {
+			$tablename = $alias = $s0;
 			$prefix = "";
 		} else {
 			$alias = $a2[0];
