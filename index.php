@@ -3683,6 +3683,8 @@ if (!function_exists("bq_login")) {
 		
 				if (($login = @$_POST["login"]) == "")
 					log_die("login empty.");
+				if (!preg_match('/^[0-9A-Za-z][-_.@+0-9A-Za-z]*$/', $login))
+					log_die("invalid character in login.");
 				$list = $tablelist["login"]->getrecordidlist("where login = ?", array($login));
 				if (count($list) < 1)
 					log_die("no login found");
