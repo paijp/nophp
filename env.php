@@ -31,6 +31,7 @@ $sys->sqlpath = "sqlite:/var/www/db/nophp.sq3";
 $sys->auth_user = "admin";
 $sys->auth_salt = "235ba225813f156690b798dc978099e1e76441ee";
 # $sys->auth_pass = "";
+$sys->includelist[] = "importer.php";		# code for ?mode=sql.
 
 #
 # If the password on the login form is empty, a mail with URL will be sent.
