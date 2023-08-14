@@ -39,10 +39,16 @@ $sys->mailcmd = "mail -s 'login URL.' @addr@";
 $sys->mailbody = "@url@";
 
 #
-# You can send a report to slack with debuglog URL.
+# You can send a report to slack or zulip with debuglog URL.
+# Please use these HTML.
+#	<FORM method=POST>
+#	<INPUT type=text name=":reportbody" size=60>
+#	<INPUT type=submit value="send report">
+#	</FORM>
 #
 
 # $sys->reportjsonurl = "https://hooks.slack.com/services/9999";
+# $sys->reportjsonurl = "https://____.zulipchat.com/api/v1/external/slack_incoming?api_key=____&stream=log&topic=log";
 $sys->reportjsonbase = array("text" => "@body@\n<@link@>");
 
 ?>
