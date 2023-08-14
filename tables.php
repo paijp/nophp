@@ -1,7 +1,6 @@
 <?php
 
 @include("sendmail.php");
-include("grid.php");
 
 class	login_table	extends	a_login_table {
 }
