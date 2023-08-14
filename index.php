@@ -1263,14 +1263,15 @@ EOO;
 		}
 		if (function_exists("bq_login"))
 			bq_login("goodlogin", $this);
+		if (($ismaillogin)) {
+			$this->v_mailkey = "";
+			$this->v_salt = $this->getrandom();
+			$this->v_pass = "";
+		}
 		$key = $this->getrandom();
 		$this->v_sessionkey = myhash($this->v_salt.$key);
 		$this->v_submitkey = $this->getrandom();
 		$this->v_lastlogin = $sys->now;
-		if (($ismaillogin)) {
-			$this->v_mailkey = "";
-			$this->v_pass = "";
-		}
 		parent::update();
 		setcookie("sessionid", $this->id, 0, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
 		setcookie("sessionkey", $key, 0, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
