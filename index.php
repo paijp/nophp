@@ -526,7 +526,7 @@ function	log_die($message = "")
 	foreach ($debugtablelist as $tablename => $orglist) {
 		$table = $tablelist[$tablename];
 		$idlist = $table->getrecordidlist();
-		if (count($idlist) >= $sys->debugmaxlogrecords)
+		if (count($idlist) > $sys->debugmaxlogrecords)
 			continue;
 		
 		$mergeidlist = array();
