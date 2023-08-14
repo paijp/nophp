@@ -20,7 +20,8 @@ $sys->htmlbase = "./res/";
 $sys->sqlpath = "sqlite:/var/www/db/nophp.sq3";
 # $sys->sqlpath = "mysql:dbname=test";		# sorry, not tested.
 
-$sys->rootpage = "g9999";
+#$sys->rootpage = "g9999";
+# move to tables.php.
 
 #
 # If you want to use 'index.php?mode=sql', you have to set this basic authentication.
