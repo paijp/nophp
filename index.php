@@ -33,6 +33,9 @@ class	sys {
 			$this->debugdir = $val;
 			break;
 		}
+		list($m, $s) = explode(" ", microtime());
+		$this->debugfn = date("ymd_His_", (int)$s).substr($m, 2);
+		$this->now = $s;
 	}
 }
 $sys = new sys();
@@ -425,8 +428,15 @@ function	adddebuglog($debugdir = null, $debugfn = null)
 	global	$targethash;
 	global	$tableshash;
 	
-	if ($debugdir === null)
-		$debugdir = @$sys->debugdir;
+	if ($debugdir === null) {
+		if (@$sys->debugdir === null)
+			return;
+		if (!is_dir($debugdir = @$sys->debugdir)) {
+			$sys->debugdir = null;
+			$sys->debugfn = null;
+			return;
+		}
+	}
 	if ($debugdir !== null) {
 		if ($debugfn === null)
 			$debugfn = "{$sys->debugfn}.php";
