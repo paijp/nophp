@@ -24,7 +24,6 @@ class	sys {
 	var	$forcelogoutonupdate = 1;
 	var	$noredirectonlogin = 0;		# 1: don't redirect from index.html to rootpage on login status.
 	
-	var	$includelist = array("tables.php");
 	var	$importlist = array();
 	
 	var	$urlbase = null;
@@ -41,16 +40,6 @@ class	sys {
 }
 $sys = new sys();
 
-require("env.php");
-
-if (!function_exists("myhash")) {
-	function	myhash($s) {
-		return hash("sha256", $s);
-	}
-}
-if (trim(myhash("")) == "")
-	die("hash not work");
-
 if (@$_SERVER["HTTPS"] == "on")
 	$sys->url = "https://";
 else
@@ -58,342 +47,6 @@ else
 $a = explode("?", @$_SERVER["REQUEST_URI"], 2);
 $sys->url .= @$_SERVER["HTTP_HOST"].$a[0];
 $sys->urlquery = @$a[1];
-
-
-if ((@$logview_fn !== null)) {
-# The name may be like "\000__COMPILER_HALT_OFFSET__\000/var/www/html....php" and it is not documented.
-	$log_fp = null;
-	foreach (get_defined_constants() as $key => $val) {
-		if (!preg_match('/^__COMPILER_HALT_OFFSET__/', ltrim($key)))
-			continue;
-		$log_fp = popen("dd bs=1 if=".escapeshellarg(@$logview_self)." skip={$val} |gunzip", "r");
-		break;
-	}
-	if ((@$_GET["snapshot"])) {
-		if ($log_fp === null)
-			$content = file_get_contents("{$logview_fn}.php");
-		else {
-			$content = stream_get_contents($log_fp);
-			pclose($log_fp);
-			$log_fp = null;
-		}
-		$output = "";
-		foreach (explode('<pre class="outphase1"', $content) as $key => $val) {
-			if ($key == 0)
-				continue;
-			$a = explode(">", $val, 2);
-			$a2 = explode("</pre>", @$a[1], 2);
-			$output .= html_entity_decode(strip_tags($a2[0]));
-		}
-		if (count($a = preg_split("/<HEAD>/i", $output, 2)) == 2) {
-			list($s0, $s1) = $a;
-			$output = <<<EOO
-{$s0}<HEAD><BASE href="{$logview_urlbase}/nopost/snapshot.html">
-{$s1}
-EOO;
-		} else {
-			$output = <<<EOO
-<HEAD><BASE href="{$logview_urlbase}/nopost/snapshot.html"></HEAD>
-{$output}
-EOO;
-		}
-		print $output;
-		die();
-	}
-	if ((@$_GET["coverage"])) {
-		$fn = "{$logview_coverage}.log";
-		if ($log_fp === null) {
-			if (!is_readable($fn))
-				die();
-			$content = file_get_contents($fn);
-		} else {
-			$fp = popen("gunzip <".escapeshellarg("{$fn}.gz"), "r");
-			$content = stream_get_contents($fp);
-			pclose($fp);
-		}
-		$list = array();
-		$actionid = -1;
-		$actionlist = array();
-		foreach (preg_split("/\r\n|\r|\n/", $content) as $line) {
-			if (count($a = explode("\t", $line, 4)) < 3)
-				continue;
-			$key = (int)$a[1];
-			$key2 = "_".$a[2];
-			if (count($a) == 3) {
-				$actionid = $key;
-				$actionlist[$key2] = 1;
-				continue;
-			}
-			$key3 = "_".$a[3];
-			if (@$list[$key][$key2][$key3] === null)
-				$list[$key][$key2][$key3] = $a[0];
-		}
-	
-		$head = null;
-		$titlelist = array();
-		foreach($list[0]["_0"] as $key => $val) {
-			if ($head === null) {
-				$head = "";
-				print "<table border>\n";
-				foreach (explode("\t", substr($key, 1)) as $k => $v) {
-					if (($k & 1))
-						continue;
-					$head .= '<tr><th colspan="'.($k / 2 + 2).'" style="text-align: right;';
-					if ((($k / 2) % 6) < 3)
-						$head .= " background: #8f8;";
-					$head .= '">';
-					list($l, $s) = explode("_", base64_decode($v), 2);
-					$titlelist[$l] = $s;
-					$head .= '<a href="#'.$l.'">'.htmlspecialchars($s)."</a>\n";
-				}
-				print $head;
-			}
-			$fn = htmlspecialchars($val, ENT_QUOTES);
-			print '<tr><th style="text-align: left;"><a href="'.$fn.'.php">'."{$fn}\n";
-			foreach (explode("\t", substr($key, 1)) as $k => $v)
-				if (($k & 1)) {
-					print "\t<td";
-					if ((($k / 2) % 6) < 3)
-						print ' style="background: #8f8;"';
-					print ">";
-					if (($s = base64_decode($v)) == 0)
-						$s = "";
-					print htmlspecialchars($s)."\n";
-				}
-		}
-		if ($head !== null)
-			print "{$head}</table>\n";
-		
-		$searchlist = array("home", "return", "break", "jump");
-		$replacelist = array();
-		foreach ($searchlist as $s)
-			$replacelist[] = '<span style="color:#f00;">'."{$s}</span>";
-		
-		ksort($list);
-		$lastid = 0;
-		foreach ($list as $id => $val) {
-			if ($id == 0)
-				continue;
-			print '<ul style="background:#ccf;">'."\n";
-			while ($lastid < $id)
-				print '<a name="'.(++$lastid).'"> </a>'; 
-			$level = 1;
-			foreach ($titlelist as $k => $v) {
-				if ($k > $id)
-					break;
-				preg_match("/^(\t*)(.*)/", @$titlelist[$k], $a);
-				while ($level < strlen($a[1])) {
-					print "<ul>\n";
-					$level++;
-				}
-				while ($level > strlen($a[1])) {
-					print "</ul>\n";
-					$level--;
-				}
-				print "<li>".htmlspecialchars($a[2])."\n";
-			}
-			while ($level > 0) {
-				print "</ul>\n";
-				$level--;
-			}
-			foreach ($val as $key2 => $val2) {
-				if ($id == $actionid)
-					$actionlist[$key2] = 0;
-				$head = "";
-				$pars = "";
-				foreach (explode("__", base64_decode($key2)) as $block) {
-					if (!preg_match('/^:/', $block)) {
-						$pars .= "{$block}__ ";
-						continue;
-					}
-					$remaincmds = explode(":", $block);
-					array_shift($remaincmds);
-					foreach ($remaincmds as $cmd) {
-						$head .= '<th style="background:#ff8;"><span style="color: #888;">'.htmlspecialchars($pars);
-						$pars = "";
-						$head .= "</span>:".str_replace($searchlist, $replacelist, htmlspecialchars($cmd));
-					}
-				}
-				print "<table border><tr><th>\n{$head}";
-				foreach ($val2 as $key3 => $val3) {
-					$a = explode("#", $val3);
-					$fn = htmlspecialchars($a[0], ENT_QUOTES);
-					if (($v = (int)$a[1]) < 0)
-						$v = 1;
-					print '<tr><th style="text-align: left;"><a href="'.$fn.'.php#'.$id.".".$v.'">'."{$fn}#{$v}\n";
-					foreach (explode("\t", $key3) as $k => $v)
-						print "\t".'<td style="text-align: right;">'.htmlspecialchars(base64_decode($v));
-				}
-				print "<tr><th>\n{$head}</table>\n<p></p>\n";
-			}
-		}
-		if ($id != $actionid) {
-			print '<ul style="background:#ccf;">'."\n";
-			while ($lastid < $actionid)
-				print '<a name="'.(++$lastid).'"> </a>'; 
-			$level = 1;
-			foreach ($titlelist as $k => $v) {
-				if ($k > $actionid)
-					break;
-				preg_match("/^(\t*)(.*)/", @$titlelist[$k], $a);
-				while ($level < strlen($a[1])) {
-					print "<ul>\n";
-					$level++;
-				}
-				while ($level > strlen($a[1])) {
-					print "</ul>\n";
-					$level--;
-				}
-				print "<li>".htmlspecialchars($a[2])."\n";
-			}
-			while ($level > 0) {
-				print "</ul>\n";
-				$level--;
-			}
-		}
-		foreach ($actionlist as $key2 => $val2) {
-			if ($val2 == 0)
-				continue;
-			$head = "";
-			$pars = "";
-			foreach (explode("__", base64_decode($key2)) as $block) {
-				if (!preg_match('/^:/', $block)) {
-					$pars .= "{$block}__ ";
-					continue;
-				}
-				$remaincmds = explode(":", $block);
-				array_shift($remaincmds);
-				foreach ($remaincmds as $cmd) {
-					$head .= '<th style="background:#ff8;"><span style="color: #888;">'.htmlspecialchars($pars);
-					$pars = "";
-					$head .= "</span>:".str_replace($searchlist, $replacelist, htmlspecialchars($cmd));
-				}
-			}
-			print '<table border><tr><th><span style="color: #aaa;">(no log)</span>'."\n{$head}";
-			print "</table>\n<p></p>\n";
-		}
-		die();
-	}
-	print "<pre><b>".htmlspecialchars(@file_get_contents("{$logview_fn}.errorlog"))."</b></pre>\n";
-	
-	if ((@$sys->debugdiff)) {
-		if ($log_fp === null)
-			$content = file_get_contents("{$logview_fn}.php");
-		else {
-			$content = stream_get_contents($log_fp);
-			pclose($log_fp);
-			$log_fp = null;
-		}
-		list($part0, $s) = explode('<div class="srcall">', $content, 2);
-		list($part1, $part2) = explode('</div>', $s, 2);
-		print $part0;
-		
-		$a = array(
-			0 => array("pipe", "r"), 
-			1 => array("pipe", "w")
-		);
-		$p0 = proc_open("diff -U 99999999 - ".escapeshellarg(@$logview_targetpath), $a, $plist);
-		$sinput = substr(html_entity_decode(strip_tags($part1)), 0, -1);
-		fputs($plist[0], $sinput);
-		fclose($plist[0]);
-		$soutput = stream_get_contents($plist[1]);
-		proc_close($p0);
-		
-		$mode = 0;
-		if ($soutput == "") {
-			$mode = 1;
-			$soutput = $sinput;
-		}
-		
-#		print nl2br(htmlspecialchars($soutput));
-	print "<pre>\n";
-		foreach (preg_split("/\r\n|\r|\n/", $soutput) as $key => $line) {
-#			$style = " background:#ccc;";
-			$style = "";
-			if ($mode == 0) {
-				switch ($key) {
-					case	0:
-						$line = "-Removed at newest file.";
-						break;
-					case	1:
-						$line = "+Added at newest file.";
-						break;
-					case	2:
-						$line = " ";
-						break;
-				}
-				switch (substr($line, 0, 1)) {
-					case	"+":
-						$style = " background:#cfc; color:#888;";
-						print '<p style="margin:0;'.$style.'">';
-						print htmlspecialchars($line)."</p>";
-						continue 2;
-					case	"-":
-						$style = " background:#ccc;";
-#						$style .= " text-decoration: line-through;";
-						break;
-					case	" ":
-						$line = substr($line, 1);
-						break;
-				}
-			}
-			print '<p style="margin:0;'.$style.'">';
-			if ($line == "") {
-				print " </p>";
-				continue;
-			}
-			foreach (explode("<!--{", $line) as $k0 => $v0) {
-				if ($k0 > 0)
-					print '<b style="color:#0000ff;">&lt;!--{';
-				foreach (explode("<!--}", $v0) as $k1 => $v1) {
-					if ($k1 > 0)
-						print '<b style="color:#0000ff;">&lt;!--}';
-					foreach (explode("-->", $v1, 2) as $k2 => $v2) {
-						if ($k2 > 0)
-							print "--&gt;</b>";
-						foreach (explode('`', $v2) as $k3 => $v3) {
-							if ($k3 > 0)
-								print '<b style="color:#ff0000;">`</b>';
-							if (($k3 & 1))
-								print '<b style="color:#ff0000;">';
-							print htmlspecialchars($v3);
-							if (($k3 & 1))
-								print "</b>";
-						}
-					}
-				}
-			}
-			print "</p>";
-		}
-	print "</pre>\n";
-		
-		print $part2;
-		
-		die();
-	}
-	
-	if ($log_fp !== null) {
-		print stream_get_contents($log_fp);
-		die();
-	}
-	return;
-}
-$coverage_list = null;
-$coverage_id = 0;
-$coverage_title = array();
-$coverage_count = array();
-$coverage_actionlist = array();
-
-$sys->importlist = array();
-
-list($m, $s) = explode(" ", microtime());
-$sys->debugfn = date("ymd_His_", (int)$s).substr($m, 2);
-$sys->now = $s;
-
-if (!is_dir(@$sys->debugdir)) {
-	$sys->debugdir = null;
-	$sys->debugfn = null;
-}
 
 
 $fplist = array();
@@ -3295,8 +2948,340 @@ class	commandparser_valid extends commandparser {
 }
 
 
-foreach ($sys->includelist as $fn)
-	require($fn);
+require("tables.php");
+
+
+if (!function_exists("myhash")) {
+	function	myhash($s) {
+		return hash("sha256", $s);
+	}
+}
+if (trim(myhash("")) == "")
+	die("hash not work");
+
+if ((@$logview_fn !== null)) {
+# The name may be like "\000__COMPILER_HALT_OFFSET__\000/var/www/html....php" and it is not documented.
+	$log_fp = null;
+	foreach (get_defined_constants() as $key => $val) {
+		if (!preg_match('/^__COMPILER_HALT_OFFSET__/', ltrim($key)))
+			continue;
+		$log_fp = popen("dd bs=1 if=".escapeshellarg(@$logview_self)." skip={$val} |gunzip", "r");
+		break;
+	}
+	if ((@$_GET["snapshot"])) {
+		if ($log_fp === null)
+			$content = file_get_contents("{$logview_fn}.php");
+		else {
+			$content = stream_get_contents($log_fp);
+			pclose($log_fp);
+			$log_fp = null;
+		}
+		$output = "";
+		foreach (explode('<pre class="outphase1"', $content) as $key => $val) {
+			if ($key == 0)
+				continue;
+			$a = explode(">", $val, 2);
+			$a2 = explode("</pre>", @$a[1], 2);
+			$output .= html_entity_decode(strip_tags($a2[0]));
+		}
+		if (count($a = preg_split("/<HEAD>/i", $output, 2)) == 2) {
+			list($s0, $s1) = $a;
+			$output = <<<EOO
+{$s0}<HEAD><BASE href="{$logview_urlbase}/nopost/snapshot.html">
+{$s1}
+EOO;
+		} else {
+			$output = <<<EOO
+<HEAD><BASE href="{$logview_urlbase}/nopost/snapshot.html"></HEAD>
+{$output}
+EOO;
+		}
+		print $output;
+		die();
+	}
+	if ((@$_GET["coverage"])) {
+		$fn = "{$logview_coverage}.log";
+		if ($log_fp === null) {
+			if (!is_readable($fn))
+				die();
+			$content = file_get_contents($fn);
+		} else {
+			$fp = popen("gunzip <".escapeshellarg("{$fn}.gz"), "r");
+			$content = stream_get_contents($fp);
+			pclose($fp);
+		}
+		$list = array();
+		$actionid = -1;
+		$actionlist = array();
+		foreach (preg_split("/\r\n|\r|\n/", $content) as $line) {
+			if (count($a = explode("\t", $line, 4)) < 3)
+				continue;
+			$key = (int)$a[1];
+			$key2 = "_".$a[2];
+			if (count($a) == 3) {
+				$actionid = $key;
+				$actionlist[$key2] = 1;
+				continue;
+			}
+			$key3 = "_".$a[3];
+			if (@$list[$key][$key2][$key3] === null)
+				$list[$key][$key2][$key3] = $a[0];
+		}
+	
+		$head = null;
+		$titlelist = array();
+		foreach($list[0]["_0"] as $key => $val) {
+			if ($head === null) {
+				$head = "";
+				print "<table border>\n";
+				foreach (explode("\t", substr($key, 1)) as $k => $v) {
+					if (($k & 1))
+						continue;
+					$head .= '<tr><th colspan="'.($k / 2 + 2).'" style="text-align: right;';
+					if ((($k / 2) % 6) < 3)
+						$head .= " background: #8f8;";
+					$head .= '">';
+					list($l, $s) = explode("_", base64_decode($v), 2);
+					$titlelist[$l] = $s;
+					$head .= '<a href="#'.$l.'">'.htmlspecialchars($s)."</a>\n";
+				}
+				print $head;
+			}
+			$fn = htmlspecialchars($val, ENT_QUOTES);
+			print '<tr><th style="text-align: left;"><a href="'.$fn.'.php">'."{$fn}\n";
+			foreach (explode("\t", substr($key, 1)) as $k => $v)
+				if (($k & 1)) {
+					print "\t<td";
+					if ((($k / 2) % 6) < 3)
+						print ' style="background: #8f8;"';
+					print ">";
+					if (($s = base64_decode($v)) == 0)
+						$s = "";
+					print htmlspecialchars($s)."\n";
+				}
+		}
+		if ($head !== null)
+			print "{$head}</table>\n";
+		
+		$searchlist = array("home", "return", "break", "jump");
+		$replacelist = array();
+		foreach ($searchlist as $s)
+			$replacelist[] = '<span style="color:#f00;">'."{$s}</span>";
+		
+		ksort($list);
+		$lastid = 0;
+		foreach ($list as $id => $val) {
+			if ($id == 0)
+				continue;
+			print '<ul style="background:#ccf;">'."\n";
+			while ($lastid < $id)
+				print '<a name="'.(++$lastid).'"> </a>'; 
+			$level = 1;
+			foreach ($titlelist as $k => $v) {
+				if ($k > $id)
+					break;
+				preg_match("/^(\t*)(.*)/", @$titlelist[$k], $a);
+				while ($level < strlen($a[1])) {
+					print "<ul>\n";
+					$level++;
+				}
+				while ($level > strlen($a[1])) {
+					print "</ul>\n";
+					$level--;
+				}
+				print "<li>".htmlspecialchars($a[2])."\n";
+			}
+			while ($level > 0) {
+				print "</ul>\n";
+				$level--;
+			}
+			foreach ($val as $key2 => $val2) {
+				if ($id == $actionid)
+					$actionlist[$key2] = 0;
+				$head = "";
+				$pars = "";
+				foreach (explode("__", base64_decode($key2)) as $block) {
+					if (!preg_match('/^:/', $block)) {
+						$pars .= "{$block}__ ";
+						continue;
+					}
+					$remaincmds = explode(":", $block);
+					array_shift($remaincmds);
+					foreach ($remaincmds as $cmd) {
+						$head .= '<th style="background:#ff8;"><span style="color: #888;">'.htmlspecialchars($pars);
+						$pars = "";
+						$head .= "</span>:".str_replace($searchlist, $replacelist, htmlspecialchars($cmd));
+					}
+				}
+				print "<table border><tr><th>\n{$head}";
+				foreach ($val2 as $key3 => $val3) {
+					$a = explode("#", $val3);
+					$fn = htmlspecialchars($a[0], ENT_QUOTES);
+					if (($v = (int)$a[1]) < 0)
+						$v = 1;
+					print '<tr><th style="text-align: left;"><a href="'.$fn.'.php#'.$id.".".$v.'">'."{$fn}#{$v}\n";
+					foreach (explode("\t", $key3) as $k => $v)
+						print "\t".'<td style="text-align: right;">'.htmlspecialchars(base64_decode($v));
+				}
+				print "<tr><th>\n{$head}</table>\n<p></p>\n";
+			}
+		}
+		if ($id != $actionid) {
+			print '<ul style="background:#ccf;">'."\n";
+			while ($lastid < $actionid)
+				print '<a name="'.(++$lastid).'"> </a>'; 
+			$level = 1;
+			foreach ($titlelist as $k => $v) {
+				if ($k > $actionid)
+					break;
+				preg_match("/^(\t*)(.*)/", @$titlelist[$k], $a);
+				while ($level < strlen($a[1])) {
+					print "<ul>\n";
+					$level++;
+				}
+				while ($level > strlen($a[1])) {
+					print "</ul>\n";
+					$level--;
+				}
+				print "<li>".htmlspecialchars($a[2])."\n";
+			}
+			while ($level > 0) {
+				print "</ul>\n";
+				$level--;
+			}
+		}
+		foreach ($actionlist as $key2 => $val2) {
+			if ($val2 == 0)
+				continue;
+			$head = "";
+			$pars = "";
+			foreach (explode("__", base64_decode($key2)) as $block) {
+				if (!preg_match('/^:/', $block)) {
+					$pars .= "{$block}__ ";
+					continue;
+				}
+				$remaincmds = explode(":", $block);
+				array_shift($remaincmds);
+				foreach ($remaincmds as $cmd) {
+					$head .= '<th style="background:#ff8;"><span style="color: #888;">'.htmlspecialchars($pars);
+					$pars = "";
+					$head .= "</span>:".str_replace($searchlist, $replacelist, htmlspecialchars($cmd));
+				}
+			}
+			print '<table border><tr><th><span style="color: #aaa;">(no log)</span>'."\n{$head}";
+			print "</table>\n<p></p>\n";
+		}
+		die();
+	}
+	print "<pre><b>".htmlspecialchars(@file_get_contents("{$logview_fn}.errorlog"))."</b></pre>\n";
+	
+	if ((@$sys->debugdiff)) {
+		if ($log_fp === null)
+			$content = file_get_contents("{$logview_fn}.php");
+		else {
+			$content = stream_get_contents($log_fp);
+			pclose($log_fp);
+			$log_fp = null;
+		}
+		list($part0, $s) = explode('<div class="srcall">', $content, 2);
+		list($part1, $part2) = explode('</div>', $s, 2);
+		print $part0;
+		
+		$a = array(
+			0 => array("pipe", "r"), 
+			1 => array("pipe", "w")
+		);
+		$p0 = proc_open("diff -U 99999999 - ".escapeshellarg(@$logview_targetpath), $a, $plist);
+		$sinput = substr(html_entity_decode(strip_tags($part1)), 0, -1);
+		fputs($plist[0], $sinput);
+		fclose($plist[0]);
+		$soutput = stream_get_contents($plist[1]);
+		proc_close($p0);
+		
+		$mode = 0;
+		if ($soutput == "") {
+			$mode = 1;
+			$soutput = $sinput;
+		}
+		
+#		print nl2br(htmlspecialchars($soutput));
+	print "<pre>\n";
+		foreach (preg_split("/\r\n|\r|\n/", $soutput) as $key => $line) {
+#			$style = " background:#ccc;";
+			$style = "";
+			if ($mode == 0) {
+				switch ($key) {
+					case	0:
+						$line = "-Removed at newest file.";
+						break;
+					case	1:
+						$line = "+Added at newest file.";
+						break;
+					case	2:
+						$line = " ";
+						break;
+				}
+				switch (substr($line, 0, 1)) {
+					case	"+":
+						$style = " background:#cfc; color:#888;";
+						print '<p style="margin:0;'.$style.'">';
+						print htmlspecialchars($line)."</p>";
+						continue 2;
+					case	"-":
+						$style = " background:#ccc;";
+#						$style .= " text-decoration: line-through;";
+						break;
+					case	" ":
+						$line = substr($line, 1);
+						break;
+				}
+			}
+			print '<p style="margin:0;'.$style.'">';
+			if ($line == "") {
+				print " </p>";
+				continue;
+			}
+			foreach (explode("<!--{", $line) as $k0 => $v0) {
+				if ($k0 > 0)
+					print '<b style="color:#0000ff;">&lt;!--{';
+				foreach (explode("<!--}", $v0) as $k1 => $v1) {
+					if ($k1 > 0)
+						print '<b style="color:#0000ff;">&lt;!--}';
+					foreach (explode("-->", $v1, 2) as $k2 => $v2) {
+						if ($k2 > 0)
+							print "--&gt;</b>";
+						foreach (explode('`', $v2) as $k3 => $v3) {
+							if ($k3 > 0)
+								print '<b style="color:#ff0000;">`</b>';
+							if (($k3 & 1))
+								print '<b style="color:#ff0000;">';
+							print htmlspecialchars($v3);
+							if (($k3 & 1))
+								print "</b>";
+						}
+					}
+				}
+			}
+			print "</p>";
+		}
+	print "</pre>\n";
+		
+		print $part2;
+		
+		die();
+	}
+	
+	if ($log_fp !== null) {
+		print stream_get_contents($log_fp);
+		die();
+	}
+	return;
+}
+$coverage_list = null;
+$coverage_id = 0;
+$coverage_title = array();
+$coverage_count = array();
+$coverage_actionlist = array();
 
 
 $cookiepath = "";

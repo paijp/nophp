@@ -1,5 +1,7 @@
 <?php
 
+require("env.php");
+
 @include("sendmail.php");
 
 $sys->rootpage = "g9999";
