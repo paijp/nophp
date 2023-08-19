@@ -1194,7 +1194,6 @@ EOO;
 		return new simpletable($r, $tablename);
 	}
 }
-new innersimpletable();
 
 
 $loginrecord = null;
@@ -3350,6 +3349,8 @@ EOO;
 	log_die();
 }
 
+
+new innersimpletable();
 
 $t = @$tablelist["simple"]->gettable("__dbinfo");
 $a = $t->getlist();
