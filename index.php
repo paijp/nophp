@@ -25,6 +25,7 @@ class	sys {
 	var	$noredirectonlogin = 0;		# 1: don't redirect from index.html to rootpage on login status.
 	
 	var	$includelist = array("tables.php");
+	var	$importlist = array();
 	
 	var	$urlbase = null;
 	var	$target = null;
