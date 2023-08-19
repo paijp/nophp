@@ -494,8 +494,7 @@ function	addcoveragelog($fn, $s = null)
 }
 
 
-$db0 = new PDO($sys->sqlpath);
-$db0->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+$db0 = null;
 
 
 function	log_die($message = "")
@@ -608,12 +607,18 @@ EOO;
 }
 
 
-function	execsql($sql, $array = null, $returnid = 0, $ignoreerror = 0)
+function	execsql($sql = null, $array = null, $returnid = 0, $ignoreerror = 0)
 {
 	global	$db0;
 	global	$sys;
 	global	$debuglog;
 	
+	if ($db0 === null) {
+		$db0 = new PDO($sys->sqlpath);
+		$db0->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+	}
+	if ($sql === null)
+		return null;
 	if ($array === null)
 		$array = array();
 	
@@ -862,6 +867,7 @@ EOO;
 		global	$db0;
 		
 		$s = implode(",", $this->configlist);
+		execsql();
 		if ($db0->getAttribute(PDO::ATTR_DRIVER_NAME) == "sqlite") {
 #	id int primary key autoincrement, 
 # create table if not exists {$this->tablename}(

@@ -147,6 +147,7 @@ if (@$_GET["mode"] == "sql") {
 	do {
 		if (($s = @$_POST["query"]) === null)
 			break;
+		execsql();
 		if (($sp0 = $db0->prepare($s)) === FALSE) {
 			$a = $db0->errorInfo();
 			print htmlspecialchars($a[2])."<BR>\n";
