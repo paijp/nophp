@@ -10,6 +10,7 @@
 
 class	sys {
 	var	$htmlbase = "./res/nofmt/";
+	var	$rootpage = "g0000";
 #	var	$sqlpath = "sqlite:/var/www/db/v1.sq3";
 ##	var	$sqlpath = "mysql:dbname=test";
 	var	$debugdir = null;
@@ -385,8 +386,6 @@ list($m, $s) = explode(" ", microtime());
 $sys->debugfn = date("ymd_His_", (int)$s).substr($m, 2);
 $sys->now = $s;
 
-if (@$sys->rootpage === null)
-	$sys->rootpage = "g0000";
 if (!is_dir(@$sys->debugdir)) {
 	$sys->debugdir = null;
 	$sys->debugfn = null;

@@ -2,8 +2,7 @@
 
 @include("sendmail.php");
 
-if (@$sys->rootpage === null)
-	$sys->rootpage = "g9999";
+$sys->rootpage = "g9999";
 
 
 class	login_table	extends	a_login_table {
