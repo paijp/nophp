@@ -9,8 +9,8 @@
 #
 
 class	sys {
-#	var	$htmlbase = "/html/user/v1/";
-#	var	$sqlpath = "sqlite:/var/www/html/db/v1.sq3";
+	var	$htmlbase = "./res/nofmt/";
+#	var	$sqlpath = "sqlite:/var/www/db/v1.sq3";
 ##	var	$sqlpath = "mysql:dbname=test";
 	var	$debugdir = null;
 	var	$debugmaxlogrecords = 500;
