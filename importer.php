@@ -1,4 +1,12 @@
 <?php
+#
+#	nophp	https://github.com/paijp/nophp
+#	
+#	Copyright (c) 2021-2023 paijp
+#
+#	This software is released under the MIT License.
+#	http://opensource.org/licenses/mit-license.php
+#
 
 $findtableidscache = array();
 $ascii2null = array();
