@@ -1,7 +1,7 @@
 <?php
 
 require("env.php");
-
+@include("builtinfunc.php");
 @include("sendmail.php");
 
 $sys->rootpage = "g9999";
