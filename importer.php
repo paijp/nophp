@@ -25,14 +25,11 @@ class	im_table {
 		execsql("delete from {$this->r->tablename};", null, 0, 1);
 	}
 	function	set($key, $val) {
-		$s = "v_{$key}";
-		$this->r->$s = $val;
+		$this->r->setfield($key, $val);
 	}
 	function	get($key) {
-		if ($key != "id") {
-			$s = "v_{$key}";
-			return @$this->r->$s."";
-		}
+		if ($key != "id")
+			return $this->r->getfield($key);
 		if ($this->r->id <= 0)
 			 $this->r->update();
 		return $this->r->id;

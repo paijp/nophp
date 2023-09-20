@@ -683,11 +683,7 @@ if (!function_exists("bq2_set__val__field")) {
 ## For example, `1__id__:set` sets the ID of the current record to 1.
 	function	bq2_set__val__field($rh0, $record, $val, $field)
 	{
-		if ($field == "id")
-			$s = $field;
-		else
-			$s = "v_{$field}";
-		$record->$s = $val;
+		$record->setfield($field, $val);
 		return array();
 	}
 }

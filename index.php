@@ -408,8 +408,7 @@ class	table {
 		foreach (@$list[0] as $key => $val) {
 			switch ($key) {
 				default:
-					$s = "v_".$key;
-					$this->$s = $val;
+					$this->setfield($key, $val);
 					continue 2;
 				case	"id":
 					$this->id = (int)$val;
@@ -424,8 +423,7 @@ class	table {
 				if (count($a = explode("=", $chunk, 2)) < 2)
 					continue;
 				list($key2, $val2) = $a;
-				$s = "v_".$key2;
-				$this->$s = rawurldecode($val2);
+				$this->setfield($key2, rawurldecode($val2));
 			}
 	}
 	function	getconfig() {
@@ -460,10 +458,15 @@ EOO;
 		}
 		return $list;
 	}
-	function	getfield($s) {
-		if ($s != "id")
-			$s = "v_{$s}";
-		return @$this->$s;
+	function	getfield($field) {
+		if ($field != "id")
+			$field = "v_{$field}";
+		return @$this->$field;
+	}
+	function	setfield($field, $val) {
+		if ($field != "id")
+			$field = "v_{$field}";
+		$this->$field = $val;
 	}
 	function	update($ignoreerror = 0) {
 		global	$sys;
@@ -606,26 +609,22 @@ class	a_table extends table {
 		$r = $this->getrecord((int)$s1);
 		return array($r->getfield($s3)."");
 	}
-	function	t_find__val__field($rh0, $record, $s1, $s3) {
+	function	t_find__val__field($rh0, $record, $val, $field) {
 ## Take three strings from the stack, consider the first as a field value, the second as a field name, and the third as a table name, and find the record ID whose table contains the field value and stack it on the stack.
 ## Returns an empty string if no field value was found. If multiple records match, the one with the smallest ID is returned.
 ## For example, `john__name__user__:t_find` is the record ID of the record whose value in the name field of the user table is john.
 		foreach ($this->getrecordidlist() as $id) {
 			$r = $this->getrecord($id);
-			if (@$r->getfield($s3) == $s1)
+			if (@$r->getfield($field) == $val)
 				return array($id);
 		}
 		return array("");
 	}
-	function	h_set__val__field($rh0, $record, $s1, $s3) {
+	function	h_set__val__field($rh0, $record, $val, $field) {
 ## Take three strings from the stack, consider them as field value, field name, and table name, respectively, and set them to the current record of the specified table.
 ## Table names must be declared in advance with "<!--{tableid" etc. must be declared beforehand.
 ## For example, `1__id__user__:t_set` sets the ID of the current record in the user table to 1.
-		if ($s3 == "id")
-			$s4 = $s3;
-		else
-			$s4 = "v_{$s3}";
-		$this->$s4 = $s1;
+		$this->setfield($field, $val);
 		return array();
 	}
 	function	hs_update($rh0, $record = null) {
@@ -712,10 +711,8 @@ class	simpletable {
 		$this->id = $id;
 		if ($list !== null) {
 			$this->list = $list;
-			foreach ($list as $key => $val) {
-				$s = "v_".$key;
-				$this->$s = $val;
-			}
+			foreach ($list as $key => $val)
+				$this->setfield($key, $val);
 			return;
 		}
 		$this->list = array();
@@ -730,10 +727,15 @@ class	simpletable {
 			}
 		}
 	}
-	function	getfield($s) {
-		if ($s != "id")
-			$s = "v_{$s}";
-		return @$this->$s;
+	function	getfield($field) {
+		if ($field != "id")
+			$field = "v_{$field}";
+		return @$this->$field;
+	}
+	function	setfield($field, $val) {
+		if ($field != "id")
+			$field = "v_{$field}";
+		$this->$field = $val;
 	}
 	function	getrecord($id = 0) {
 		$s = get_class($this);
@@ -782,15 +784,11 @@ class	simpletable {
 			}
 		$debuglog .= "</TABLE>\n";
 	}
-	function	h_set__val__field($rh0, $record, $s1, $s3) {
+	function	h_set__val__field($rh0, $record, $val, $field) {
 ## Take three strings from the stack, consider them as field value, field name, and table name, respectively, and set them to the current record of the specified table.
 ## Table names must be declared in advance with "<!--{tableid" etc. must be declared beforehand.
 ## For example, `1__id__user__:t_set` sets the ID of the current record in the user table to 1.
-		if ($s3 == "id")
-			$s4 = $s3;
-		else
-			$s4 = "v_{$s3}";
-		$this->$s4 = $s1;
+		$this->setfield($field, $val);
 		return array();
 	}
 	function	hs_update($rh0, $record = null) {
@@ -856,10 +854,15 @@ $loginrecord = null;
 class	rootrecord {
 	var	$tablename = "root";
 	var	$methodlist = null;
-	function	getfield($s) {
-		if ($s != "id")
-			$s = "v_{$s}";
-		return @$this->$s;
+	function	getfield($field) {
+		if ($field != "id")
+			$field = "v_{$field}";
+		return @$this->$field;
+	}
+	function	setfield($field, $val) {
+		if ($field != "id")
+			$field = "v_{$field}";
+		$this->$field = $val;
 	}
 	function	dumpfields($title = "") {
 	}
@@ -1600,8 +1603,9 @@ class	recordholder {
 			return;
 		else
 			$val = "";
-		$s = "v_".$name;
-		$this->record->$s = $val;
+#		$s = "v_".$name;
+#		$this->record->$s = $val;
+		$this->record->setfield($name, $val);
 	}
 	function	striphighlight($highlight = "") {
 		$ret = "";
