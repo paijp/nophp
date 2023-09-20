@@ -2,7 +2,7 @@
 
 require("env.php");
 @include("builtinfunc.php");
-@include("login.php");
+require("loginrecord.php");
 @include("sendmail.php");
 
 $sys->rootpage = "g9999";
