@@ -1244,15 +1244,19 @@ class	recordholder {
 							$a = get_defined_functions();
 							$funclist = array();
 							foreach ($a["user"] as $s) {
-								if (!preg_match('/^bq_/', $s))
+								if ((preg_match('/^bq_(.*)/', $s, $a0)))
+									;
+								else if ((preg_match('/^bq2_(.*)/', $s, $a0)))
+									;
+								else 
 									continue;
-								$a0 = explode("__", $s);
-								if (@$funclist[$a0[0]] !== null)
+								list($s0) = explode("__", $a0[1], 2);
+								if (@$funclist[$s0] !== null)
 									trigger_error("duplexed function({$s})");
-								$funclist[$a0[0]] = $s;
+								$funclist[$s0] = $s;
 							}
 						}
-						if (($s = @$funclist["bq_{$cmd}"]) === null) {
+						if (($s = @$funclist[$cmd]) === null) {
 							trigger_error($s = "unknown command({$cmd} in ".get_class($this).")");
 							$debuglog .= "<h3>".htmlspecialchars($s)."</h3>";
 							$this->pushstack(array());
@@ -1261,69 +1265,16 @@ class	recordholder {
 						$a = explode("__", $s);
 						array_shift($a);
 						$a0 = $this->popstack($cmd, implode(" ", $a));
+						if (preg_match('/^bq2_/', $s)) {
+							array_unshift($a0, $record);
+							array_unshift($a0, $rh);
+						}
 						$a = call_user_func_array($s, $a0);
 						if (!is_array($a))
 							return $a;		# avoid debuglog
 						$this->pushstack($a);
 						break;
 #* bq
-					case	"curid":
-## Stack the current record ID on the stack.
-## For example, inside "<!--{tableid user 1-->" inside, "1" is stacked on the stack.
-						$this->popstack($cmd, "");
-						$s = (int)@$this->record->id;
-						$this->pushstack(array($s));
-						break;
-					case	"curtable":
-## Stack the current table name on the stack.
-## For example, inside "<!--{tableid user 1-->" inside, "user" is stacked on the stack.
-						$this->popstack($cmd, "");
-						$s = @$this->record->tablename."";
-						$this->pushstack(array($s));
-						break;
-					case	"curpage":
-## Stack the current page name obtained from the URL.
-## For example, when "g0000.html" is accessed, "g0000" is stacked on the stack.
-						$this->popstack($cmd, "");
-						$this->pushstack(array($sys->target));
-						break;
-					case	"isvalid":
-## Validation stacks "1" if there are no errors, or an empty string if there are errors.
-						$this->popstack($cmd, "");
-						$this->pushstack(array(($invalid)? "" : "1"));
-						break;
-					case	"g":
-## Take one string from the stack, consider it a GET name, and stack the resulting GET value on the stack.
-## For example, if the URL is "?id=1", then `id__:g` is "1".
-## If "?id" is not specified, `id__:g` will be an empty string.
-## GET can only yield an empty string or a sequence of numbers and commas for security reasons.
-						list($s1) = $this->popstack($cmd, "name");
-						$s = @$_GET[$s1]."";
-						$s = preg_replace("/[^,0-9]/", "", $s);
-						$this->pushstack(array($s));
-						break;
-					case	"p":
-## Take one string from the stack and consider it as a POST name, and pile the resulting POST value on the stack.
-## For example, the value submitted with <form method="post"><input name="s1"><input type="submit"> can be obtained with `s1__:p`.
-## If it is not a POST or the POST name does not exist, it will be an empty string.
-## With POST, you can get an arbitrary string (unlike GET, which has a submitkey).
-## However, `` in SQL can only output numbers and (added 190429) ",".
-# See also: parsewithbqinsql()
-						list($s1) = $this->popstack($cmd, "name");
-						if ((ispost())) {
-							$postkey = $this->prefix.str_replace(array(" ", "."), "_", $s1);
-							$this->pushstack(array(@$_POST[$postkey].""));
-						} else
-							$this->pushstack(array(""));
-						break;
-					case	"r":
-## Take one string from the stack and consider it a field name, then retrieve the field from the current record and stack it on the stack.
-## For example, "<!--{tableid user 1-->" inside, `id__:r` will yield the value of the "id" field of record 1 in the user table.
-## If no record is defined or the specified field name does not exist, it will be an empty string.
-						list($s1) = $this->popstack($cmd, "field");
-						$s = $record->getfield($s1)."";
-						$this->pushstack(array($s));
-						break;
 					case	"nl2br":
 					case	"html":
 ## Indicates HTML escaping of output.
@@ -1555,123 +1506,6 @@ class	recordholder {
 						$this->flush_coverage();
 						header("Location: {$s}");
 						log_die();
-					case	"set":
-## Take two strings from the stack, consider them as field values and field names, respectively, and set them to the current record.
-## For example, `1__id__:set` sets the ID of the current record to 1.
-						list($s1, $s2) = $this->popstack($cmd, "val field");
-						if ($s2 == "id")
-							$s3 = $s2;
-						else
-							$s3 = "v_{$s2}";
-						$this->record->$s3 = $s1;
-						$this->pushstack(array());
-						break;
-					case	"sqlisnull":
-## Take one string from the stack, consider it a field name, and add "and field name is null" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1) = $this->popstack($cmd, "field");
-						$this->whereargs["{$s1} is null"] = array();
-						$this->pushstack(array());
-						break;
-					case	"sqlisnotnull":
-## Take one string from the stack, consider it a field name, and add "and field name is not null" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1) = $this->popstack($cmd, "field");
-						$this->whereargs["{$s1} is not null"] = array();
-						$this->pushstack(array());
-						break;
-					case	"sqlisempty":
-## Take one string from the stack, consider it a field name, and add "and (field name is null or field name = "")" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1) = $this->popstack($cmd, "field");
-						$this->whereargs["({$s1} is null or {$s1} = ?)"] = array("");
-						$this->pushstack(array());
-						break;
-					case	"sqlisnotempty":
-## Take one string from the stack, consider it a field name, and add "and field name is not null and field name <> "" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1) = $this->popstack($cmd, "field");
-						$this->whereargs["{$s1} is not null"] = array();
-						$this->whereargs["{$s1} <> ?"] = array("");
-						$this->pushstack(array());
-						break;
-					case	"sqllike":
-## Take two strings from the stack, consider each to be a search string and a field name, and add "and field name like "%search string%"" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1, $s2) = $this->popstack($cmd, "val field");
-						$this->whereargs["{$s2} like ?"] = array("%{$s1}%");
-						$this->pushstack(array());
-						break;
-					case	"sqllike2":
-## Take three strings from the stack, consider each as a search string, field name 1, and field name 2, and add "and (field name 1 like "%search string%" or field name 2 like "%search string%")" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1, $s2, $s3) = $this->popstack($cmd, "val field1 field2");
-						$this->whereargs["({$s2} like ? or {$s3} like ?)"] = array("%{$s1}%", "%{$s1}%");
-						$this->pushstack(array());
-						break;
-					case	"sqllike3":
-## Take four strings from the stack, consider each as a search string, field name 1, field name 2, and field name 3, and add "and (field name 1 like "%Search String%" or field name 2 like "%Search String%" or field name 3 like "% Search String%")" is added.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1, $s2, $s3, $s4) = $this->popstack($cmd, "val field1 field2 field3");
-						$this->whereargs["({$s2} like ? or {$s3} like ? or {$s4} like ?)"] = array("%{$s1}%", "%{$s1}%", "%{$s1}%");
-						$this->pushstack(array());
-						break;
-					case	"sqllike4":
-## Take 5 strings from the stack and consider each as a search string, field name 1, field name 2, field name 3, field name 4, and add "and (field name 1 like "%search string%" or field name 2 like "%search string%" or field name 3 like "%search string%" or field name 4 like "%search string")".
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1, $s2, $s3, $s4, $s5) = $this->popstack($cmd, "val field1 field2 field3 field4");
-						$this->whereargs["({$s2} like ? or {$s3} like ? or {$s4} like ? or {$s5} like ?)"] = array("%{$s1}%", "%{$s1}%", "%{$s1}%", "%{$s1}%");
-						$this->pushstack(array());
-						break;
-					case	"sqlnotlike":
-## Take two strings from the stack, consider them as a search string and a field name, respectively, and add "and field name not like "%search string%"" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1, $s2) = $this->popstack($cmd, "val field");
-						$this->whereargs["{$s2} not like ?"] = array("%{$s1}%");
-						$this->pushstack(array());
-						break;
-					case	"sqleq":
-## Take two strings from the stack, consider each to be a string and a field name, and add "and "string" = field name" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1, $s2) = $this->popstack($cmd, "val field");
-						$this->whereargs["? = {$s2}"] = array($s1);
-						$this->pushstack(array());
-						break;
-					case	"sqlne":
-## Take two strings from the stack, consider each to be a string and a field name, and add "and "string" <> field name" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1, $s2) = $this->popstack($cmd, "val field");
-						$this->whereargs["? <> {$s2}"] = array($s1);
-						$this->pushstack(array());
-						break;
-					case	"sqllt":
-## Take two strings from the stack, consider each to be a string and a field name, and add "and "string" < field name" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1, $s2) = $this->popstack($cmd, "val field");
-						$this->whereargs["? < {$s2}"] = array($s1);
-						$this->pushstack(array());
-						break;
-					case	"sqlle":
-## Take two strings from the stack, consider each to be a string and a field name, and add "and "string" <= field name" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1, $s2) = $this->popstack($cmd, "val field");
-						$this->whereargs["? <= {$s2}"] = array($s1);
-						$this->pushstack(array());
-						break;
-					case	"sqlgt":
-## Take two strings from the stack, consider each to be a string and a field name, and add "and "string" > field name" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1, $s2) = $this->popstack($cmd, "val field");
-						$this->whereargs["? > {$s2}"] = array($s1);
-						$this->pushstack(array());
-						break;
-					case	"sqlge":
-## Take two strings from the stack, consider each to be a string and a field name, and add "and "string" >= field name" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1, $s2) = $this->popstack($cmd, "val field");
-						$this->whereargs["? >= {$s2}"] = array($s1);
-						$this->pushstack(array());
-						break;
 # not work without submitkey.
 #					case	"login":
 #						$tablelist["login"]->check_loginform();
