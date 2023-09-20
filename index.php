@@ -1267,7 +1267,7 @@ class	recordholder {
 						$a0 = $this->popstack($cmd, implode(" ", $a));
 						if (preg_match('/^bq2_/', $s)) {
 							array_unshift($a0, $record);
-							array_unshift($a0, $rh);
+							array_unshift($a0, $this);
 						}
 						$a = call_user_func_array($s, $a0);
 						if (!is_array($a))
