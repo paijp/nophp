@@ -68,6 +68,10 @@ https://github.com/paijp/nophp/discussions/2
 - And the 'simple table' that holds a data like items for ``<select><option>``, can be add by HTML specialists.
 - New function can be added by the PHP specialists, and HTML specialists can use it.
 
+## syntax diagram.
+
+- https://paijp.github.io/nophp/index.html
+
 # File structure.
 
 - db/ (any path)
