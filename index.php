@@ -8,6 +8,13 @@
 #	http://opensource.org/licenses/mit-license.php
 #
 
+
+/*jp.pa-i/html
+<p><a href="https://github.com/paijp/diagram-in-comment">How to generate this?</a></p>
+*/
+/* output: https://paijp.github.io/nophp/index.html */
+
+
 class	sys {
 	var	$htmlbase = "./res/nofmt/";
 	var	$rootpage = "g0000";
@@ -1134,6 +1141,20 @@ class	recordholder {
 				$debuglog .= "\t".'<td style="text-align: right;">'.@$this->debugpoplist[$key].nl2br(htmlspecialchars($val))."<br />";
 		$debuglog .= "\n</table>\n";
 	}
+
+/*jp.pa-i/html
+<h2>backtick syntax</h2>
+*/
+
+/*jp.pa-i/syntaxdiagram
+(`
+{{|[literal
+|{(:
+[command
+r}r(__
+}(`
+*/
+
 	function	parsebq($text = "", $record = null, $issubmit = 0, $initstack = null) {
 		global	$sys;
 		global	$debuglog;
@@ -2038,6 +2059,23 @@ class	commandparserrecordholder extends commandparser {
 	}
 }
 
+/*jp.pa-i/html
+<h2>if section</h2>
+*/
+
+/*jp.pa-i/syntaxdiagram
+(<!--{if
+[expr
+(-->
+[html block
+{|(<!--}{elseif
+[expr
+(-->
+[html block
+r}{|(<!--}{else-->
+[html block
+}(<!--}-->
+*/
 
 class	commandparser_if extends commandparser {
 	function	parsehtmlinner($rh = null, $record = null) {
@@ -2082,6 +2120,19 @@ class	commandparser__else extends commandparser {
 	}
 }
 
+/*jp.pa-i/html
+<h2>selectrows section</h2>
+*/
+
+/*jp.pa-i/syntaxdiagram
+(<!--{selectrows
+[from-clause
+(-->
+[html block
+{|(<!--}{else-->
+[html block
+}(<!--}-->
+*/
 
 class	commandparser_selectrows extends commandparser {
 # The "<!--{selectrows SQL clause-->" to "<!--}-->" is repeated as many times as the number of search results obtained with the specified SQL clause.
@@ -2101,6 +2152,19 @@ class	commandparser_selectrows extends commandparser {
 	}
 }
 
+/*jp.pa-i/html
+<h2>stablerows section</h2>
+*/
+
+/*jp.pa-i/syntaxdiagram
+(<!--{stablerows
+[simple table name
+(-->
+[html block
+{|(<!--}{else-->
+[html block
+}(<!--}-->
+*/
 
 class	commandparser_stablerows extends commandparser {
 # The "<!--{stablerows simple table name-->" to "<!--}-->" is repeated for the number of records in the specified simple table.
@@ -2136,6 +2200,21 @@ class	daterecord extends rootrecord {
 	}
 }
 
+/*jp.pa-i/html
+<h2>dayrows section</h2>
+*/
+
+/*jp.pa-i/syntaxdiagram
+(<!--{dayrows
+[UNIX time
+{|( 
+[count
+{|( 
+[date format
+}}(-->
+[html block
+(<!--}-->
+*/
 
 class	commandparser_dayrows extends commandparser {
 	function	parsehtmlinner($rh = null, $record = null) {
@@ -2157,6 +2236,23 @@ class	commandparser_dayrows extends commandparser {
 	}
 }
 
+/*jp.pa-i/html
+<h2>wdayrows section</h2>
+*/
+
+/*jp.pa-i/syntaxdiagram
+(<!--{wdayrows
+[UNIX time
+{|( 
+[count
+{|( 
+[start
+{|( 
+[date format
+}}}(-->
+[html block
+(<!--}-->
+*/
 
 class	commandparser_wdayrows extends commandparser {
 	function	parsehtmlinner($rh = null, $record = null) {
@@ -2189,6 +2285,21 @@ class	commandparser_wdayrows extends commandparser {
 	}
 }
 
+/*jp.pa-i/html
+<h2>valid section</h2>
+*/
+
+/*jp.pa-i/syntaxdiagram
+(<!--{valid
+[validation command
+{|( 
+[field name
+}(-->
+[html block
+{|(<!--}{else-->
+[html block
+}(<!--}-->
+*/
 
 class	commandparser_valid extends commandparser {
 	function	parsehtmlinner($rh = null, $record = null) {
