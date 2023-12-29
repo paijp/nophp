@@ -11,6 +11,7 @@
 -- If anyone starts using this framework, please let us know so we can avoid incompatible changes.
 https://github.com/paijp/nophp/discussions/2
 
+- 2023/09/20 Move functions from index.php to builtinfunc.php, loginrecord.php, importer.php. Please include these files from tables.php.
 - 2023/03/30 **Important security fix**. Please see env_patchsample230330a.php .
 - 2023/03/05 The argument '$par' in recordholder::__construct() is no longer parsed with parsewithbq(). Please parse argument in constructor in user class.
 - 2022/07/11 Return value of commandparser::parsehtml() is discarded. Please call commandparser::output() for output.
