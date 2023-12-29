@@ -2,15 +2,23 @@
 #
 #	nophp	https://github.com/paijp/nophp
 #	
-#	Copyright (c) 2021 paijp
+#	Copyright (c) 2021-2023 paijp
 #
 #	This software is released under the MIT License.
 #	http://opensource.org/licenses/mit-license.php
 #
 
+
+/*jp.pa-i/html
+<p><a href="https://github.com/paijp/diagram-in-comment">How to generate this?</a></p>
+*/
+/* output: https://paijp.github.io/nophp/index.html */
+
+
 class	sys {
-#	var	$htmlbase = "/html/user/v1/";
-#	var	$sqlpath = "sqlite:/var/www/html/db/v1.sq3";
+	var	$htmlbase = "./res/nofmt/";
+	var	$rootpage = "g0000";
+#	var	$sqlpath = "sqlite:/var/www/db/v1.sq3";
 ##	var	$sqlpath = "mysql:dbname=test";
 	var	$debugdir = null;
 	var	$debugmaxlogrecords = 500;
@@ -23,6 +31,8 @@ class	sys {
 	var	$forcelogoutonupdate = 1;
 	var	$noredirectonlogin = 0;		# 1: don't redirect from index.html to rootpage on login status.
 	
+	var	$importlist = array();
+	
 	var	$urlbase = null;
 	var	$target = null;
 	function	__construct() {
@@ -30,19 +40,12 @@ class	sys {
 			$this->debugdir = $val;
 			break;
 		}
+		list($m, $s) = explode(" ", microtime());
+		$this->debugfn = date("ymd_His_", (int)$s).substr($m, 2);
+		$this->now = $s;
 	}
 }
 $sys = new sys();
-
-require("env.php");
-
-if (!function_exists("myhash")) {
-	function	myhash($s) {
-		return hash("sha256", $s);
-	}
-}
-if (trim(myhash("")) == "")
-	die("hash not work");
 
 if (@$_SERVER["HTTPS"] == "on")
 	$sys->url = "https://";
@@ -51,344 +54,6 @@ else
 $a = explode("?", @$_SERVER["REQUEST_URI"], 2);
 $sys->url .= @$_SERVER["HTTP_HOST"].$a[0];
 $sys->urlquery = @$a[1];
-
-
-if ((@$logview_fn !== null)) {
-# The name may be like "\000__COMPILER_HALT_OFFSET__\000/var/www/html....php" and it is not documented.
-	$log_fp = null;
-	foreach (get_defined_constants() as $key => $val) {
-		if (!preg_match('/^__COMPILER_HALT_OFFSET__/', ltrim($key)))
-			continue;
-		$log_fp = popen("dd bs=1 if=".escapeshellarg(@$logview_self)." skip={$val} |gunzip", "r");
-		break;
-	}
-	if ((@$_GET["snapshot"])) {
-		if ($log_fp === null)
-			$content = file_get_contents("{$logview_fn}.php");
-		else {
-			$content = stream_get_contents($log_fp);
-			pclose($log_fp);
-			$log_fp = null;
-		}
-		$output = "";
-		foreach (explode('<pre class="outphase1"', $content) as $key => $val) {
-			if ($key == 0)
-				continue;
-			$a = explode(">", $val, 2);
-			$a2 = explode("</pre>", @$a[1], 2);
-			$output .= html_entity_decode(strip_tags($a2[0]));
-		}
-		if (count($a = preg_split("/<HEAD>/i", $output, 2)) == 2) {
-			list($s0, $s1) = $a;
-			$output = <<<EOO
-{$s0}<HEAD><BASE href="{$logview_urlbase}/nopost/snapshot.html">
-{$s1}
-EOO;
-		} else {
-			$output = <<<EOO
-<HEAD><BASE href="{$logview_urlbase}/nopost/snapshot.html"></HEAD>
-{$output}
-EOO;
-		}
-		print $output;
-		die();
-	}
-	if ((@$_GET["coverage"])) {
-		$fn = "{$logview_coverage}.log";
-		if ($log_fp === null) {
-			if (!is_readable($fn))
-				die();
-			$content = file_get_contents($fn);
-		} else {
-			$fp = popen("gunzip <".escapeshellarg("{$fn}.gz"), "r");
-			$content = stream_get_contents($fp);
-			pclose($fp);
-		}
-		$list = array();
-		$actionid = -1;
-		$actionlist = array();
-		foreach (preg_split("/\r\n|\r|\n/", $content) as $line) {
-			if (count($a = explode("\t", $line, 4)) < 3)
-				continue;
-			$key = (int)$a[1];
-			$key2 = "_".$a[2];
-			if (count($a) == 3) {
-				$actionid = $key;
-				$actionlist[$key2] = 1;
-				continue;
-			}
-			$key3 = "_".$a[3];
-			if (@$list[$key][$key2][$key3] === null)
-				$list[$key][$key2][$key3] = $a[0];
-		}
-	
-		$head = null;
-		$titlelist = array();
-		foreach($list[0]["_0"] as $key => $val) {
-			if ($head === null) {
-				$head = "";
-				print "<table border>\n";
-				foreach (explode("\t", substr($key, 1)) as $k => $v) {
-					if (($k & 1))
-						continue;
-					$head .= '<tr><th colspan="'.($k / 2 + 2).'" style="text-align: right;';
-					if ((($k / 2) % 6) < 3)
-						$head .= " background: #8f8;";
-					$head .= '">';
-					list($l, $s) = explode("_", base64_decode($v), 2);
-					$titlelist[$l] = $s;
-					$head .= '<a href="#'.$l.'">'.htmlspecialchars($s)."</a>\n";
-				}
-				print $head;
-			}
-			$fn = htmlspecialchars($val, ENT_QUOTES);
-			print '<tr><th style="text-align: left;"><a href="'.$fn.'.php">'."{$fn}\n";
-			foreach (explode("\t", substr($key, 1)) as $k => $v)
-				if (($k & 1)) {
-					print "\t<td";
-					if ((($k / 2) % 6) < 3)
-						print ' style="background: #8f8;"';
-					print ">";
-					if (($s = base64_decode($v)) == 0)
-						$s = "";
-					print htmlspecialchars($s)."\n";
-				}
-		}
-		if ($head !== null)
-			print "{$head}</table>\n";
-		
-		$searchlist = array("home", "return", "break", "jump");
-		$replacelist = array();
-		foreach ($searchlist as $s)
-			$replacelist[] = '<span style="color:#f00;">'."{$s}</span>";
-		
-		ksort($list);
-		$lastid = 0;
-		foreach ($list as $id => $val) {
-			if ($id == 0)
-				continue;
-			print '<ul style="background:#ccf;">'."\n";
-			while ($lastid < $id)
-				print '<a name="'.(++$lastid).'"> </a>'; 
-			$level = 1;
-			foreach ($titlelist as $k => $v) {
-				if ($k > $id)
-					break;
-				preg_match("/^(\t*)(.*)/", @$titlelist[$k], $a);
-				while ($level < strlen($a[1])) {
-					print "<ul>\n";
-					$level++;
-				}
-				while ($level > strlen($a[1])) {
-					print "</ul>\n";
-					$level--;
-				}
-				print "<li>".htmlspecialchars($a[2])."\n";
-			}
-			while ($level > 0) {
-				print "</ul>\n";
-				$level--;
-			}
-			foreach ($val as $key2 => $val2) {
-				if ($id == $actionid)
-					$actionlist[$key2] = 0;
-				$head = "";
-				$pars = "";
-				foreach (explode("__", base64_decode($key2)) as $block) {
-					if (!preg_match('/^:/', $block)) {
-						$pars .= "{$block}__ ";
-						continue;
-					}
-					$remaincmds = explode(":", $block);
-					array_shift($remaincmds);
-					foreach ($remaincmds as $cmd) {
-						$head .= '<th style="background:#ff8;"><span style="color: #888;">'.htmlspecialchars($pars);
-						$pars = "";
-						$head .= "</span>:".str_replace($searchlist, $replacelist, htmlspecialchars($cmd));
-					}
-				}
-				print "<table border><tr><th>\n{$head}";
-				foreach ($val2 as $key3 => $val3) {
-					$a = explode("#", $val3);
-					$fn = htmlspecialchars($a[0], ENT_QUOTES);
-					if (($v = (int)$a[1]) < 0)
-						$v = 1;
-					print '<tr><th style="text-align: left;"><a href="'.$fn.'.php#'.$id.".".$v.'">'."{$fn}#{$v}\n";
-					foreach (explode("\t", $key3) as $k => $v)
-						print "\t".'<td style="text-align: right;">'.htmlspecialchars(base64_decode($v));
-				}
-				print "<tr><th>\n{$head}</table>\n<p></p>\n";
-			}
-		}
-		if ($id != $actionid) {
-			print '<ul style="background:#ccf;">'."\n";
-			while ($lastid < $actionid)
-				print '<a name="'.(++$lastid).'"> </a>'; 
-			$level = 1;
-			foreach ($titlelist as $k => $v) {
-				if ($k > $actionid)
-					break;
-				preg_match("/^(\t*)(.*)/", @$titlelist[$k], $a);
-				while ($level < strlen($a[1])) {
-					print "<ul>\n";
-					$level++;
-				}
-				while ($level > strlen($a[1])) {
-					print "</ul>\n";
-					$level--;
-				}
-				print "<li>".htmlspecialchars($a[2])."\n";
-			}
-			while ($level > 0) {
-				print "</ul>\n";
-				$level--;
-			}
-		}
-		foreach ($actionlist as $key2 => $val2) {
-			if ($val2 == 0)
-				continue;
-			$head = "";
-			$pars = "";
-			foreach (explode("__", base64_decode($key2)) as $block) {
-				if (!preg_match('/^:/', $block)) {
-					$pars .= "{$block}__ ";
-					continue;
-				}
-				$remaincmds = explode(":", $block);
-				array_shift($remaincmds);
-				foreach ($remaincmds as $cmd) {
-					$head .= '<th style="background:#ff8;"><span style="color: #888;">'.htmlspecialchars($pars);
-					$pars = "";
-					$head .= "</span>:".str_replace($searchlist, $replacelist, htmlspecialchars($cmd));
-				}
-			}
-			print '<table border><tr><th><span style="color: #aaa;">(no log)</span>'."\n{$head}";
-			print "</table>\n<p></p>\n";
-		}
-		die();
-	}
-	print "<pre><b>".htmlspecialchars(@file_get_contents("{$logview_fn}.errorlog"))."</b></pre>\n";
-	
-	if ((@$sys->debugdiff)) {
-		if ($log_fp === null)
-			$content = file_get_contents("{$logview_fn}.php");
-		else {
-			$content = stream_get_contents($log_fp);
-			pclose($log_fp);
-			$log_fp = null;
-		}
-		list($part0, $s) = explode('<div class="srcall">', $content, 2);
-		list($part1, $part2) = explode('</div>', $s, 2);
-		print $part0;
-		
-		$a = array(
-			0 => array("pipe", "r"), 
-			1 => array("pipe", "w")
-		);
-		$p0 = proc_open("diff -U 99999999 - ".escapeshellarg(@$logview_targetpath), $a, $plist);
-		$sinput = substr(html_entity_decode(strip_tags($part1)), 0, -1);
-		fputs($plist[0], $sinput);
-		fclose($plist[0]);
-		$soutput = stream_get_contents($plist[1]);
-		proc_close($p0);
-		
-		$mode = 0;
-		if ($soutput == "") {
-			$mode = 1;
-			$soutput = $sinput;
-		}
-		
-#		print nl2br(htmlspecialchars($soutput));
-	print "<pre>\n";
-		foreach (preg_split("/\r\n|\r|\n/", $soutput) as $key => $line) {
-#			$style = " background:#ccc;";
-			$style = "";
-			if ($mode == 0) {
-				switch ($key) {
-					case	0:
-						$line = "-Removed at newest file.";
-						break;
-					case	1:
-						$line = "+Added at newest file.";
-						break;
-					case	2:
-						$line = " ";
-						break;
-				}
-				switch (substr($line, 0, 1)) {
-					case	"+":
-						$style = " background:#cfc; color:#888;";
-						print '<p style="margin:0;'.$style.'">';
-						print htmlspecialchars($line)."</p>";
-						continue 2;
-					case	"-":
-						$style = " background:#ccc;";
-#						$style .= " text-decoration: line-through;";
-						break;
-					case	" ":
-						$line = substr($line, 1);
-						break;
-				}
-			}
-			print '<p style="margin:0;'.$style.'">';
-			if ($line == "") {
-				print " </p>";
-				continue;
-			}
-			foreach (explode("<!--{", $line) as $k0 => $v0) {
-				if ($k0 > 0)
-					print '<b style="color:#0000ff;">&lt;!--{';
-				foreach (explode("<!--}", $v0) as $k1 => $v1) {
-					if ($k1 > 0)
-						print '<b style="color:#0000ff;">&lt;!--}';
-					foreach (explode("-->", $v1, 2) as $k2 => $v2) {
-						if ($k2 > 0)
-							print "--&gt;</b>";
-						foreach (explode('`', $v2) as $k3 => $v3) {
-							if ($k3 > 0)
-								print '<b style="color:#ff0000;">`</b>';
-							if (($k3 & 1))
-								print '<b style="color:#ff0000;">';
-							print htmlspecialchars($v3);
-							if (($k3 & 1))
-								print "</b>";
-						}
-					}
-				}
-			}
-			print "</p>";
-		}
-	print "</pre>\n";
-		
-		print $part2;
-		
-		die();
-	}
-	
-	if ($log_fp !== null) {
-		print stream_get_contents($log_fp);
-		die();
-	}
-	return;
-}
-$coverage_list = null;
-$coverage_id = 0;
-$coverage_title = array();
-$coverage_count = array();
-$coverage_actionlist = array();
-
-$sys->importlist = array();
-
-list($m, $s) = explode(" ", microtime());
-$sys->debugfn = date("ymd_His_", (int)$s).substr($m, 2);
-$sys->now = $s;
-
-if (@$sys->rootpage === null)
-	$sys->rootpage = "g0000";
-if (!is_dir(@$sys->debugdir)) {
-	$sys->debugdir = null;
-	$sys->debugfn = null;
-}
 
 
 $fplist = array();
@@ -424,8 +89,15 @@ function	adddebuglog($debugdir = null, $debugfn = null)
 	global	$targethash;
 	global	$tableshash;
 	
-	if ($debugdir === null)
-		$debugdir = @$sys->debugdir;
+	if ($debugdir === null) {
+		if (@$sys->debugdir === null)
+			return;
+		if (!is_dir($debugdir = @$sys->debugdir)) {
+			$sys->debugdir = null;
+			$sys->debugfn = null;
+			return;
+		}
+	}
 	if ($debugdir !== null) {
 		if ($debugfn === null)
 			$debugfn = "{$sys->debugfn}.php";
@@ -493,8 +165,7 @@ function	addcoveragelog($fn, $s = null)
 }
 
 
-$db0 = new PDO($sys->sqlpath);
-$db0->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+$db0 = null;
 
 
 function	log_die($message = "")
@@ -526,7 +197,7 @@ function	log_die($message = "")
 	foreach ($debugtablelist as $tablename => $orglist) {
 		$table = $tablelist[$tablename];
 		$idlist = $table->getrecordidlist();
-		if (count($idlist) >= $sys->debugmaxlogrecords)
+		if (count($idlist) > $sys->debugmaxlogrecords)
 			continue;
 		
 		$mergeidlist = array();
@@ -607,12 +278,18 @@ EOO;
 }
 
 
-function	execsql($sql, $array = null, $returnid = 0, $ignoreerror = 0)
+function	execsql($sql = null, $array = null, $returnid = 0, $ignoreerror = 0)
 {
 	global	$db0;
 	global	$sys;
 	global	$debuglog;
 	
+	if ($db0 === null) {
+		$db0 = new PDO($sys->sqlpath);
+		$db0->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
+	}
+	if ($sql === null)
+		return null;
 	if ($array === null)
 		$array = array();
 	
@@ -738,8 +415,7 @@ class	table {
 		foreach (@$list[0] as $key => $val) {
 			switch ($key) {
 				default:
-					$s = "v_".$key;
-					$this->$s = $val;
+					$this->setfield($key, $val);
 					continue 2;
 				case	"id":
 					$this->id = (int)$val;
@@ -754,8 +430,7 @@ class	table {
 				if (count($a = explode("=", $chunk, 2)) < 2)
 					continue;
 				list($key2, $val2) = $a;
-				$s = "v_".$key2;
-				$this->$s = rawurldecode($val2);
+				$this->setfield($key2, rawurldecode($val2));
 			}
 	}
 	function	getconfig() {
@@ -765,6 +440,8 @@ updated	int
 deleted	int
 
 EOO;
+	}
+	function	onload() {
 	}
 	function	getrecord($id = 0) {
 		$s = get_class($this);
@@ -788,10 +465,15 @@ EOO;
 		}
 		return $list;
 	}
-	function	getfield($s) {
-		if ($s != "id")
-			$s = "v_{$s}";
-		return @$this->$s;
+	function	getfield($field) {
+		if ($field != "id")
+			$field = "v_{$field}";
+		return @$this->$field;
+	}
+	function	setfield($field, $val) {
+		if ($field != "id")
+			$field = "v_{$field}";
+		$this->$field = $val;
 	}
 	function	update($ignoreerror = 0) {
 		global	$sys;
@@ -861,6 +543,7 @@ EOO;
 		global	$db0;
 		
 		$s = implode(",", $this->configlist);
+		execsql();
 		if ($db0->getAttribute(PDO::ATTR_DRIVER_NAME) == "sqlite") {
 #	id int primary key autoincrement, 
 # create table if not exists {$this->tablename}(
@@ -933,26 +616,22 @@ class	a_table extends table {
 		$r = $this->getrecord((int)$s1);
 		return array($r->getfield($s3)."");
 	}
-	function	t_find__val__field($rh0, $record, $s1, $s3) {
+	function	t_find__val__field($rh0, $record, $val, $field) {
 ## Take three strings from the stack, consider the first as a field value, the second as a field name, and the third as a table name, and find the record ID whose table contains the field value and stack it on the stack.
 ## Returns an empty string if no field value was found. If multiple records match, the one with the smallest ID is returned.
 ## For example, `john__name__user__:t_find` is the record ID of the record whose value in the name field of the user table is john.
 		foreach ($this->getrecordidlist() as $id) {
 			$r = $this->getrecord($id);
-			if (@$r->getfield($s3) == $s1)
+			if (@$r->getfield($field) == $val)
 				return array($id);
 		}
 		return array("");
 	}
-	function	h_set__val__field($rh0, $record, $s1, $s3) {
+	function	h_set__val__field($rh0, $record, $val, $field) {
 ## Take three strings from the stack, consider them as field value, field name, and table name, respectively, and set them to the current record of the specified table.
 ## Table names must be declared in advance with "<!--{tableid" etc. must be declared beforehand.
 ## For example, `1__id__user__:t_set` sets the ID of the current record in the user table to 1.
-		if ($s3 == "id")
-			$s4 = $s3;
-		else
-			$s4 = "v_{$s3}";
-		$this->$s4 = $s1;
+		$this->setfield($field, $val);
 		return array();
 	}
 	function	hs_update($rh0, $record = null) {
@@ -1039,10 +718,8 @@ class	simpletable {
 		$this->id = $id;
 		if ($list !== null) {
 			$this->list = $list;
-			foreach ($list as $key => $val) {
-				$s = "v_".$key;
-				$this->$s = $val;
-			}
+			foreach ($list as $key => $val)
+				$this->setfield($key, $val);
 			return;
 		}
 		$this->list = array();
@@ -1057,10 +734,15 @@ class	simpletable {
 			}
 		}
 	}
-	function	getfield($s) {
-		if ($s != "id")
-			$s = "v_{$s}";
-		return @$this->$s;
+	function	getfield($field) {
+		if ($field != "id")
+			$field = "v_{$field}";
+		return @$this->$field;
+	}
+	function	setfield($field, $val) {
+		if ($field != "id")
+			$field = "v_{$field}";
+		$this->$field = $val;
 	}
 	function	getrecord($id = 0) {
 		$s = get_class($this);
@@ -1109,15 +791,11 @@ class	simpletable {
 			}
 		$debuglog .= "</TABLE>\n";
 	}
-	function	h_set__val__field($rh0, $record, $s1, $s3) {
+	function	h_set__val__field($rh0, $record, $val, $field) {
 ## Take three strings from the stack, consider them as field value, field name, and table name, respectively, and set them to the current record of the specified table.
 ## Table names must be declared in advance with "<!--{tableid" etc. must be declared beforehand.
 ## For example, `1__id__user__:t_set` sets the ID of the current record in the user table to 1.
-		if ($s3 == "id")
-			$s4 = $s3;
-		else
-			$s4 = "v_{$s3}";
-		$this->$s4 = $s1;
+		$this->setfield($field, $val);
 		return array();
 	}
 	function	hs_update($rh0, $record = null) {
@@ -1177,226 +855,21 @@ EOO;
 		return new simpletable($r, $tablename);
 	}
 }
-new innersimpletable();
 
 
 $loginrecord = null;
-class	a_login_table extends a_table {
-	function	getconfig() {
-		return parent::getconfig().<<<EOO
-login	text unique not null
-pass	text
-salt	text
-sessionkey	text
-lastlogin	int
-lastlogout	int
-ismaillogin	int
-
-EOO;
-	}
-	function	createtable() {
-		global	$sys;
-		
-		parent::createtable();
-		if (@$sys->defaultuser == "")
-			;
-		else if (count($this->getrecordidlist()) == 0) {
-			$r = $this->getrecord();
-			$r->v_login = $sys->defaultuser;
-			if (@$sys->defaultpass != "")
-				$r->setpassword($sys->defaultpass, 1);
-			else
-				$r->update(1);
-		}
-	}
-	function	update($ignoreerror = 0) {
-		global	$sys;
-		
-		$r = $this->getrecord($this->id);
-		if (($this->v_login != $r->v_login)&& function_exists("bq_login"))
-			bq_login("changelogin", $r);
-		$this->v_salt = $r->v_salt;
-		$this->v_pass = $r->v_pass;
-		if ((@$sys->forcelogoutonupdate)) {
-			$this->v_sessionkey = "";
-			$this->v_mailkey = "";
-		}
-		parent::update($ignoreerror);
-	}
-	function	getrandom() {
-		if (($fp = fopen("/dev/urandom", "r")) !== FALSE) {
-			$random = bin2hex(fread($fp, 20));
-			fclose($fp);
-		} else
-			$random = myhash(microtime());
-		return $random;
-	}
-	function	setmailkey($key) {
-		global	$sys;
-		
-		$this->v_mailkey = myhash($this->v_login.$key);
-		$this->v_mailsent = $sys->now;
-		parent::update();
-	}
-	function	setpassword($newpass, $ignoreerror = 0) {
-		if (function_exists("bq_login"))
-			bq_login("changepass", $this);
-		$this->v_salt = $this->getrandom();
-		$this->v_pass = myhash($newpass.$this->v_salt);
-		$this->v_sessionkey = "";
-		$this->v_mailkey = "";
-		parent::update($ignoreerror);
-	}
-	function	login($pass = "", $ismaillogin = 0) {
-		global	$sys;
-		global	$cookiepath;
-		
-		if (($ismaillogin)) {
-			if ((int)@$this->v_ismaillogin == 0)
-				log_die("ismaillogin but not v_ismaillogin");
-		} else if ((@$this->v_ismaillogin))
-			log_die("v_ismaillogin but not ismaillogin");
-		else if (myhash($pass.$this->v_salt) != $this->v_pass) {
-			if (function_exists("bq_login"))
-				bq_login("badlogin", $this);
-			log_die("login fail.");
-		}
-		if (function_exists("bq_login"))
-			bq_login("goodlogin", $this);
-		$key = $this->getrandom();
-		$this->v_sessionkey = myhash($this->v_salt.$key);
-		$this->v_submitkey = $this->getrandom();
-		$this->v_lastlogin = $sys->now;
-		if (($ismaillogin)) {
-			$this->v_mailkey = "";
-			$this->v_pass = "";
-		}
-		parent::update();
-		setcookie("sessionid", $this->id, 0, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
-		setcookie("sessionkey", $key, 0, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
-		log_die("login success.");
-	}
-	function	check_loginform() {
-		global	$sys;
-		
-		header("Location: {$sys->url}");
-		
-		if (@$_GET["mode"] == "1login") {
-			$uid = (int)@$_GET["uid"];
-			$key = @$_GET["key"]."";
-			
-			$r = $this->getrecord($uid);
-			if ((int)@$r->v_ismaillogin != 0)
-				log_die("ismaillogin.");
-			if (@$r->v_mailkey == "")
-				log_die("mailkey empty.");
-			if (@$sys->mailexpire <= 0)
-				;
-			else if (@$r->v_mailsent < $sys->now - $sys->mailexpire)
-				log_die("mailexpire.");
-			if (myhash($r->v_login.$key) == $r->v_mailkey) {
-				if (($pass = @$_POST["pass"]) == "")
-					log_die("pass empty.");
-				$r->setpassword($pass);
-				log_die("password change success.");
-			}
-			log_die("maillogin fail.");
-			return 0;
-		}
-		
-		if (($login = @$_POST["login"]) === null) {
-			if (function_exists("bq_login"))
-				bq_login("badlogin");
-			log_die("login null.");
-		}
-		if (($pass = @$_POST["pass"]) === null) {
-			if (function_exists("bq_login"))
-				bq_login("badlogin");
-			log_die("pass null.");
-		}
-		$list = $this->getrecordidlist("where login = ?", array($login));
-		if (count($list) < 1) {
-			if (function_exists("bq_login"))
-				bq_login("badlogin");
-			log_die("no login found");
-		}
-		$r = $this->getrecord($list[0]);
-		$r->login($pass);
-		log_die("login fail.");
-	}
-	function	check_maillogin() {
-		global	$sys;
-		
-		if (@$_GET["mode"] != "1login")
-			return 0;
-		$uid = (int)@$_GET["uid"];
-		$key = @$_GET["key"]."";
-		
-		$r = $this->getrecord($uid);
-		if ((int)@$r->v_ismaillogin == 0)
-			return 0;
-		
-		header("Location: {$sys->url}");
-		
-		if (@$r->v_mailkey == "")
-			log_die("mailkey empty.");
-		if (@$sys->mailexpire <= 0)
-			;
-		else if (@$r->v_mailsent < $sys->now - $sys->mailexpire)
-			log_die("mailexpire.");
-		if (myhash($r->v_login.$key) == $r->v_mailkey)
-			$r->login("", 1);
-		log_die("maillogin fail.");
-	}
-	function	is_login() {
-		global	$loginrecord;
-		
-		$loginrecord = null;
-		if (($sessionid = @$_COOKIE["sessionid"]) === null)
-			return 0;
-		if (($key = @$_COOKIE["sessionkey"]) === null)
-			return 0;
-		$loginrecord = $this->getrecord($sessionid);
-		if (@$loginrecord->v_submitkey == "")
-			;
-		else if ($loginrecord->v_sessionkey == "")
-			;
-		else if ($loginrecord->v_sessionkey == myhash($loginrecord->v_salt.$key)) {
-			execsql("begin;");
-			$loginrecord = $this->getrecord($sessionid);
-			return 1;
-		}
-		$loginrecord = null;
-		return 0;
-	}
-	function	logout() {
-		global	$loginrecord;
-		global	$sys;
-		global	$cookiepath;
-		
-		if ($loginrecord !== null) {
-			if (function_exists("bq_login"))
-				bq_login("logout", $loginrecord);
-			$loginrecord->v_lastlogout = $sys->now;
-			$loginrecord->v_sessionkey = "";
-			$loginrecord->mailkey = "";
-			$loginrecord->update();
-			execsql("commit;");
-		}
-		setcookie("sessionid", "", 1, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
-		setcookie("sessionkey", "", 1, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
-		header("Location: {$sys->urlbase}/logout/".@$sys->rootpage.".html");
-	}
-}
-
-
 class	rootrecord {
 	var	$tablename = "root";
 	var	$methodlist = null;
-	function	getfield($s) {
-		if ($s != "id")
-			$s = "v_{$s}";
-		return @$this->$s;
+	function	getfield($field) {
+		if ($field != "id")
+			$field = "v_{$field}";
+		return @$this->$field;
+	}
+	function	setfield($field, $val) {
+		if ($field != "id")
+			$field = "v_{$field}";
+		$this->$field = $val;
 	}
 	function	dumpfields($title = "") {
 	}
@@ -1668,6 +1141,20 @@ class	recordholder {
 				$debuglog .= "\t".'<td style="text-align: right;">'.@$this->debugpoplist[$key].nl2br(htmlspecialchars($val))."<br />";
 		$debuglog .= "\n</table>\n";
 	}
+
+/*jp.pa-i/html
+<h2>backtick syntax</h2>
+*/
+
+/*jp.pa-i/syntaxdiagram
+(`
+{{|[literal
+|{(:
+[command
+r}r(__
+}(`
+*/
+
 	function	parsebq($text = "", $record = null, $issubmit = 0, $initstack = null) {
 		global	$sys;
 		global	$debuglog;
@@ -1781,15 +1268,19 @@ class	recordholder {
 							$a = get_defined_functions();
 							$funclist = array();
 							foreach ($a["user"] as $s) {
-								if (!preg_match('/^bq_/', $s))
+								if ((preg_match('/^bq_(.*)/', $s, $a0)))
+									;
+								else if ((preg_match('/^bq2_(.*)/', $s, $a0)))
+									;
+								else 
 									continue;
-								$a0 = explode("__", $s);
-								if (@$funclist[$a0[0]] !== null)
+								list($s0) = explode("__", $a0[1], 2);
+								if (@$funclist[$s0] !== null)
 									trigger_error("duplexed function({$s})");
-								$funclist[$a0[0]] = $s;
+								$funclist[$s0] = $s;
 							}
 						}
-						if (($s = @$funclist["bq_{$cmd}"]) === null) {
+						if (($s = @$funclist[$cmd]) === null) {
 							trigger_error($s = "unknown command({$cmd} in ".get_class($this).")");
 							$debuglog .= "<h3>".htmlspecialchars($s)."</h3>";
 							$this->pushstack(array());
@@ -1798,175 +1289,16 @@ class	recordholder {
 						$a = explode("__", $s);
 						array_shift($a);
 						$a0 = $this->popstack($cmd, implode(" ", $a));
+						if (preg_match('/^bq2_/', $s)) {
+							array_unshift($a0, $record);
+							array_unshift($a0, $this);
+						}
 						$a = call_user_func_array($s, $a0);
 						if (!is_array($a))
 							return $a;		# avoid debuglog
 						$this->pushstack($a);
 						break;
 #* bq
-					case	"dot":
-## "." on the stack.
-## For example, `index__:dot__html__:cat:cat` becomes "index.html".
-## Normally, this is not necessary.
-						$this->popstack($cmd, "");
-						$this->pushstack(array("."));
-						break;
-					case	"col":
-## Stack the ":" on the stack.
-## For example, `12__:col__00__:cat:cat` would be "12:00".
-## Use when you want to enter ":" as a character, since a description prefixed with ":" is considered a command.
-						$this->popstack($cmd, "");
-						$this->pushstack(array(":"));
-						break;
-					case	"sp":
-## " " on the stack.
-## For example, `abc__:sp__def__:cat:cat` becomes "abc def".
-## Use when spaces are not allowed, such as during the name of the input tag.
-						$this->popstack($cmd, "");
-						$this->pushstack(array(" "));
-						break;
-					case	"bq":
-## "`" on the stack.
-## For example, `:bq` becomes "`".
-						$this->popstack($cmd, "");
-						$this->pushstack(array("`"));
-						break;
-					case	"null":
-## Empty string (zero-length string) on stack.
-						$this->popstack($cmd, "");
-						$this->pushstack(array(""));
-						break;
-					case	"hex":
-## Take one string from the stack, consider it as a sequence of hexadecimal numbers, convert it to a string, and stack it on the stack.
-## For example, `414243__:hex` would be "ABC".
-## Use to enter special characters that cannot be entered using the above methods.
-						list($s1) = $this->popstack($cmd, "hex");
-						$s = "";
-						for ($i=0; $i<strlen($s1); $i+=2)
-							$s .= chr(filter_var("0x".substr($s1, $i, 2), FILTER_VALIDATE_INT, FILTER_FLAG_ALLOW_HEX));
-						$this->pushstack(array($s.""));
-						break;
-					case	"curid":
-## Stack the current record ID on the stack.
-## For example, inside "<!--{tableid user 1-->" inside, "1" is stacked on the stack.
-						$this->popstack($cmd, "");
-						$s = (int)@$this->record->id;
-						$this->pushstack(array($s));
-						break;
-					case	"curtable":
-## Stack the current table name on the stack.
-## For example, inside "<!--{tableid user 1-->" inside, "user" is stacked on the stack.
-						$this->popstack($cmd, "");
-						$s = @$this->record->tablename."";
-						$this->pushstack(array($s));
-						break;
-					case	"curpage":
-## Stack the current page name obtained from the URL.
-## For example, when "g0000.html" is accessed, "g0000" is stacked on the stack.
-						$this->popstack($cmd, "");
-						$this->pushstack(array($sys->target));
-						break;
-					case	"ispost":
-## Stack 1 if the current request is a POST, or empty string if it is not a POST.
-						$this->popstack($cmd, "");
-						$this->pushstack(array((ispost())? "1" : ""));
-						break;
-					case	"isvalid":
-## Validation stacks "1" if there are no errors, or an empty string if there are errors.
-						$this->popstack($cmd, "");
-						$this->pushstack(array(($invalid)? "" : "1"));
-						break;
-					case	"g":
-## Take one string from the stack, consider it a GET name, and stack the resulting GET value on the stack.
-## For example, if the URL is "?id=1", then `id__:g` is "1".
-## If "?id" is not specified, `id__:g` will be an empty string.
-## GET can only yield an empty string or a sequence of numbers and commas for security reasons.
-						list($s1) = $this->popstack($cmd, "name");
-						$s = @$_GET[$s1]."";
-						$s = preg_replace("/[^,0-9]/", "", $s);
-						$this->pushstack(array($s));
-						break;
-					case	"p":
-## Take one string from the stack and consider it as a POST name, and pile the resulting POST value on the stack.
-## For example, the value submitted with <form method="post"><input name="s1"><input type="submit"> can be obtained with `s1__:p`.
-## If it is not a POST or the POST name does not exist, it will be an empty string.
-## With POST, you can get an arbitrary string (unlike GET, which has a submitkey).
-## However, `` in SQL can only output numbers and (added 190429) ",".
-# See also: parsewithbqinsql()
-						list($s1) = $this->popstack($cmd, "name");
-						if ((ispost())) {
-							$postkey = $this->prefix.str_replace(array(" ", "."), "_", $s1);
-							$this->pushstack(array(@$_POST[$postkey].""));
-						} else
-							$this->pushstack(array(""));
-						break;
-					case	"r":
-## Take one string from the stack and consider it a field name, then retrieve the field from the current record and stack it on the stack.
-## For example, "<!--{tableid user 1-->" inside, `id__:r` will yield the value of the "id" field of record 1 in the user table.
-## If no record is defined or the specified field name does not exist, it will be an empty string.
-						list($s1) = $this->popstack($cmd, "field");
-						$s = $record->getfield($s1)."";
-						$this->pushstack(array($s));
-						break;
-					case	"int":
-## Take one string from the stack, round it off as a number, and stack it on the stack.
-## For example, `3.8__:int` is "4".
-						list($s1) = $this->popstack($cmd, "val");
-						$this->pushstack(array(round((float)$s1)));
-						break;
-					case	"isnull":
-## Take one string from the stack and stack "1" if it is an empty string, otherwise empty string on the stack.
-## `id__:g:isnull:andbreak` will break if there is no specification such as "?id=1".
-## It can also be used for logic inversion, in the form `:isvalid:isnull`.
-						list($s1) = $this->popstack($cmd, "val");
-						$this->pushstack(array(($s1 == "")? "1" : ""));
-						break;
-					case	"h2z":
-## Take a string from the stack, convert half-width alphanumeric characters to full-width alphanumeric characters, and stack them on the stack.
-						list($s1) = $this->popstack($cmd, "hankaku");
-						$this->pushstack(array(mb_convert_kana($s1, "ASKV", "UTF-8")));
-						break;
-					case	"z2h":
-## Take a string from the stack, convert full-width alphanumeric characters to half-width alphanumeric characters, and stack them on the stack.
-						list($s1) = $this->popstack($cmd, "zenkaku");
-						$this->pushstack(array(mb_convert_kana($s1, "as", "UTF-8")));
-						break;
-					case	"sys":
-## Take a string from the stack, consider it a system variable name, and stack the variable value on the stack.
-## For example, if there is a statement in env.php that $sys->v_limit = 100;, then `limit__:sys` will be "100".
-						list($s1) = $this->popstack($cmd, "name");
-						$s ="v_{$s1}";
-						$this->pushstack(array(@$sys->$s.""));
-						break;
-					case	"now":
-## Place the current time value (in seconds since January 1, 1970 0:00:00 GMT) on the stack.
-## Use :todate to convert to a generic date and time.
-## For example, `:now__y/m/d H:i:s__:todate` would be "19/02/10 19:52:13", etc.
-						$this->popstack($cmd, "");
-						$this->pushstack(array($sys->now));
-						break;
-					case	"ymd2t":
-## Take three strings from the stack and stack the current time value (seconds since 0:00:00 GMT on Jan 1, 1970), considering them as year, month, and day, respectively.
-## Use :todate to convert to a generic date and time.
-						list($s1, $s2, $s3) = $this->popstack($cmd, "year month day");
-						$t = mktime(0, 0, 0, $s2, $s3, $s1);
-						$this->pushstack(array($t));
-						break;
-					case	"age2t":
-## Take a string from the stack, consider it as a number of years, and add it to the stack as the current time value (seconds since 0:00:00 GMT, Jan 1, 1970) minus the number of years.
-## Use :todate to convert to a generic date and time.
-						list($s1) = $this->popstack($cmd, "year");
-						$t = mktime(date("H", $sys->now), date("i", $sys->now), date("s", $sys->now), date("n", $sys->now), date("j", $sys->now), date("Y", $sys->now) - $s1);
-						$this->pushstack(array($t));
-						break;
-					case	"todate":
-## Take a time value (seconds since January 1, 1970 0:00:00 GMT) and a format string from the stack, and put the string with the time in the format on the stack.
-## The format string can be from the php date() function.
-## Use :now to get the current time value.
-## For example, `:now__y/m/d H:i:s__:todate` would be "19/02/10 19:52:13", etc.
-						list($s1, $s2) = $this->popstack($cmd, "time dateformat");
-						$this->pushstack(array(date($s2, (int)$s1)));
-						break;
 					case	"nl2br":
 					case	"html":
 ## Indicates HTML escaping of output.
@@ -1986,224 +1318,6 @@ class	recordholder {
 					case	"raw":
 						$outputmode = $cmd;
 						$this->pushstack(array());
-						break;
-					case	"cat":
-## Take two strings from the stack, concatenate them, and stack them on the stack.
-## For example, `a__b__:cat` would be "ab".
-						list($s1, $s2) = $this->popstack($cmd, "s0 s1");
-						$this->pushstack(array($s1.$s2));
-						break;
-					case	"rcat":
-## Take two strings from the stack, combine them in reverse order, and stack them on the stack.
-## For example, `a__b__:rcat` would be "ba".
-						list($s1, $s2) = $this->popstack($cmd, "s0 s1");
-						$this->pushstack(array($s2.$s1));
-						break;
-					case	"scat":
-## Take two strings from the stack, concatenate them, and stack them on the stack.
-## For example, `a__b__:scat` becomes "a b".
-						list($s1, $s2) = $this->popstack($cmd, "s0 s1");
-						$this->pushstack(array("{$s1} {$s2}"));
-						break;
-					case	"rscat":
-## Take two strings from the stack, combine them in reverse order, and stack them on the stack.
-## For example, `a__b__:rscat` becomes "b a".
-						list($s1, $s2) = $this->popstack($cmd, "s0 s1");
-						$this->pushstack(array("{$s2} {$s1}"));
-						break;
-					case	"ismatch":
-## Take two strings from the stack and stack "1" if the second string is in the first string, otherwise empty string on the stack.
-## For example, `abc__b__:match` is "1" because there is a "b" in "abc".
-## Conversely, `abc__cb__:match` is an empty string because there is no "cb" in "abc".
-						list($s1, $s2) = $this->popstack($cmd, "s0 s1");
-						$this->pushstack(array((strpos($s1, $s2) !== FALSE)? 1 : ""));
-						break;
-					case	"addzero":
-## Take two strings from the stack and stack them on the stack with the first string prefixed with "0" until the length specified by the second character count is reached.
-## For example, `123__6__:addzero` would be "000123".
-## Also, `123__2__:addzero`.
-## Note that `-123__6__:addzero` will be "00-123" since it is not treated as a number.
-						list($s, $v) = $this->popstack($cmd, "num digits");
-						if (($i = strlen($s)) < (int)$v)
-							$s = str_repeat("0", $v - $i).$s;
-						$this->pushstack(array($s));
-						break;
-					case	"add":
-## Take two strings from the stack, consider each to be a number, and add them to the stack.
-## For example, `123__456__:add` would be "579".
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array($s1 + $s2));
-						break;
-					case	"sub":
-## Take two strings from the stack and subtract each as a number and stack them on the stack.
-## For example, `123__456__:sub` would be "-333".
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array($s1 - $s2));
-						break;
-					case	"rsub":
-## Take two strings from the stack, consider each as a number and subtract them in reverse order, and stack them on the stack.
-## For example, `123__456__:rsub` would be "333".
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array($s2 - $s1));
-						break;
-					case	"mul":
-## Take two strings from the stack, consider each to be a number, and stack them on the stack, adding them up.
-## For example, `123__456__:mul` would be "56088".
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array($s1 * $s2));
-						break;
-					case	"div":
-## Take two strings from the stack, divide each of them as a number, and stack them on the stack rounded down.
-## For example, `123__456__:div` would be "0".
-## If the divisor is 0, the divisor is 0.
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						if ((int)$s2 == 0)
-							$this->pushstack(array(0));
-						else
-							$this->pushstack(array(floor($s1 / $s2)));
-						break;
-					case	"rdiv":
-## Take two strings from the stack, consider each as a number, divide them in reverse order, and round down to the nearest whole number, and stack them on the stack.
-## For example, `123__456__:rdiv` would be "3".
-## If the divisor is 0, the divisor is 0.
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						if ((int)$s1 == 0)
-							$this->pushstack(array(0));
-						else
-							$this->pushstack(array(floor($s2 / $s1)));
-						break;
-					case	"mod":
-## Take two strings from the stack, consider each to be a number, and stack the remainder of the division on the stack.
-## For example, `123__456__:mod` would be "123".
-## If the divisor is 0, the divisor is 0.
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						if ((int)$s2 == 0)
-							$this->pushstack(array(0));
-						else
-							$this->pushstack(array($s1 % $s2));
-						break;
-					case	"rmod":
-## Take two strings from the stack, consider each to be a number, divide them in reverse order, and stack the remainder on the stack.
-## For example, `123__456__:rmod` would be "87".
-## If the divisor is 0, the divisor is 0.
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						if ((int)$s1 == 0)
-							$this->pushstack(array(0));
-						else
-							$this->pushstack(array($s2 % $s1));
-						break;
-					case	"eq":
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(($s1 == $s2)? 1 : ""));
-						break;
-					case	"ieq":
-## Take two strings from the stack and regard each as a number, stacking them on the stack with a "1" if they are equal or an empty string if they are not.
-## For example, `1__1__:ieq` or `1__01__:ieq` or `0__ __:ieq` or `0x1__1__:ieq` is "1".
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(((int)$s1 == (int)$s2)? 1 : ""));
-						break;
-					case	"seq":
-## Take two strings from the stack, consider each as a string, and pile "1" on the stack if they are equal, or an empty string if they are not equal.
-## For example, `1__1__:seq` would be "1".
-## The `1__01__:seq` or `0__ __:seq` will be an empty string.
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(($s1."" === $s2."")? 1 : ""));
-						break;
-					case	"ne":
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(($s1 != $s2)? 1 : ""));
-						break;
-					case	"ine":
-## Take two strings from the stack and regard each as a number, stacking them on the stack with a "1" if they are not equal, or an empty string if they are equal.
-## For example, `1__1__:ieq` or `1__01__:ieq` or `0__ __:ieq` or `0x1__1__:ieq` is an empty string.
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(((int)$s1 != (int)$s2)? 1 : ""));
-						break;
-					case	"sne":
-## Take two strings from the stack and consider each to be a string, stacking them on the stack with a "1" if they are not equal and an empty string if they are.
-## For example, `1__1__:seq` will be an empty string.
-## 1__01__:seq` or `0__ __:seq` will be "1".
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(($s1."" !== $s2."")? 1 : ""));
-						break;
-					case	"lt":
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(($s1 < $s2)? 1 : ""));
-						break;
-					case	"ilt":
-## Take two strings from the stack, consider each as a number, and pile "1" on the stack if the second one is larger, otherwise empty string.
-## For example, `1__2__:ilt` would be "1".
-## `1__1__:ilt` or `1__0__:ilt` will be an empty string.
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(((int)$s1 < (int)$s2)? 1 : ""));
-						break;
-					case	"slt":
-## Take two strings from the stack, consider each as a string, and pile "1" on the stack if the second one is larger, otherwise empty string.
-## For example, `1__2__:slt` would be "1".
-## `1__1__:slt` and `1__0__:slt` will be empty strings.
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(("_".$s1 < "_".$s2)? 1 : ""));
-						break;
-					case	"gt":
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(($s1 > $s2)? 1 : ""));
-						break;
-					case	"igt":
-## Take two strings from the stack, consider each as a number, and pile "1" on the stack if the first is larger, otherwise empty string.
-## For example, `1__0__:igt` would be "1".
-## `1__1__:igt` and `1__2__:igt` will be empty strings.
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(((int)$s1 > (int)$s2)? 1 : ""));
-						break;
-					case	"sgt":
-## Take two strings from the stack and consider each to be a string, stacking "1" on the stack if the first is larger, otherwise an empty string.
-## For example, `1__0__:sgt` would be "1".
-## `1__1__:sgt` and `1__2__:sgt` will be empty strings.
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(("_".$s1 > "_".$s2)? 1 : ""));
-						break;
-					case	"le":
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(($s1 <= $s2)? 1 : ""));
-						break;
-					case	"ile":
-## Take two strings from the stack, consider each as a number, and stack "1" if they are equal or the second is greater, otherwise empty string on the stack.
-## For example, `1__2__:ile` or `1__1__:ile` would be "1".
-## `1__0__:ile` will be an empty string.
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(((int)$s1 <= (int)$s2)? 1 : ""));
-						break;
-					case	"sle":
-## Take two strings from the stack, consider each as a string, and pile "1" on the stack if they are equal or the second is greater, otherwise empty string.
-## For example, `1__2__:sle` or `1__1__:sle` would be "1".
-## `1__0__:sle` will be an empty string.
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(("_".$s1 <= "_".$s2)? 1 : ""));
-						break;
-					case	"ge":
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(($s1 >= $s2)? 1 : ""));
-						break;
-					case	"ige":
-## Take two strings from the stack, consider each as a number, and stack "1" if they are equal or the first is greater, otherwise empty string on the stack.
-## For example, `1__0__:ige` or `1__1__:ige` is "1".
-## `1__2__:ige` will be an empty string.
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(((int)$s1 >= (int)$s2)? 1 : ""));
-						break;
-					case	"sge":
-## Take two strings from the stack, consider each as a string, and stack "1" if they are equal or the first is larger, otherwise empty string on the stack.
-## For example, `1__0__:sge` or `1__1__:sge` would be "1".
-## `1__2__:sge` will be an empty string.
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(("_".$s1 >= "_".$s2)? 1 : ""));
-						break;
-					case	"dup":
-## Take one string from the stack and stack two identical ones on the stack.
-## This is used, for example, in `id__:g:dup:isnull:andbreak__table__field__:tableid`, when you want to use "id__:g" once obtained for both ":isnull" and ":tableid".
-						$this->popstack($cmd, "");
-						$s1 = $this->stack[count($this->stack) - 1];
-						$this->pushstack(array($s1));
 						break;
 					case	"andbreak":
 ## Retrieve a string from the stack and continue if it is an empty string or "0", otherwise terminate evaluation of the expression there and return an empty string.
@@ -2416,161 +1530,6 @@ class	recordholder {
 						$this->flush_coverage();
 						header("Location: {$s}");
 						log_die();
-					case	"sor":
-## Take two strings from the stack and stack the first string if the second string is empty, otherwise stack the second string on the stack.
-## For example, `empty__name__:g:sor` is "empty" if `name__:g` is an empty string, otherwise `name__:g`.
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						if ($s2 == "")
-							$s2 = $s1;
-						$this->pushstack(array($s2));
-						break;
-					case	"sand":
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						if ($s2 != "")
-							$s2 = $s1;
-						$this->pushstack(array($s2));
-						break;
-					case	"ior":
-## Take two strings from the stack, consider each as a number, and pile the first number on the stack if the second number is 0, otherwise the second number.
-## For example, `2__1__:ior` becomes "1" and `2__0__:ior` becomes "2".
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						if ((int)$s2 == 0)
-							$s2 = $s1;
-						$this->pushstack(array((int)$s2));
-						break;
-					case	"iand":
-						list($s1, $s2) = $this->popstack($cmd, "i j");
-						if ((int)$s2 != 0)
-							$s2 = $s1;
-						$this->pushstack(array((int)$s2));
-						break;
-					case	"loginrecord":
-## Take one string from the stack, consider it a field name, and stack the field values of the record in the login table corresponding to the logged-in user for this session.
-## Empty string if there is no login for this session.
-## For example, `login__:loginrecord` will be the login name for this session.
-						list($s1) = $this->popstack($cmd, "field");
-						$s = "";
-						if ($loginrecord !== null)
-							$s = $loginrecord->getfield($s1)."";
-						$this->pushstack(array($s));
-						break;
-					case	"set":
-## Take two strings from the stack, consider them as field values and field names, respectively, and set them to the current record.
-## For example, `1__id__:set` sets the ID of the current record to 1.
-						list($s1, $s2) = $this->popstack($cmd, "val field");
-						if ($s2 == "id")
-							$s3 = $s2;
-						else
-							$s3 = "v_{$s2}";
-						$this->record->$s3 = $s1;
-						$this->pushstack(array());
-						break;
-					case	"sqlisnull":
-## Take one string from the stack, consider it a field name, and add "and field name is null" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1) = $this->popstack($cmd, "field");
-						$this->whereargs["{$s1} is null"] = array();
-						$this->pushstack(array());
-						break;
-					case	"sqlisnotnull":
-## Take one string from the stack, consider it a field name, and add "and field name is not null" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1) = $this->popstack($cmd, "field");
-						$this->whereargs["{$s1} is not null"] = array();
-						$this->pushstack(array());
-						break;
-					case	"sqlisempty":
-## Take one string from the stack, consider it a field name, and add "and (field name is null or field name = "")" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1) = $this->popstack($cmd, "field");
-						$this->whereargs["({$s1} is null or {$s1} = ?)"] = array("");
-						$this->pushstack(array());
-						break;
-					case	"sqlisnotempty":
-## Take one string from the stack, consider it a field name, and add "and field name is not null and field name <> "" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1) = $this->popstack($cmd, "field");
-						$this->whereargs["{$s1} is not null"] = array();
-						$this->whereargs["{$s1} <> ?"] = array("");
-						$this->pushstack(array());
-						break;
-					case	"sqllike":
-## Take two strings from the stack, consider each to be a search string and a field name, and add "and field name like "%search string%"" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1, $s2) = $this->popstack($cmd, "val field");
-						$this->whereargs["{$s2} like ?"] = array("%{$s1}%");
-						$this->pushstack(array());
-						break;
-					case	"sqllike2":
-## Take three strings from the stack, consider each as a search string, field name 1, and field name 2, and add "and (field name 1 like "%search string%" or field name 2 like "%search string%")" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1, $s2, $s3) = $this->popstack($cmd, "val field1 field2");
-						$this->whereargs["({$s2} like ? or {$s3} like ?)"] = array("%{$s1}%", "%{$s1}%");
-						$this->pushstack(array());
-						break;
-					case	"sqllike3":
-## Take four strings from the stack, consider each as a search string, field name 1, field name 2, and field name 3, and add "and (field name 1 like "%Search String%" or field name 2 like "%Search String%" or field name 3 like "% Search String%")" is added.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1, $s2, $s3, $s4) = $this->popstack($cmd, "val field1 field2 field3");
-						$this->whereargs["({$s2} like ? or {$s3} like ? or {$s4} like ?)"] = array("%{$s1}%", "%{$s1}%", "%{$s1}%");
-						$this->pushstack(array());
-						break;
-					case	"sqllike4":
-## Take 5 strings from the stack and consider each as a search string, field name 1, field name 2, field name 3, field name 4, and add "and (field name 1 like "%search string%" or field name 2 like "%search string%" or field name 3 like "%search string%" or field name 4 like "%search string")".
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1, $s2, $s3, $s4, $s5) = $this->popstack($cmd, "val field1 field2 field3 field4");
-						$this->whereargs["({$s2} like ? or {$s3} like ? or {$s4} like ? or {$s5} like ?)"] = array("%{$s1}%", "%{$s1}%", "%{$s1}%", "%{$s1}%");
-						$this->pushstack(array());
-						break;
-					case	"sqlnotlike":
-## Take two strings from the stack, consider them as a search string and a field name, respectively, and add "and field name not like "%search string%"" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1, $s2) = $this->popstack($cmd, "val field");
-						$this->whereargs["{$s2} not like ?"] = array("%{$s1}%");
-						$this->pushstack(array());
-						break;
-					case	"sqleq":
-## Take two strings from the stack, consider each to be a string and a field name, and add "and "string" = field name" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1, $s2) = $this->popstack($cmd, "val field");
-						$this->whereargs["? = {$s2}"] = array($s1);
-						$this->pushstack(array());
-						break;
-					case	"sqlne":
-## Take two strings from the stack, consider each to be a string and a field name, and add "and "string" <> field name" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1, $s2) = $this->popstack($cmd, "val field");
-						$this->whereargs["? <> {$s2}"] = array($s1);
-						$this->pushstack(array());
-						break;
-					case	"sqllt":
-## Take two strings from the stack, consider each to be a string and a field name, and add "and "string" < field name" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1, $s2) = $this->popstack($cmd, "val field");
-						$this->whereargs["? < {$s2}"] = array($s1);
-						$this->pushstack(array());
-						break;
-					case	"sqlle":
-## Take two strings from the stack, consider each to be a string and a field name, and add "and "string" <= field name" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1, $s2) = $this->popstack($cmd, "val field");
-						$this->whereargs["? <= {$s2}"] = array($s1);
-						$this->pushstack(array());
-						break;
-					case	"sqlgt":
-## Take two strings from the stack, consider each to be a string and a field name, and add "and "string" > field name" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1, $s2) = $this->popstack($cmd, "val field");
-						$this->whereargs["? > {$s2}"] = array($s1);
-						$this->pushstack(array());
-						break;
-					case	"sqlge":
-## Take two strings from the stack, consider each to be a string and a field name, and add "and "string" >= field name" to the corresponding SQL statement.
-## This is a tablegrid that is a tablegrid that contains both the "<!--{tablegrid" parameter section and "<!--}--" up to and including "<!--{selectrows" parameter section.
-						list($s1, $s2) = $this->popstack($cmd, "val field");
-						$this->whereargs["? >= {$s2}"] = array($s1);
-						$this->pushstack(array());
-						break;
 # not work without submitkey.
 #					case	"login":
 #						$tablelist["login"]->check_loginform();
@@ -2665,8 +1624,9 @@ class	recordholder {
 			return;
 		else
 			$val = "";
-		$s = "v_".$name;
-		$this->record->$s = $val;
+#		$s = "v_".$name;
+#		$this->record->$s = $val;
+		$this->record->setfield($name, $val);
 	}
 	function	striphighlight($highlight = "") {
 		$ret = "";
@@ -3099,6 +2059,23 @@ class	commandparserrecordholder extends commandparser {
 	}
 }
 
+/*jp.pa-i/html
+<h2>if section</h2>
+*/
+
+/*jp.pa-i/syntaxdiagram
+(<!--{if
+[expr
+(-->
+[html block
+{|(<!--}{elseif
+[expr
+(-->
+[html block
+r}{|(<!--}{else-->
+[html block
+}(<!--}-->
+*/
 
 class	commandparser_if extends commandparser {
 	function	parsehtmlinner($rh = null, $record = null) {
@@ -3143,6 +2120,19 @@ class	commandparser__else extends commandparser {
 	}
 }
 
+/*jp.pa-i/html
+<h2>selectrows section</h2>
+*/
+
+/*jp.pa-i/syntaxdiagram
+(<!--{selectrows
+[from-clause
+(-->
+[html block
+{|(<!--}{else-->
+[html block
+}(<!--}-->
+*/
 
 class	commandparser_selectrows extends commandparser {
 # The "<!--{selectrows SQL clause-->" to "<!--}-->" is repeated as many times as the number of search results obtained with the specified SQL clause.
@@ -3162,6 +2152,19 @@ class	commandparser_selectrows extends commandparser {
 	}
 }
 
+/*jp.pa-i/html
+<h2>stablerows section</h2>
+*/
+
+/*jp.pa-i/syntaxdiagram
+(<!--{stablerows
+[simple table name
+(-->
+[html block
+{|(<!--}{else-->
+[html block
+}(<!--}-->
+*/
 
 class	commandparser_stablerows extends commandparser {
 # The "<!--{stablerows simple table name-->" to "<!--}-->" is repeated for the number of records in the specified simple table.
@@ -3197,6 +2200,21 @@ class	daterecord extends rootrecord {
 	}
 }
 
+/*jp.pa-i/html
+<h2>dayrows section</h2>
+*/
+
+/*jp.pa-i/syntaxdiagram
+(<!--{dayrows
+[UNIX time
+{|( 
+[count
+{|( 
+[date format
+}}(-->
+[html block
+(<!--}-->
+*/
 
 class	commandparser_dayrows extends commandparser {
 	function	parsehtmlinner($rh = null, $record = null) {
@@ -3218,6 +2236,23 @@ class	commandparser_dayrows extends commandparser {
 	}
 }
 
+/*jp.pa-i/html
+<h2>wdayrows section</h2>
+*/
+
+/*jp.pa-i/syntaxdiagram
+(<!--{wdayrows
+[UNIX time
+{|( 
+[count
+{|( 
+[start
+{|( 
+[date format
+}}}(-->
+[html block
+(<!--}-->
+*/
 
 class	commandparser_wdayrows extends commandparser {
 	function	parsehtmlinner($rh = null, $record = null) {
@@ -3250,6 +2285,21 @@ class	commandparser_wdayrows extends commandparser {
 	}
 }
 
+/*jp.pa-i/html
+<h2>valid section</h2>
+*/
+
+/*jp.pa-i/syntaxdiagram
+(<!--{valid
+[validation command
+{|( 
+[field name
+}(-->
+[html block
+{|(<!--}{else-->
+[html block
+}(<!--}-->
+*/
 
 class	commandparser_valid extends commandparser {
 	function	parsehtmlinner($rh = null, $record = null) {
@@ -3280,316 +2330,337 @@ class	commandparser_valid extends commandparser {
 require("tables.php");
 
 
-$findtableidscache = array();
-$ascii2null = array();
-for ($i=0; $i<128; $i++)
-	$ascii2null[chr($i)] = "";
-
-
-class	im_table {
-	var	$r;
-	function	__construct($name, $id = 0) {
-		global	 $tablelist;
-		
-		$this->r = $tablelist[$name]->getrecord($id);
-	}
-	function	del() {
-		execsql("delete from {$this->r->tablename};", null, 0, 1);
-	}
-	function	set($key, $val) {
-		$s = "v_{$key}";
-		$this->r->$s = $val;
-	}
-	function	get($key) {
-		if ($key != "id") {
-			$s = "v_{$key}";
-			return @$this->r->$s."";
-		}
-		if ($this->r->id <= 0)
-			 $this->r->update();
-		return $this->r->id;
-	}
-	function	update() {
-		 $this->r->update();
+if (!function_exists("myhash")) {
+	function	myhash($s) {
+		return hash("sha256", $s);
 	}
 }
+if (trim(myhash("")) == "")
+	die("hash not work");
 
-
-class	im_tables {
-	var	$name;
-	var	$list;
-	function	__construct($name) {
-		$this->name = $name;
-		$this->list = array();
+if ((@$logview_fn !== null)) {
+# The name may be like "\000__COMPILER_HALT_OFFSET__\000/var/www/html....php" and it is not documented.
+	$log_fp = null;
+	foreach (get_defined_constants() as $key => $val) {
+		if (!preg_match('/^__COMPILER_HALT_OFFSET__/', ltrim($key)))
+			continue;
+		$log_fp = popen("dd bs=1 if=".escapeshellarg(@$logview_self)." skip={$val} |gunzip", "r");
+		break;
 	}
-	function	del() {
-		global	$tablelist;
-		
-		$t = $tablelist["simple"]->gettable($this->name);
-		$t->updatelist(array());
-	}
-	function	update() {
-		global	$tablelist;
-		global	$findtableidscache;
-		
-		$findtableidscache = array();	# clear cache.
-		
-		$t = $tablelist["simple"]->gettable($this->name);
-		$list = $t->getlist();
-		$list[] = $this->list;
-		$t->updatelist($list);
-	}
-	function	set($key, $val) {
-		$this->list[$key] = $val;
-	}
-	function	findtableids($field, $val) {
-		global	$tablelist;
-		global	$findtableidscache;
-		
-		if (($cache = @$findtableidscache[$cachename = "{$this->name}|{$field}"]) === null) {
-			$cache = array();
-			$t = $tablelist["simple"]->gettable($this->name);
-			$list = $t->getlist();
-			foreach ($list as $key => $a)
-				$cache[@$a[$field]] = $key + 1;
-			$findtableidscache[$cachename] = $cache;
+	if ((@$_GET["snapshot"])) {
+		if ($log_fp === null)
+			$content = file_get_contents("{$logview_fn}.php");
+		else {
+			$content = stream_get_contents($log_fp);
+			pclose($log_fp);
+			$log_fp = null;
 		}
-		return (int)@$cache[$val];
+		$output = "";
+		foreach (explode('<pre class="outphase1"', $content) as $key => $val) {
+			if ($key == 0)
+				continue;
+			$a = explode(">", $val, 2);
+			$a2 = explode("</pre>", @$a[1], 2);
+			$output .= html_entity_decode(strip_tags($a2[0]));
+		}
+		if (count($a = preg_split("/<HEAD>/i", $output, 2)) == 2) {
+			list($s0, $s1) = $a;
+			$output = <<<EOO
+{$s0}<HEAD><BASE href="{$logview_urlbase}/nopost/snapshot.html">
+{$s1}
+EOO;
+		} else {
+			$output = <<<EOO
+<HEAD><BASE href="{$logview_urlbase}/nopost/snapshot.html"></HEAD>
+{$output}
+EOO;
+		}
+		print $output;
+		die();
 	}
-	function	findtableidsa($field, $val) {
-		global	$tablelist;
-		global	$findtableidscache;
-		
-		if (($cache = @$findtableidscache[$cachename = "{$this->name}|{$field}"]) === null) {
-			$cache = array();
-			$t = $tablelist["simple"]->gettable($this->name);
-			$list = $t->getlist();
-			foreach ($list as $key => $a)
-				$cache[@$a[$field]] = $key + 1;
-			$findtableidscache[$cachename] = $cache;
+	if ((@$_GET["coverage"])) {
+		$fn = "{$logview_coverage}.log";
+		if ($log_fp === null) {
+			if (!is_readable($fn))
+				die();
+			$content = file_get_contents($fn);
+		} else {
+			$fp = popen("gunzip <".escapeshellarg("{$fn}.gz"), "r");
+			$content = stream_get_contents($fp);
+			pclose($fp);
 		}
-		if (@$cache[$val] === null) {
-			$t = $tablelist["simple"]->gettable($this->name);
-			$list = $t->getlist();
-			$list[] = array($field => $val);
-			$t->updatelist($list);
-			$cache[$val] = count($list);
-			$findtableidscache[$cachename] = $cache;
-		}
-		return (int)@$cache[$val];
-	}
-	function	findtableidsz($field, $val) {
-		global	$tablelist;
-		global	$ascii2null;
-		
-		$s0 = strtr(mb_convert_kana($val, "as", "UTF-8"), $ascii2null);
-		
-		$t = $tablelist["simple"]->gettable($this->name);
-		$list = $t->getlist();
-		foreach ($list as $key => $a) {
-			$s1 = strtr(mb_convert_kana(@$a[$field], "as", "UTF-8"), $ascii2null);
-			if ($s0 == $s1)
-				return $key + 1;
-		}
-		return 0;
-	}
-}
-
-
-function	basicauth()
-{
-	global	$sys;
-	
-	if (@$sys->auth_user === "")
-		return;
-	if (@$_SERVER["PHP_AUTH_USER"] != @$sys->auth_user)
-		;
-	else if (myhash(@$sys->auth_salt.@$_SERVER["PHP_AUTH_PW"]) != @$sys->auth_pass)
-		;
-	else
-		return;
-	
-	header('WWW-Authenticate: Basic realm="www"');
-	header("HTTP/1.0 401 Unauthorized");
-	log_die();
-}
-
-
-if (@$_GET["mode"] == "sql") {
-	basicauth();
-	if (@$_POST["create"] !== null) {
-		$debuglog = "<H1>".htmlspecialchars(@$_GET["mode"])."</H1>\n\n";
-
-		foreach ($tablelist as $table)
-			$table->createtable();
-		log_die();
-	}
-	do {
-		if (($s = @$_POST["query"]) === null)
-			break;
-		if (($sp0 = $db0->prepare($s)) === FALSE) {
-			$a = $db0->errorInfo();
-			print htmlspecialchars($a[2])."<BR>\n";
-			break;
-		}
-		if (!$sp0->execute()) {
-			$a = $sp0->errorInfo();
-			print htmlspecialchars($a[2])."<BR>\n";
-			break;
-		}
-		$list = $sp0->fetchAll(PDO::FETCH_ASSOC);
-		if (count($list) == 0) {
-			print "changes: ".$sp0->rowCount()."<BR>\n";
-			break;
-		}
-		$first = 1;
-		print "<TABLE border=2>\n";
-		foreach ($list as $a) {
-			if (($first)) {
-				$first = 0;
-				print "  <TR>\n";
-				foreach ($a as $key => $val)
-					print "    <TH>".htmlspecialchars($key)."</TH>\n";
-				print "  </TR>\n";
+		$list = array();
+		$actionid = -1;
+		$actionlist = array();
+		foreach (preg_split("/\r\n|\r|\n/", $content) as $line) {
+			if (count($a = explode("\t", $line, 4)) < 3)
+				continue;
+			$key = (int)$a[1];
+			$key2 = "_".$a[2];
+			if (count($a) == 3) {
+				$actionid = $key;
+				$actionlist[$key2] = 1;
+				continue;
 			}
-			print "  <TR>\n";
-			foreach ($a as $key => $val)
-				print "    <TD>".htmlspecialchars($val)."</TD>\n";
-			print "  </TR>\n";
+			$key3 = "_".$a[3];
+			if (@$list[$key][$key2][$key3] === null)
+				$list[$key][$key2][$key3] = $a[0];
 		}
-		print "</TABLE>";
-	} while (0);
 	
-	print <<<EOO
-<FORM method=POST>
-<TEXTAREA name=query cols=40 rows=10></TEXTAREA>
-<INPUT type=submit>
-</FORM>
-<HR>
-<FORM method=POST>
-<INPUT type=submit name=create value="create">
-<A href="?mode=import">import</A>
-</FORM>
-</BODY></HTML>
-EOO;
-	log_die();
-}
-if (@$_GET["mode"] == "import") {
-	basicauth();
-ini_set("max_execution_time", "300");
-ini_set("display_errors", "TRUE");
-$debuglog = "<H1>".htmlspecialchars(@$_GET["mode"])."</H1>\n\n";
-		print <<<EOO
-<FORM method=POST>
-<UL>
-
-EOO;
-	foreach ($importlist as $key => $val) {
-		$name = "import_".bin2hex($val);
-		$s = htmlspecialchars($val);
-		print <<<EOO
-	<LI><LABEL><INPUT type=checkbox name="{$name}" value=1>{$s}</LABEL>
-
-EOO;
-		if (@$_POST[$name] != "") {
-			$fp = fopen($val, "r") or log_die("fopen failed: ".htmlspecialchars($val)."(".bin2hex($val).")");
-			execsql("begin;");
-			$stack = array();
-			$list = array();
-			while (($line = fgets($fp)) !== FALSE) {
-				$a = explode("\t", rtrim($line));
-				if (count($a) < 2)
-					continue;
-				switch ($a[1]) {
-					default:
-						if (!class_exists($s = "im_".$a[1]))
-							log_die("unknown command: ".htmlspecialchars($a[1])."(".bin2hex($a[1]).")");
-						$obj = new $s(trim($a[0]));
-						array_unshift($stack, $obj);
-						continue 2;
-					case	"":
-					case	"#":
-						continue 2;
-					case	"#message":
-						$a = explode("\t", $line, 3);
-						print "<P>".htmlspecialchars(date("Y/m/d H:i:s ").@$a[2])."</P>\n";
-						flush();
-						continue 2;
-					case	"delete":
-						$obj = new im_table(trim($a[0]));
-						$obj->del();
-						continue 2;
-					case	"deletes":
-						$obj = new im_tables(trim($a[0]));
-						$obj->del();
-						continue 2;
-					case	"table{":
-						$obj = new im_table($s = trim($a[0]), (int)@$a[2]);
-						$list[$s] = $obj;
-						array_unshift($stack, $obj);
-						if ((int)@$a[2] == 0)
-							continue 2;
-						if ($obj->get("id") > 0)
-							continue 2;
-						print htmlspecialchars("record not found : {$r->tablename}#{$r->id}.".$a[0])."<BR>\n";
-						log_die();
-					case	"}":
-						$stack[0]->update();
-						array_shift($stack);
-						continue 2;
-					case	"=":
-						$a = explode("\t", rtrim($line), 3);
-						$stack[0]->set(trim($a[0]), @$a[2]);
-						continue 2;
-					case	"==":
-						$a = explode("\t", rtrim($line), 3);
-						$s = $stack[0]->get(trim($a[0]));
-						if ($s == @$a[2])
-							continue 2;
-						$r = $stack[0]->r;
-						print htmlspecialchars("{$r->tablename}#{$r->id}.".$a[0])."<BR>\n";
-						print htmlspecialchars("expected : ".@$a[2])."<BR>\n";
-						print htmlspecialchars("found : {$s}")."<BR>\n";
-						log_die();
-					case	"=sprintf":
-						break;
+		$head = null;
+		$titlelist = array();
+		foreach($list[0]["_0"] as $key => $val) {
+			if ($head === null) {
+				$head = "";
+				print "<table border>\n";
+				foreach (explode("\t", substr($key, 1)) as $k => $v) {
+					if (($k & 1))
+						continue;
+					$head .= '<tr><th colspan="'.($k / 2 + 2).'" style="text-align: right;';
+					if ((($k / 2) % 6) < 3)
+						$head .= " background: #8f8;";
+					$head .= '">';
+					list($l, $s) = explode("_", base64_decode($v), 2);
+					$titlelist[$l] = $s;
+					$head .= '<a href="#'.$l.'">'.htmlspecialchars($s)."</a>\n";
 				}
-				$a0 = array(@$a[2]."");
-				for ($i=3; $i<count($a); $i++) {
-					$a1 = explode(".", $a[$i]);
-					if ($a1[0] != "") {
-						$a0[] = $list[$a1[0]]->get(@$a1[1]);
+				print $head;
+			}
+			$fn = htmlspecialchars($val, ENT_QUOTES);
+			print '<tr><th style="text-align: left;"><a href="'.$fn.'.php">'."{$fn}\n";
+			foreach (explode("\t", substr($key, 1)) as $k => $v)
+				if (($k & 1)) {
+					print "\t<td";
+					if ((($k / 2) % 6) < 3)
+						print ' style="background: #8f8;"';
+					print ">";
+					if (($s = base64_decode($v)) == 0)
+						$s = "";
+					print htmlspecialchars($s)."\n";
+				}
+		}
+		if ($head !== null)
+			print "{$head}</table>\n";
+		
+		$searchlist = array("home", "return", "break", "jump");
+		$replacelist = array();
+		foreach ($searchlist as $s)
+			$replacelist[] = '<span style="color:#f00;">'."{$s}</span>";
+		
+		ksort($list);
+		$lastid = 0;
+		foreach ($list as $id => $val) {
+			if ($id == 0)
+				continue;
+			print '<ul style="background:#ccf;">'."\n";
+			while ($lastid < $id)
+				print '<a name="'.(++$lastid).'"> </a>'; 
+			$level = 1;
+			foreach ($titlelist as $k => $v) {
+				if ($k > $id)
+					break;
+				preg_match("/^(\t*)(.*)/", @$titlelist[$k], $a);
+				while ($level < strlen($a[1])) {
+					print "<ul>\n";
+					$level++;
+				}
+				while ($level > strlen($a[1])) {
+					print "</ul>\n";
+					$level--;
+				}
+				print "<li>".htmlspecialchars($a[2])."\n";
+			}
+			while ($level > 0) {
+				print "</ul>\n";
+				$level--;
+			}
+			foreach ($val as $key2 => $val2) {
+				if ($id == $actionid)
+					$actionlist[$key2] = 0;
+				$head = "";
+				$pars = "";
+				foreach (explode("__", base64_decode($key2)) as $block) {
+					if (!preg_match('/^:/', $block)) {
+						$pars .= "{$block}__ ";
 						continue;
 					}
-					switch ($s = @$a1[1]."") {
-						default:
-							log_die("unknown command: {$s}(".bin2hex($s).")");
-						case	"findtableids":
-						case	"findtableidsa":
-						case	"findtableidsz":
-							$a1 = explode(".", $a[$i], 5);
-							$obj = new im_tables(@$a1[2]);
-							$a0[] = $obj->$s(@$a1[3], @$a1[4]);
-							continue 2;
+					$remaincmds = explode(":", $block);
+					array_shift($remaincmds);
+					foreach ($remaincmds as $cmd) {
+						$head .= '<th style="background:#ff8;"><span style="color: #888;">'.htmlspecialchars($pars);
+						$pars = "";
+						$head .= "</span>:".str_replace($searchlist, $replacelist, htmlspecialchars($cmd));
 					}
 				}
-				$s = call_user_func_array("sprintf", $a0);
-				$stack[0]->set(trim($a[0]), $s);
+				print "<table border><tr><th>\n{$head}";
+				foreach ($val2 as $key3 => $val3) {
+					$a = explode("#", $val3);
+					$fn = htmlspecialchars($a[0], ENT_QUOTES);
+					if (($v = (int)$a[1]) < 0)
+						$v = 1;
+					print '<tr><th style="text-align: left;"><a href="'.$fn.'.php#'.$id.".".$v.'">'."{$fn}#{$v}\n";
+					foreach (explode("\t", $key3) as $k => $v)
+						print "\t".'<td style="text-align: right;">'.htmlspecialchars(base64_decode($v));
+				}
+				print "<tr><th>\n{$head}</table>\n<p></p>\n";
 			}
-			execsql("commit;");
-			fclose($fp);
 		}
+		if ($id != $actionid) {
+			print '<ul style="background:#ccf;">'."\n";
+			while ($lastid < $actionid)
+				print '<a name="'.(++$lastid).'"> </a>'; 
+			$level = 1;
+			foreach ($titlelist as $k => $v) {
+				if ($k > $actionid)
+					break;
+				preg_match("/^(\t*)(.*)/", @$titlelist[$k], $a);
+				while ($level < strlen($a[1])) {
+					print "<ul>\n";
+					$level++;
+				}
+				while ($level > strlen($a[1])) {
+					print "</ul>\n";
+					$level--;
+				}
+				print "<li>".htmlspecialchars($a[2])."\n";
+			}
+			while ($level > 0) {
+				print "</ul>\n";
+				$level--;
+			}
+		}
+		foreach ($actionlist as $key2 => $val2) {
+			if ($val2 == 0)
+				continue;
+			$head = "";
+			$pars = "";
+			foreach (explode("__", base64_decode($key2)) as $block) {
+				if (!preg_match('/^:/', $block)) {
+					$pars .= "{$block}__ ";
+					continue;
+				}
+				$remaincmds = explode(":", $block);
+				array_shift($remaincmds);
+				foreach ($remaincmds as $cmd) {
+					$head .= '<th style="background:#ff8;"><span style="color: #888;">'.htmlspecialchars($pars);
+					$pars = "";
+					$head .= "</span>:".str_replace($searchlist, $replacelist, htmlspecialchars($cmd));
+				}
+			}
+			print '<table border><tr><th><span style="color: #aaa;">(no log)</span>'."\n{$head}";
+			print "</table>\n<p></p>\n";
+		}
+		die();
 	}
-	print <<<EOO
-</UL>
-<UL>
-	<LI><INPUT type=submit value=import>
-</UL>
-</FORM>
-
-EOO;
-	log_die();
+	print "<pre><b>".htmlspecialchars(@file_get_contents("{$logview_fn}.errorlog"))."</b></pre>\n";
+	
+	if ((@$sys->debugdiff)) {
+		if ($log_fp === null)
+			$content = file_get_contents("{$logview_fn}.php");
+		else {
+			$content = stream_get_contents($log_fp);
+			pclose($log_fp);
+			$log_fp = null;
+		}
+		list($part0, $s) = explode('<div class="srcall">', $content, 2);
+		list($part1, $part2) = explode('</div>', $s, 2);
+		print $part0;
+		
+		$a = array(
+			0 => array("pipe", "r"), 
+			1 => array("pipe", "w")
+		);
+		$p0 = proc_open("diff -U 99999999 - ".escapeshellarg(@$logview_targetpath), $a, $plist);
+		$sinput = substr(html_entity_decode(strip_tags($part1)), 0, -1);
+		fputs($plist[0], $sinput);
+		fclose($plist[0]);
+		$soutput = stream_get_contents($plist[1]);
+		proc_close($p0);
+		
+		$mode = 0;
+		if ($soutput == "") {
+			$mode = 1;
+			$soutput = $sinput;
+		}
+		
+#		print nl2br(htmlspecialchars($soutput));
+	print "<pre>\n";
+		foreach (preg_split("/\r\n|\r|\n/", $soutput) as $key => $line) {
+#			$style = " background:#ccc;";
+			$style = "";
+			if ($mode == 0) {
+				switch ($key) {
+					case	0:
+						$line = "-Removed at newest file.";
+						break;
+					case	1:
+						$line = "+Added at newest file.";
+						break;
+					case	2:
+						$line = " ";
+						break;
+				}
+				switch (substr($line, 0, 1)) {
+					case	"+":
+						$style = " background:#cfc; color:#888;";
+						print '<p style="margin:0;'.$style.'">';
+						print htmlspecialchars($line)."</p>";
+						continue 2;
+					case	"-":
+						$style = " background:#ccc;";
+#						$style .= " text-decoration: line-through;";
+						break;
+					case	" ":
+						$line = substr($line, 1);
+						break;
+				}
+			}
+			print '<p style="margin:0;'.$style.'">';
+			if ($line == "") {
+				print " </p>";
+				continue;
+			}
+			foreach (explode("<!--{", $line) as $k0 => $v0) {
+				if ($k0 > 0)
+					print '<b style="color:#0000ff;">&lt;!--{';
+				foreach (explode("<!--}", $v0) as $k1 => $v1) {
+					if ($k1 > 0)
+						print '<b style="color:#0000ff;">&lt;!--}';
+					foreach (explode("-->", $v1, 2) as $k2 => $v2) {
+						if ($k2 > 0)
+							print "--&gt;</b>";
+						foreach (explode('`', $v2) as $k3 => $v3) {
+							if ($k3 > 0)
+								print '<b style="color:#ff0000;">`</b>';
+							if (($k3 & 1))
+								print '<b style="color:#ff0000;">';
+							print htmlspecialchars($v3);
+							if (($k3 & 1))
+								print "</b>";
+						}
+					}
+				}
+			}
+			print "</p>";
+		}
+	print "</pre>\n";
+		
+		print $part2;
+		
+		die();
+	}
+	
+	if ($log_fp !== null) {
+		print stream_get_contents($log_fp);
+		die();
+	}
+	return;
 }
+$coverage_list = null;
+$coverage_id = 0;
+$coverage_title = array();
+$coverage_count = array();
+$coverage_actionlist = array();
 
 
 $cookiepath = "";
@@ -3644,6 +2715,8 @@ EOO;
 }
 
 
+new innersimpletable();
+
 $t = @$tablelist["simple"]->gettable("__dbinfo");
 $a = $t->getlist();
 $updated = 0;
@@ -3663,72 +2736,10 @@ if (($updated)) {
 }
 
 
-if (!function_exists("bq_login")) {
-	function	bq_login($type = null, $r = null)
-	{
-		global	$tablelist;
-		global	$sys;
-		
-		if ($type === null)
-			return array();
-		switch ($type) {
-			case	"emptypass":		# empty password
-				header("Location: {$sys->url}?mode=2mailsent");
-				if (($mailcmd = $sys->mailcmd) == "")
-					log_die("mailcmd empty.");
-				if (($mailbody = @$sys->mailbody) == "")
-					log_die("mailbody empty.");
-				if (@$sys->mailinterval <= 0)
-					log_die("mailinterval <= 0.");
-		
-				if (($login = @$_POST["login"]) == "")
-					log_die("login empty.");
-				if (!preg_match('/^[0-9A-Za-z][-_.@+0-9A-Za-z]*$/', $login))
-					log_die("invalid character in login.");
-				$list = $tablelist["login"]->getrecordidlist("where login = ?", array($login));
-				if (count($list) < 1)
-					log_die("no login found");
-				$r = $tablelist["login"]->getrecord($uid = $list[0]);
-		
-				if (@$r->v_mailsent > $sys->now - $sys->mailinterval)
-					log_die("mail interval too short.");
-		
-				$key =$r->getrandom();
-				$r->setmailkey($key);
-		
-				$a0 = array("@addr@", "@url@");
-				$a1 = array($login, "{$sys->url}?mode=1login&uid={$uid}&key={$key}&");
-				$mailcmd = str_replace($a0, $a1, $mailcmd);
-				$mailbody = str_replace($a0, $a1, $mailbody);
-				if (($fp = popen($mailcmd, "w")) === null)
-					log_die("popen failed: {$mailcmd}");
-				fputs($fp, $mailbody);
-				pclose($fp);
-				log_die("mail sent.");
-			case	"goodlogin":		# login success
-				break;
-			case	"badlogin":		# login fail
-				break;
-			case	"logout":		# logout
-				break;
-			case	"changelogin":	# change mail address
-				break;
-			case	"changepass":		# change password
-				break;
-		}
-		return array();
-	}
-}
+foreach ($tablelist as $obj)
+	$obj->onload();
 
 
-if ($tablelist["login"]->is_login() <= 0)
-	$sys->target = "index";
-else if ((@$sys->noredirectonlogin))
-	;
-else if (@$sys->target == "index") {
-	header("Location: {$sys->urlbase}/index/".@$sys->rootpage.".html");
-	log_die();
-}
 if (($targethtml = @file_get_contents("{$sys->htmlbase}/{$sys->target}.html")) === FALSE) {
 	header("Location: {$sys->urlbase}/nopage/".@$sys->rootpage.".html");
 	log_die();

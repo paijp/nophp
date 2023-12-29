@@ -1,7 +1,12 @@
 <?php
 
+require("env.php");
+@include("builtinfunc.php");
+require("loginrecord.php");
 @include("sendmail.php");
-include("grid.php");
+
+$sys->rootpage = "g9999";
+
 
 class	login_table	extends	a_login_table {
 }

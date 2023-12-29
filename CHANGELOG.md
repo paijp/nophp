@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.0.2] - 2023-12-29
+### Added
+- Add syntax diagram(index.php, index.html).
+### Changed
+- Move functions from index.php to builtinfunc.php, loginrecord.php, importer.php. Please include these files from tables.php.
+
 ## [0.0.1] - 2023-03-30 [YANKED]
 ### Security
 - Security fix: command injection when send a password setting mail.

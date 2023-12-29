@@ -20,8 +20,6 @@ $sys->htmlbase = "./res/";
 $sys->sqlpath = "sqlite:/var/www/db/nophp.sq3";
 # $sys->sqlpath = "mysql:dbname=test";		# sorry, not tested.
 
-$sys->rootpage = "g9999";
-
 #
 # If you want to use 'index.php?mode=sql', you have to set this basic authentication.
 # $sys->auth_pass = sha1( $sys->auth_salt . $pass );
@@ -30,6 +28,7 @@ $sys->rootpage = "g9999";
 $sys->auth_user = "admin";
 $sys->auth_salt = "235ba225813f156690b798dc978099e1e76441ee";
 # $sys->auth_pass = "";
+include("importer.php");		# code for ?mode=sql.
 
 #
 # If the password on the login form is empty, a mail with URL will be sent.
@@ -39,10 +38,16 @@ $sys->mailcmd = "mail -s 'login URL.' @addr@";
 $sys->mailbody = "@url@";
 
 #
-# You can send a report to slack with debuglog URL.
+# You can send a report to slack or zulip with debuglog URL.
+# Please use these HTML.
+#	<FORM method=POST>
+#	<INPUT type=text name=":reportbody" size=60>
+#	<INPUT type=submit value="send report">
+#	</FORM>
 #
 
 # $sys->reportjsonurl = "https://hooks.slack.com/services/9999";
+# $sys->reportjsonurl = "https://____.zulipchat.com/api/v1/external/slack_incoming?api_key=____&stream=log&topic=log";
 $sys->reportjsonbase = array("text" => "@body@\n<@link@>");
 
 ?>
