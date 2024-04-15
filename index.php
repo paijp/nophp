@@ -23,6 +23,8 @@ class	sys {
 	var	$forcelogoutonupdate = 1;
 	var	$noredirectonlogin = 0;		# 1: don't redirect from index.html to rootpage on login status.
 	
+	var	$reportlogin = 0;
+	
 	var	$urlbase = null;
 	var	$target = null;
 	function	__construct() {
@@ -1209,6 +1211,31 @@ EOO;
 				$r->update(1);
 		}
 	}
+	function	report($body = "", $link = "") {
+		global	$sys;
+		
+		if (@$sys->reportlogin == 0)
+			return;
+		if (@$sys->reportjsonurl == "")
+			return;
+		$body .= " id(".$this->id.") remote_addr(".@$_SERVER["REMOTE_ADDR"].")";
+		$list = array();
+		foreach (@$sys->reportjsonbase as $key => $s) {
+			$s = str_replace("@body@", $body, $s);
+			$s = str_replace("@link@", $link, $s);
+			$list[$key] = $s;
+				continue;
+		}
+		$a = array(
+			"http" => array(
+				"method" => "POST", 
+				"protocol_version" => 1.1, 
+				"header" => "Content-Type: application/json\r\nConnection: close\r\n", 
+				"content" => json_encode($list)
+			)
+		);
+		file_get_contents(@$sys->reportjsonurl, FALSE, stream_context_create($a));
+	}
 	function	update($ignoreerror = 0) {
 		global	$sys;
 		
@@ -1237,6 +1264,7 @@ EOO;
 		$this->v_mailkey = myhash($this->v_login.$key);
 		$this->v_mailsent = $sys->now;
 		parent::update();
+		$this->report("setmailkey");
 	}
 	function	setpassword($newpass, $ignoreerror = 0) {
 		if (function_exists("bq_login"))
@@ -1246,23 +1274,29 @@ EOO;
 		$this->v_sessionkey = "";
 		$this->v_mailkey = "";
 		parent::update($ignoreerror);
+		$this->report("setpassword");
 	}
 	function	login($pass = "", $ismaillogin = 0) {
 		global	$sys;
 		global	$cookiepath;
 		
 		if (($ismaillogin)) {
-			if ((int)@$this->v_ismaillogin == 0)
+			if ((int)@$this->v_ismaillogin == 0) {
+				$this->report("login/ismaillogin but not v_ismaillogin");
 				log_die("ismaillogin but not v_ismaillogin");
-		} else if ((@$this->v_ismaillogin))
+			}
+		} else if ((@$this->v_ismaillogin)) {
+			$this->report("login/v_ismaillogin but not ismaillogin");
 			log_die("v_ismaillogin but not ismaillogin");
-		else if (myhash($pass.$this->v_salt) != $this->v_pass) {
+		} else if (myhash($pass.$this->v_salt) != $this->v_pass) {
 			if (function_exists("bq_login"))
 				bq_login("badlogin", $this);
+			$this->report("login/badlogin");
 			log_die("login fail.");
 		}
 		if (function_exists("bq_login"))
 			bq_login("goodlogin", $this);
+		$this->report("login/goodlogin");
 		if (($ismaillogin)) {
 			$this->v_mailkey = "";
 			$this->v_salt = $this->getrandom();
@@ -1287,20 +1321,28 @@ EOO;
 			$key = @$_GET["key"]."";
 			
 			$r = $this->getrecord($uid);
-			if ((int)@$r->v_ismaillogin != 0)
+			if ((int)@$r->v_ismaillogin != 0) {
+				$this->report("check_loginform/ismaillogin");
 				log_die("ismaillogin.");
-			if (@$r->v_mailkey == "")
+			}
+			if (@$r->v_mailkey == "") {
+				$this->report("check_loginform/malikey empty");
 				log_die("mailkey empty.");
-			if (@$sys->mailexpire <= 0)
+			} if (@$sys->mailexpire <= 0)
 				;
-			else if (@$r->v_mailsent < $sys->now - $sys->mailexpire)
+			else if (@$r->v_mailsent < $sys->now - $sys->mailexpire) {
+				$this->report("check_loginform/mailexpire.");
 				log_die("mailexpire.");
-			if (myhash($r->v_login.$key) == $r->v_mailkey) {
-				if (($pass = @$_POST["pass"]) == "")
+			} if (myhash($r->v_login.$key) == $r->v_mailkey) {
+				if (($pass = @$_POST["pass"]) == "") {
+					$this->report("check_loginform/pass empty.");
 					log_die("pass empty.");
+				}
 				$r->setpassword($pass);
+				$this->report("check_loginform/password change success");
 				log_die("password change success.");
 			}
+			$this->report("check_loginform/maillogin fail.");
 			log_die("maillogin fail.");
 			return 0;
 		}
@@ -1308,21 +1350,25 @@ EOO;
 		if (($login = @$_POST["login"]) === null) {
 			if (function_exists("bq_login"))
 				bq_login("badlogin");
+			$this->report("check_loginform/login null");
 			log_die("login null.");
 		}
 		if (($pass = @$_POST["pass"]) === null) {
 			if (function_exists("bq_login"))
 				bq_login("badlogin");
+			$this->report("check_loginform/pass null");
 			log_die("pass null.");
 		}
 		$list = $this->getrecordidlist("where login = ?", array($login));
 		if (count($list) < 1) {
 			if (function_exists("bq_login"))
 				bq_login("badlogin");
+			$this->report("check_loginform/no login found");
 			log_die("no login found");
 		}
 		$r = $this->getrecord($list[0]);
 		$r->login($pass);
+		$this->report("check_loginform/login fail.");
 		log_die("login fail.");
 	}
 	function	check_maillogin() {
@@ -1339,14 +1385,18 @@ EOO;
 		
 		header("Location: {$sys->url}");
 		
-		if (@$r->v_mailkey == "")
+		if (@$r->v_mailkey == "") {
+			$this->report("check_maillogin/mailkey empty.");
 			log_die("mailkey empty.");
-		if (@$sys->mailexpire <= 0)
+		} if (@$sys->mailexpire <= 0)
 			;
-		else if (@$r->v_mailsent < $sys->now - $sys->mailexpire)
+		else if (@$r->v_mailsent < $sys->now - $sys->mailexpire) {
+			$this->report("check_maillogin/mailexpire.");
 			log_die("mailexpire.");
+		}
 		if (myhash($r->v_login.$key) == $r->v_mailkey)
 			$r->login("", 1);
+		$this->report("check_maillogin/maillogin fail.");
 		log_die("maillogin fail.");
 	}
 	function	is_login() {
@@ -1375,6 +1425,7 @@ EOO;
 		global	$sys;
 		global	$cookiepath;
 		
+		$this->report("logout");
 		if ($loginrecord !== null) {
 			if (function_exists("bq_login"))
 				bq_login("logout", $loginrecord);

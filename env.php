@@ -51,4 +51,6 @@ $sys->mailbody = "@url@";
 # $sys->reportjsonurl = "https://____.zulipchat.com/api/v1/external/slack_incoming?api_key=____&stream=log&topic=log";
 $sys->reportjsonbase = array("text" => "@body@\n<@link@>");
 
+#$sys->reportlogin = 1;
+
 ?>
