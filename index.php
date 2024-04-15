@@ -1285,6 +1285,7 @@ EOO;
 				$this->report("login/ismaillogin but not v_ismaillogin");
 				log_die("ismaillogin but not v_ismaillogin");
 			}
+			$this->report("login/goodmaillogin");
 		} else if ((@$this->v_ismaillogin)) {
 			$this->report("login/v_ismaillogin but not ismaillogin");
 			log_die("v_ismaillogin but not ismaillogin");
@@ -1293,10 +1294,11 @@ EOO;
 				bq_login("badlogin", $this);
 			$this->report("login/badlogin");
 			log_die("login fail.");
+		} else {
+			$this->report("login/goodlogin");
 		}
 		if (function_exists("bq_login"))
 			bq_login("goodlogin", $this);
-		$this->report("login/goodlogin");
 		if (($ismaillogin)) {
 			$this->v_mailkey = "";
 			$this->v_salt = $this->getrandom();
