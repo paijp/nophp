@@ -2,7 +2,7 @@
 #
 #	nophp	https://github.com/paijp/nophp
 #	
-#	Copyright (c) 2021-2023 paijp
+#	Copyright (c) 2021-2024 paijp
 #
 #	This software is released under the MIT License.
 #	http://opensource.org/licenses/mit-license.php
@@ -1176,6 +1176,7 @@ r}r(__
 		
 		$outputmode = "";
 		$this->remainblocks = explode("__", $text);
+		$this->remaincmds = array();
 		while (($block = array_shift($this->remainblocks)) !== null) {
 			if (!preg_match('/^:/', $block)) {
 				$this->pushstack(array($block), 0);
