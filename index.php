@@ -2,7 +2,7 @@
 #
 #	nophp	https://github.com/paijp/nophp
 #	
-#	Copyright (c) 2021 paijp
+#	Copyright (c) 2021-2024 paijp
 #
 #	This software is released under the MIT License.
 #	http://opensource.org/licenses/mit-license.php
@@ -41,7 +41,7 @@ $sys->urlquery = @$a[1];
 $sys->importlist = array();
 
 list($m, $s) = explode(" ", microtime());
-$sys->debugfn = date("ymd_His_", $s + 0).substr($m, 2);
+$sys->debugfn = date("ymd_His_", (int)$s).substr($m, 2);
 $sys->now = $s;
 
 if (@$sys->rootpage === null)
@@ -59,12 +59,13 @@ function	file_add_contents($fn, $s)
 	if (($fp = @fopen($fn, "a")) === false)
 		return;
 	$a = explode(" ", microtime());
-	fputs($fp, "<!-- ".date("ymd_His", $a[1] + 0).substr($a[0], 1)." -->{$s}");
+	fputs($fp, "<!-- ".date("ymd_His", (int)$a[1]).substr($a[0], 1)." -->{$s}");
 	fclose($fp);
 }
 
 
 $db0 = new PDO($sys->sqlpath);
+$db0->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
 
 
 function	log_die($message = "")
@@ -306,7 +307,7 @@ class	table {
 					$this->$s = $val;
 					continue 2;
 				case	"id":
-					$this->id = $val + 0;
+					$this->id = (int)$val;
 					continue 2;
 				case	"mixed":
 					$mixed = $val;
@@ -340,7 +341,7 @@ EOO;
 			return array();
 		$idlist = array();
 		foreach ($list as $record)
-			$idlist[] = $record["id"] + 0;
+			$idlist[] = (int)$record["id"];
 		return $idlist;
 	}
 	function	getlist() {
@@ -399,7 +400,7 @@ EOO;
 			$svals = implode(", ", array_fill(0, count($fieldlist), "?"));
 			$sql = "insert into {$this->tablename}($skeys) values($svals);";
 			$a = array_values($fieldlist);
-			$this->id = execsql($sql, $a, 1) + 0;
+			$this->id = (int)execsql($sql, $a, 1);
 		} else {
 			$a = array();
 			foreach ($fieldlist as $key => $val)
@@ -493,7 +494,7 @@ class	a_table extends table {
 	function	t_id__id__field($rh0, $record, $s1, $s3) {
 ## スタックから文字列を3つ取り出し、1番目をレコードID、2番目をフィールド名、3番目をテーブル名とみなし、テーブルのレコードIDのフィールド値をスタックに積みます。
 ## 例えば`1__name__user__:t_id`は、userテーブルのレコード1のnameフィールドの値になります。
-		$r = $this->getrecord($s1 + 0);
+		$r = $this->getrecord((int)$s1);
 		return array($r->getfield($s3)."");
 	}
 	function	t_find__val__field($rh0, $record, $s1, $s3) {
@@ -522,7 +523,7 @@ class	a_table extends table {
 ## スタックから文字列を1つ取り出し、テーブル名とみなして、そのテーブルのレコードをupdateまたはinsertします。
 ## テーブルは「<!--{tableid」などに指定したものを使用します。
 		$s = "";
-		if ($this->update() == 0)
+		if ((int)$this->update() == 0)
 			$s = $this->id;
 		return array($s);
 	}
@@ -539,9 +540,9 @@ class	a_table extends table {
 # <!--{valid len-5 v1-->カレントレコードのv1のフィールドが、6,7文字の場合に表示されます。<!--}--> 
 		if (!preg_match('/^(-?[0-9]*)-(-?[0-9]*)/', $par, $a2))
 			return 0;
-		if ((($i = $a2[1]) != "")&&(strlen($s) < $i + 0))
+		if ((($i = $a2[1]) != "")&&(strlen($s) < (int)$i))
 			return 1;
-		if ((($i = $a2[2]) != "")&&(strlen($s) > $i + 0))
+		if ((($i = $a2[2]) != "")&&(strlen($s) > (int)$i))
 			return 1;
 		return 0;
 	}
@@ -561,9 +562,9 @@ class	a_table extends table {
 			return 0;
 		if (!preg_match('/^-?[0-9]+$/', $s))
 			return 1;
-		if ((($i = $a2[1]) != "")&&($s + 0 < $i + 0))
+		if ((($i = $a2[1]) != "")&&((int)$s < (int)$i))
 			return 1;
-		if ((($i = $a2[2]) != "")&&($s + 0 > $i + 0))
+		if ((($i = $a2[2]) != "")&&((int)$s > (int)$i))
 			return 1;
 		return 0;
 	}
@@ -706,7 +707,7 @@ class	simpletable {
 	function	s_id__id__field($rh0, $record, $s1, $s3) {
 ## スタックから文字列を3つ取り出し、1番目をレコードID、2番目をフィールド名、3番目をシンプルテーブル名とみなし、シンプルテーブルのレコードIDのフィールド値をスタックに積みます。
 ## 例えば`1__name__user__:s_id`は、userシンプルテーブルのレコード1のnameフィールドの値になります。
-		$r = $this->getrecord($s1 + 0);
+		$r = $this->getrecord((int)$s1);
 		return array($r->getfield($s3)."");
 	}
 	function	s_find__val__field($rh0, $record, $s1, $s3) {
@@ -835,7 +836,7 @@ EOO;
 		header("Location: {$sys->url}");
 		
 		if (@$_GET["mode"] == "1login") {
-			$uid = @$_GET["uid"] + 0;
+			$uid = (int)@$_GET["uid"];
 			$key = @$_GET["key"]."";
 			
 			$r = $this->getrecord($uid);
@@ -1178,6 +1179,7 @@ EOO;
 		$debuglog .= "<H3>".htmlspecialchars($text)."</H3>\n";
 		$outputmode = "";
 		$this->remainblocks = explode("__", $text);
+		$this->remaincmds = array();
 		while (($block = array_shift($this->remainblocks)) !== null) {
 			if (!preg_match('/^:/', $block)) {
 				$this->pushstack(array($block));
@@ -1246,7 +1248,7 @@ EOO;
 										$id2 = $loginrecord->getfield($a[1]);
 									break;
 							}
-							$id2 = round($id2 + 0);
+							$id2 = round((float)$id2);
 							if ((@$a[2] == "")&&($id2 <= 0)) {
 								$this->debuglog .= "\nID is zero.\n";
 								$debuglog .= "<H3>ID is zero.</H3>\n";
@@ -1340,7 +1342,7 @@ EOO;
 ## 現在のレコードIDをスタックに積みます。
 ## 例えば「<!--{tableid user 1-->」内部では、「1」がスタックに積まれます。
 						$this->popstack($cmd, "");
-						$s = @$this->record->id + 0;
+						$s = (int)@$this->record->id;
 						$this->pushstack(array($s));
 						break;
 					case	"curtable":
@@ -1402,7 +1404,7 @@ EOO;
 ## スタックから文字列を1つ取り出し、数値とみなして四捨五入し、スタックに積みます。
 ## 例えば`3.8__:int`は「4」になります。
 						list($s1) = $this->popstack($cmd, "val");
-						$this->pushstack(array(round($s1 + 0)));
+						$this->pushstack(array(round((float)$s1)));
 						break;
 					case	"isnull":
 ## スタックから文字列を1つ取り出し、空文字列であれば「1」を、そうでなければ空文字列をスタックに積みます。
@@ -1455,7 +1457,7 @@ EOO;
 ## 現在時刻値を得るには、:nowを使います。
 ## 例えば`:now__y/m/d H:i:s__:todate`は、「19/02/10 19:52:13」などになります。
 						list($s1, $s2) = $this->popstack($cmd, "time dateformat");
-						$this->pushstack(array(date($s2, $s1 + 0)));
+						$this->pushstack(array(date($s2, (int)$s1)));
 						break;
 					case	"html":
 ## 出力をHTMLエスケープすることを示します。
@@ -1512,7 +1514,7 @@ EOO;
 ## また、`123__2__:addzero`は、「123」になります。
 ## なお、数値として扱うわけではありませんので、`-123__6__:addzero`は「00-123」になります。
 						list($s, $v) = $this->popstack($cmd, "num digits");
-						if (($i = strlen($s)) < $v + 0)
+						if (($i = strlen($s)) < (int)$v)
 							$s = str_repeat("0", $v - $i).$s;
 						$this->pushstack(array($s));
 						break;
@@ -1545,7 +1547,7 @@ EOO;
 ## たとえば`123__456__:div`は「0」になります。
 ## 除数が0の場合は、0になります。
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						if ($s2 == 0)
+						if ((int)$s2 == 0)
 							$this->pushstack(array(0));
 						else
 							$this->pushstack(array(floor($s1 / $s2)));
@@ -1555,7 +1557,7 @@ EOO;
 ## たとえば`123__456__:rdiv`は「3」になります。
 ## 除数が0の場合は、0になります。
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						if ($s1 == 0)
+						if ((int)$s1 == 0)
 							$this->pushstack(array(0));
 						else
 							$this->pushstack(array(floor($s2 / $s1)));
@@ -1565,7 +1567,7 @@ EOO;
 ## たとえば`123__456__:mod`は「123」になります。
 ## 除数が0の場合は、0になります。
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						if ($s2 == 0)
+						if ((int)$s2 == 0)
 							$this->pushstack(array(0));
 						else
 							$this->pushstack(array($s1 % $s2));
@@ -1575,7 +1577,7 @@ EOO;
 ## たとえば`123__456__:rmod`は「87」になります。
 ## 除数が0の場合は、0になります。
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						if ($s1 == 0)
+						if ((int)$s1 == 0)
 							$this->pushstack(array(0));
 						else
 							$this->pushstack(array($s2 % $s1));
@@ -1588,7 +1590,7 @@ EOO;
 ## スタックから文字列を2つ取り出し、それぞれを数値とみなして、等しければ「1」を、等しくなければ空文字列をスタックに積みます。
 ## 例えば`1__1__:ieq`や`1__01__:ieq`や`0__ __:ieq`や`0x1__1__:ieq`は「1」になります。
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(($s1 + 0 == $s2 + 0)? 1 : ""));
+						$this->pushstack(array(((int)$s1 == (int)$s2)? 1 : ""));
 						break;
 					case	"seq":
 ## スタックから文字列を2つ取り出し、それぞれを文字列とみなして、等しければ「1」を、等しくなければ空文字列をスタックに積みます。
@@ -1605,7 +1607,7 @@ EOO;
 ## スタックから文字列を2つ取り出し、それぞれを数値とみなして、等しくなければ「1」を、等しければ空文字列をスタックに積みます。
 ## 例えば`1__1__:ieq`や`1__01__:ieq`や`0__ __:ieq`や`0x1__1__:ieq`は空文字列になります。
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(($s1 + 0 != $s2 + 0)? 1 : ""));
+						$this->pushstack(array(((int)$s1 != (int)$s2)? 1 : ""));
 						break;
 					case	"sne":
 ## スタックから文字列を2つ取り出し、それぞれを文字列とみなして、等しくなければ「1」を、等しければ空文字列をスタックに積みます。
@@ -1623,7 +1625,7 @@ EOO;
 ## 例えば`1__2__:ilt`は「1」になります。
 ## `1__1__:ilt`や`1__0__:ilt`は空文字列になります。
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(($s1 + 0 < $s2 + 0)? 1 : ""));
+						$this->pushstack(array(((int)$s1 < (int)$s2)? 1 : ""));
 						break;
 					case	"slt":
 ## スタックから文字列を2つ取り出し、それぞれを文字列とみなして、2番目が大きければ「1」を、そうでなければ空文字列をスタックに積みます。
@@ -1641,7 +1643,7 @@ EOO;
 ## 例えば`1__0__:igt`は「1」になります。
 ## `1__1__:igt`や`1__2__:igt`は空文字列になります。
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(($s1 + 0 > $s2 + 0)? 1 : ""));
+						$this->pushstack(array(((int)$s1 > (int)$s2)? 1 : ""));
 						break;
 					case	"sgt":
 ## スタックから文字列を2つ取り出し、それぞれを文字列とみなして、1番目が大きければ「1」を、そうでなければ空文字列をスタックに積みます。
@@ -1659,7 +1661,7 @@ EOO;
 ## 例えば`1__2__:ile`や`1__1__:ile`は「1」になります。
 ## `1__0__:ile`は空文字列になります。
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(($s1 + 0 <= $s2 + 0)? 1 : ""));
+						$this->pushstack(array(((int)$s1 <= (int)$s2)? 1 : ""));
 						break;
 					case	"sle":
 ## スタックから文字列を2つ取り出し、それぞれを文字列とみなして、等しいか2番目が大きければ「1」を、そうでなければ空文字列をスタックに積みます。
@@ -1677,7 +1679,7 @@ EOO;
 ## 例えば`1__0__:ige`や`1__1__:ige`は「1」になります。
 ## `1__2__:ige`は空文字列になります。
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array(($s1 + 0 >= $s2 + 0)? 1 : ""));
+						$this->pushstack(array(((int)$s1 >= (int)$s2)? 1 : ""));
 						break;
 					case	"sge":
 ## スタックから文字列を2つ取り出し、それぞれを文字列とみなして、等しいか1番目が大きければ「1」を、そうでなければ空文字列をスタックに積みます。
@@ -1700,7 +1702,7 @@ EOO;
 ## これは例えば、`id__:g:dup:isnull:andbreak__table__field__:tableid`のような使い方で、「id__:g」が空文字列であったら、そこで評価を終了するのに使われます。
 						list($s1) = $this->popstack($cmd, "val");
 						$this->pushstack(array());
-						if ($s1 != 0) {
+						if ((int)$s1 != 0) {
 							$this->debuglog .= "\nBREAK.\n";
 							$debuglog .= "<H3>BREAK</H3>\n";
 							return "";
@@ -1713,7 +1715,7 @@ EOO;
 ## これは例えば、`id__:g:int:dup:orbreak__id__:set`のような使い方で、「id__:g:int」が0か空文字列であったら、そこで評価を終了するのに使われます。
 						list($s1) = $this->popstack($cmd, "val");
 						$this->pushstack(array());
-						if ($s1 == 0) {
+						if ((int)$s1 == 0) {
 							$this->debuglog .= "\nBREAK.\n";
 							$debuglog .= "<H3>BREAK</H3>\n";
 							return "";
@@ -1731,7 +1733,7 @@ EOO;
 ## 例えば`0__:andreturn0__a`は「a」になります。
 ## 一方、`1__:andreturn0__a`は「0」になります(__a以降は評価されません)。
 						list($s1) = $this->popstack($cmd, "val");
-						if ($s1 != 0) {
+						if ((int)$s1 != 0) {
 							$this->stack = array();
 							$this->pushstack(array(0));
 							$this->debuglog .= "\nRETURN(".$this->stack[0].")\n";
@@ -1745,7 +1747,7 @@ EOO;
 ## 例えば`1__:orreturn0__a`は「a」になります。
 ## 一方、`0__:orreturn0__a`は「0」になります(__a以降は評価されません)。
 						list($s1) = $this->popstack($cmd, "val");
-						if ($s1 == 0) {
+						if ((int)$s1 == 0) {
 							$this->stack = array();
 							$this->pushstack(array(0));
 							$this->debuglog .= "\nRETURN(".$this->stack[0].")\n";
@@ -1759,7 +1761,7 @@ EOO;
 ## 例えば`0__:andreturn1__a`は「a」になります。
 ## 一方、`1__:andreturn1__a`は「1」になります(__a以降は評価されません)。
 						list($s1) = $this->popstack($cmd, "val");
-						if ($s1 != 0) {
+						if ((int)$s1 != 0) {
 							$this->stack = array();
 							$this->pushstack(array(1));
 							$this->debuglog .= "\nRETURN(".$this->stack[0].")\n";
@@ -1773,7 +1775,7 @@ EOO;
 ## 例えば`1__:orreturn1__a`は「a」になります。
 ## 一方、`0__:orreturn1__a`は「1」になります(__a以降は評価されません)。
 						list($s1) = $this->popstack($cmd, "val");
-						if ($s1 == 0) {
+						if ((int)$s1 == 0) {
 							$this->stack = array();
 							$this->pushstack(array(1));
 							$this->debuglog .= "\nRETURN(".$this->stack[0].")\n";
@@ -1787,7 +1789,7 @@ EOO;
 ## 例えば`0__:andreturn2__a`は「a」になります。
 ## 一方、`1__:andreturn2__a`は「2」になります(__a以降は評価されません)。
 						list($s1) = $this->popstack($cmd, "val");
-						if ($s1 != 0) {
+						if ((int)$s1 != 0) {
 							$this->stack = array();
 							$this->pushstack(array(2));
 							$this->debuglog .= "\nRETURN(".$this->stack[0].")\n";
@@ -1801,7 +1803,7 @@ EOO;
 ## 例えば`1__:orreturn2__a`は「a」になります。
 ## 一方、`0__:orreturn2__a`は「2」になります(__a以降は評価されません)。
 						list($s1) = $this->popstack($cmd, "val");
-						if ($s1 == 0) {
+						if ((int)$s1 == 0) {
 							$this->stack = array();
 							$this->pushstack(array(2));
 							$this->debuglog .= "\nRETURN(".$this->stack[0].")\n";
@@ -1815,7 +1817,7 @@ EOO;
 ## 例えば`0__:andreturn3__a`は「a」になります。
 ## 一方、`1__:andreturn3__a`は「3」になります(__a以降は評価されません)。
 						list($s1) = $this->popstack($cmd, "val");
-						if ($s1 != 0) {
+						if ((int)$s1 != 0) {
 							$this->stack = array();
 							$this->pushstack(array(3));
 							$this->debuglog .= "\nRETURN(".$this->stack[0].")\n";
@@ -1829,7 +1831,7 @@ EOO;
 ## 例えば`1__:orreturn3__a`は「a」になります。
 ## 一方、`0__:orreturn3__a`は「3」になります(__a以降は評価されません)。
 						list($s1) = $this->popstack($cmd, "val");
-						if ($s1 == 0) {
+						if ((int)$s1 == 0) {
 							$this->stack = array();
 							$this->pushstack(array(3));
 							$this->debuglog .= "\nRETURN(".$this->stack[0].")\n";
@@ -1843,7 +1845,7 @@ EOO;
 ## 例えば`0__:andreturn4__a`は「a」になります。
 ## 一方、`1__:andreturn4__a`は「4」になります(__a以降は評価されません)。
 						list($s1) = $this->popstack($cmd, "val");
-						if ($s1 != 0) {
+						if ((int)$s1 != 0) {
 							$this->stack = array();
 							$this->pushstack(array(4));
 							$this->debuglog .= "\nRETURN(".$this->stack[0].")\n";
@@ -1857,7 +1859,7 @@ EOO;
 ## 例えば`1__:orreturn4__a`は「a」になります。
 ## 一方、`0__:orreturn4__a`は「4」になります(__a以降は評価されません)。
 						list($s1) = $this->popstack($cmd, "val");
-						if ($s1 == 0) {
+						if ((int)$s1 == 0) {
 							$this->stack = array();
 							$this->pushstack(array(4));
 							$this->debuglog .= "\nRETURN(".$this->stack[0].")\n";
@@ -1882,7 +1884,7 @@ EOO;
 ## 例えば`0__:andreturn4__a`は「a」になります。
 ## 一方、`1__:andreturn4__a`はルートページにリダイレクトします(__a以降は評価されません)。
 						list($s1) = $this->popstack($cmd, "val");
-						if ($s1 != 0) {
+						if ((int)$s1 != 0) {
 							$this->debuglog .= "\nHOME\n";
 							$debuglog .= "<H3>HOME</H3>\n";
 							if (@$sys->debugdir !== null) {
@@ -1899,7 +1901,7 @@ EOO;
 ## 例えば`1__:orhome__a`は「a」になります。
 ## 一方、`0__:orhome__a`はルートページにリダイレクトします(__a以降は評価されません)。
 						list($s1) = $this->popstack($cmd, "val");
-						if ($s1 == 0) {
+						if ((int)$s1 == 0) {
 							$this->debuglog .= "\nHOME\n";
 							$debuglog .= "<H3>HOME</H3>\n";
 							if (@$sys->debugdir !== null) {
@@ -1968,15 +1970,15 @@ EOO;
 ## スタックから文字列を2つ取り出し、それぞれを数値とみなして、2番目の数値が0なら1番目の数値を、そうでなければ2番目の数値をスタックに積みます。
 ## 例えば`2__1__:ior`は「1」に、`2__0__:ior`は「2」になります。
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						if ($s2 == 0)
+						if ((int)$s2 == 0)
 							$s2 = $s1;
-						$this->pushstack(array($s2 + 0));
+						$this->pushstack(array((int)$s2));
 						break;
 					case	"iand":
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						if ($s2 != 0)
+						if ((int)$s2 != 0)
 							$s2 = $s1;
-						$this->pushstack(array($s2 + 0));
+						$this->pushstack(array((int)$s2));
 						break;
 					case	"loginrecord":
 ## スタックから文字列を1つ取り出してフィールド名とみなし、このセッションのログインユーザーに対応する、ログインテーブルのレコードのフィールド値をスタックに積みます。
@@ -2229,7 +2231,7 @@ EOO;
 					$this->actioncommand = $a[1];
 				} else if (($loginrecord === null)&&($a[1] == ":login")&&(@$_POST[":login"] !== null)) {
 					if (@$_POST["pass"] == "")
-						bq_login(0);
+						bq_login("emptypass");
 					else
 						$tablelist["login"]->check_loginform();
 					log_die();
@@ -2315,7 +2317,7 @@ class	recordholder_tableid extends recordholder {
 		
 		if (($t = @$tablelist[$tablename]) === null)
 			return;
-		$this->record = $t->getrecord($rh->parsewithbqinsql($par, $record) + 0);
+		$this->record = $t->getrecord((int)$rh->parsewithbqinsql($par, $record));
 		$this->record->dumpfields();
 	}
 }
@@ -2332,7 +2334,7 @@ class	recordholder_stableid extends recordholder {
 		parent::__construct($rh, $record, $tablename, $prefix, $par);
 		
 		$t = @$tablelist["simple"]->gettable($tablename);
-		$this->record = $t->getrecord($rh->parsewithbqinsql($par, $record) + 0);
+		$this->record = $t->getrecord((int)$rh->parsewithbqinsql($par, $record));
 		$this->record->dumpfields();
 	}
 }
@@ -2495,7 +2497,7 @@ class	commandparserrecordholder extends commandparser {
 
 class	commandparser_if extends commandparser {
 	function	parsehtmlinner($rh = null, $record = null) {
-		$this->cond = ($rh->parsewithbq($this->par, $record) == 0)? 0 : 1;
+		$this->cond = ((int)$rh->parsewithbq($this->par, $record) == 0)? 0 : 1;
 		if ($this->cond < 1)
 			return "";
 		return parent::parsehtmlinner($rh, $record);
@@ -2513,7 +2515,7 @@ class	commandparser__elseif extends commandparser {
 			$this->cond = -1;
 			return "";
 		}
-		$this->cond = ($rh->parsewithbq($this->par, $record) == 0)? 0 : 1;
+		$this->cond = ((int)$rh->parsewithbq($this->par, $record) == 0)? 0 : 1;
 		if ($this->cond < 1)
 			return "";
 		return parent::parsehtmlinner($rh, $record);
@@ -2596,8 +2598,8 @@ class	daterecord extends rootrecord {
 class	commandparser_dayrows extends commandparser {
 	function	parsehtmlinner($rh = null, $record = null) {
 		$a = explode(" ", $rh->parsewithbqinhtml($this->par, $record), 3);
-		$t = $a[0] + 0;
-		if (($count = @$a[1]) == 0)
+		$t = (int)$a[0];
+		if (($count = (int)@$a[1]) == 0)
 			$count = 1;
 		
 		$ret = "";
@@ -2619,10 +2621,10 @@ class	commandparser_dayrows extends commandparser {
 class	commandparser_wdayrows extends commandparser {
 	function	parsehtmlinner($rh = null, $record = null) {
 		$a = explode(" ", $rh->parsewithbqinhtml($this->par, $record), 4);
-		$t = $a[0] + 0;
-		if (($count = @$a[1]) == 0)
+		$t = (int)$a[0];
+		if (($count = (int)@$a[1]) == 0)
 			$count = 1;
-		$start = @$a[2] + 0;
+		$start = (int)@$a[2];
 		
 		for ($i=0; $i<7; $i++) {
 			$r = new daterecord($t);
@@ -2753,7 +2755,7 @@ class	im_tables {
 				$cache[@$a[$field]] = $key + 1;
 			$findtableidscache[$cachename] = $cache;
 		}
-		return @$cache[$val] + 0;
+		return (int)@$cache[$val];
 	}
 	function	findtableidsa($field, $val) {
 		global	$tablelist;
@@ -2775,7 +2777,7 @@ class	im_tables {
 			$cache[$val] = count($list);
 			$findtableidscache[$cachename] = $cache;
 		}
-		return @$cache[$val] + 0;
+		return (int)@$cache[$val];
 	}
 	function	findtableidsz($field, $val) {
 		global	$tablelist;
@@ -2923,10 +2925,10 @@ EOO;
 						$obj->del();
 						continue 2;
 					case	"table{":
-						$obj = new im_table($s = trim($a[0]), @$a[2] + 0);
+						$obj = new im_table($s = trim($a[0]), (int)@$a[2]);
 						$list[$s] = $obj;
 						array_unshift($stack, $obj);
-						if (@$a[2] + 0 == 0)
+						if ((int)@$a[2] == 0)
 							continue 2;
 						if ($obj->get("id") > 0)
 							continue 2;
