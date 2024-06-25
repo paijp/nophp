@@ -156,7 +156,7 @@ if (!function_exists("bq_ymd2t__year__month__day")) {
 ## Use :todate to convert to a generic date and time.
 	function	bq_ymd2t__year__month__day($year, $month, $day)
 	{
-		return array(mktime(0, 0, 0, $month, $day, $year));
+		return array(mktime(0, 0, 0, (int)$month, (int)$day, (int)$year));
 	}
 }
 
@@ -168,7 +168,7 @@ if (!function_exists("bq_age2t__year")) {
 	{
 		global	$sys;
 		
-		return array(mktime(date("H", $sys->now), date("i", $sys->now), date("s", $sys->now), date("n", $sys->now), date("j", $sys->now), date("Y", $sys->now) - $year));
+		return array(mktime(date("H", $sys->now), date("i", $sys->now), date("s", $sys->now), date("n", $sys->now), date("j", $sys->now), date("Y", $sys->now) - (int)$year));
 	}
 }
 
@@ -255,7 +255,7 @@ if (!function_exists("bq_add__i__j")) {
 ## For example, `123__456__:add` would be "579".
 	function	bq_add__i__j($i, $j)
 	{
-		return array($i + $j);
+		return array((float)$i + (float)$j);
 	}
 }
 
@@ -265,7 +265,7 @@ if (!function_exists("bq_sub__i__j")) {
 ## For example, `123__456__:sub` would be "-333".
 	function	bq_sub__i__j($i, $j)
 	{
-		return array($i - $j);
+		return array((float)$i - (float)$j);
 	}
 }
 
@@ -275,7 +275,7 @@ if (!function_exists("bq_rsub__i__j")) {
 ## For example, `123__456__:rsub` would be "333".
 	function	bq_rsub__i__j($i, $j)
 	{
-		return array($j - $i);
+		return array((float)$j - (float)$i);
 	}
 }
 
@@ -285,7 +285,7 @@ if (!function_exists("bq_mul__i__j")) {
 ## For example, `123__456__:mul` would be "56088".
 	function	bq_mul__i__j($i, $j)
 	{
-		return array($i * $j);
+		return array((float)$i * (float)$j);
 	}
 }
 
@@ -298,7 +298,7 @@ if (!function_exists("bq_div__i__j")) {
 	{
 		if ((int)$j == 0)
 			return array(0);
-		return array(floor($i / $j));
+		return array(floor((int)$i / (int)$j));
 	}
 }
 
@@ -311,7 +311,7 @@ if (!function_exists("bq_rdiv__i__j")) {
 	{
 		if ((int)$i == 0)
 			return array(0);
-		return array(floor($j / $i));
+		return array(floor((int)$j / (int)$i));
 	}
 }
 
@@ -324,7 +324,7 @@ if (!function_exists("bq_mod__i__j")) {
 	{
 		if ((int)$j == 0)
 			return array(0);
-		return array($i % $j);
+		return array((int)$i % (int)$j);
 	}
 }
 
@@ -337,7 +337,7 @@ if (!function_exists("bq_rmod__i__j")) {
 	{
 		if ((int)$i == 0)
 			return array(0);
-		return array($j % $i);
+		return array((int)$j % (int)$i);
 	}
 }
 
