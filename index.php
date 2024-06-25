@@ -1441,14 +1441,14 @@ EOO;
 ## スタックから文字列を3つ取り出し、それぞれ年・月・日とみなして、現在時刻値(1970年1月1日0:00:00GMTからの秒数)をスタックに積みます。
 ## 一般的な日時に変換するには、:todateを使います。
 						list($s1, $s2, $s3) = $this->popstack($cmd, "year month day");
-						$t = mktime(0, 0, 0, $s2, $s3, $s1);
+						$t = mktime(0, 0, 0, (int)$s2, (int)$s3, (int)$s1);
 						$this->pushstack(array($t));
 						break;
 					case	"age2t":
 ## スタックから文字列を1つ取り出し、年数とみなして、現在時刻値(1970年1月1日0:00:00GMTからの秒数)から年数を引いた値を、スタックに積みます。
 ## 一般的な日時に変換するには、:todateを使います。
 						list($s1) = $this->popstack($cmd, "year");
-						$t = mktime(date("H", $sys->now), date("i", $sys->now), date("s", $sys->now), date("n", $sys->now), date("j", $sys->now), date("Y", $sys->now) - $s1);
+						$t = mktime(date("H", $sys->now), date("i", $sys->now), date("s", $sys->now), date("n", $sys->now), date("j", $sys->now), date("Y", $sys->now) - (int)$s1);
 						$this->pushstack(array($t));
 						break;
 					case	"todate":
@@ -1522,25 +1522,25 @@ EOO;
 ## スタックから文字列を2つ取り出し、それぞれを数値とみなして加算したものをスタックに積みます。
 ## たとえば`123__456__:add`は「579」になります。
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array($s1 + $s2));
+						$this->pushstack(array((float)$s1 + (float)$s2));
 						break;
 					case	"sub":
 ## スタックから文字列を2つ取り出し、それぞれを数値とみなして減算したものをスタックに積みます。
 ## たとえば`123__456__:sub`は「-333」になります。
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array($s1 - $s2));
+						$this->pushstack(array((float)$s1 - (float)$s2));
 						break;
 					case	"rsub":
 ## スタックから文字列を2つ取り出し、それぞれを数値とみなして逆順に減算したものをスタックに積みます。
 ## たとえば`123__456__:rsub`は「333」になります。
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array($s2 - $s1));
+						$this->pushstack(array((float)$s2 - (float)$s1));
 						break;
 					case	"mul":
 ## スタックから文字列を2つ取り出し、それぞれを数値とみなして積算したものをスタックに積みます。
 ## たとえば`123__456__:mul`は「56088」になります。
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array($s1 * $s2));
+						$this->pushstack(array((float)$s1 * (float)$s2));
 						break;
 					case	"div":
 ## スタックから文字列を2つ取り出し、それぞれを数値とみなして除算して切り捨てたものをスタックに積みます。
@@ -1550,7 +1550,7 @@ EOO;
 						if ((int)$s2 == 0)
 							$this->pushstack(array(0));
 						else
-							$this->pushstack(array(floor($s1 / $s2)));
+							$this->pushstack(array(floor((int)$s1 / (int)$s2)));
 						break;
 					case	"rdiv":
 ## スタックから文字列を2つ取り出し、それぞれを数値とみなして逆順に除算して切り捨てたものをスタックに積みます。
@@ -1560,7 +1560,7 @@ EOO;
 						if ((int)$s1 == 0)
 							$this->pushstack(array(0));
 						else
-							$this->pushstack(array(floor($s2 / $s1)));
+							$this->pushstack(array(floor((int)$s2 / (int)$s1)));
 						break;
 					case	"mod":
 ## スタックから文字列を2つ取り出し、それぞれを数値とみなして除算した剰余をスタックに積みます。
@@ -1570,7 +1570,7 @@ EOO;
 						if ((int)$s2 == 0)
 							$this->pushstack(array(0));
 						else
-							$this->pushstack(array($s1 % $s2));
+							$this->pushstack(array((int)$s1 % (int)$s2));
 						break;
 					case	"rmod":
 ## スタックから文字列を2つ取り出し、それぞれを数値とみなして逆順に除算した剰余をスタックに積みます。
@@ -1580,7 +1580,7 @@ EOO;
 						if ((int)$s1 == 0)
 							$this->pushstack(array(0));
 						else
-							$this->pushstack(array($s2 % $s1));
+							$this->pushstack(array((int)$s2 % (int)$s1));
 						break;
 					case	"eq":
 						list($s1, $s2) = $this->popstack($cmd, "i j");
