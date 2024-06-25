@@ -2004,14 +2004,14 @@ class	recordholder {
 ## Take three strings from the stack and stack the current time value (seconds since 0:00:00 GMT on Jan 1, 1970), considering them as year, month, and day, respectively.
 ## Use :todate to convert to a generic date and time.
 						list($s1, $s2, $s3) = $this->popstack($cmd, "year month day");
-						$t = mktime(0, 0, 0, $s2, $s3, $s1);
+						$t = mktime(0, 0, 0, (int)$s2, (int)$s3, (int)$s1);
 						$this->pushstack(array($t));
 						break;
 					case	"age2t":
 ## Take a string from the stack, consider it as a number of years, and add it to the stack as the current time value (seconds since 0:00:00 GMT, Jan 1, 1970) minus the number of years.
 ## Use :todate to convert to a generic date and time.
 						list($s1) = $this->popstack($cmd, "year");
-						$t = mktime(date("H", $sys->now), date("i", $sys->now), date("s", $sys->now), date("n", $sys->now), date("j", $sys->now), date("Y", $sys->now) - $s1);
+						$t = mktime(date("H", $sys->now), date("i", $sys->now), date("s", $sys->now), date("n", $sys->now), date("j", $sys->now), date("Y", $sys->now) - (int)$s1);
 						$this->pushstack(array($t));
 						break;
 					case	"todate":
@@ -2087,25 +2087,25 @@ class	recordholder {
 ## Take two strings from the stack, consider each to be a number, and add them to the stack.
 ## For example, `123__456__:add` would be "579".
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array($s1 + $s2));
+						$this->pushstack(array((float)$s1 + (float)$s2));
 						break;
 					case	"sub":
 ## Take two strings from the stack and subtract each as a number and stack them on the stack.
 ## For example, `123__456__:sub` would be "-333".
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array($s1 - $s2));
+						$this->pushstack(array((float)$s1 - (float)$s2));
 						break;
 					case	"rsub":
 ## Take two strings from the stack, consider each as a number and subtract them in reverse order, and stack them on the stack.
 ## For example, `123__456__:rsub` would be "333".
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array($s2 - $s1));
+						$this->pushstack(array((float)$s2 - (float)$s1));
 						break;
 					case	"mul":
 ## Take two strings from the stack, consider each to be a number, and stack them on the stack, adding them up.
 ## For example, `123__456__:mul` would be "56088".
 						list($s1, $s2) = $this->popstack($cmd, "i j");
-						$this->pushstack(array($s1 * $s2));
+						$this->pushstack(array((float)$s1 * (float)$s2));
 						break;
 					case	"div":
 ## Take two strings from the stack, divide each of them as a number, and stack them on the stack rounded down.
@@ -2115,7 +2115,7 @@ class	recordholder {
 						if ((int)$s2 == 0)
 							$this->pushstack(array(0));
 						else
-							$this->pushstack(array(floor($s1 / $s2)));
+							$this->pushstack(array(floor((int)$s1 / (int)$s2)));
 						break;
 					case	"rdiv":
 ## Take two strings from the stack, consider each as a number, divide them in reverse order, and round down to the nearest whole number, and stack them on the stack.
@@ -2125,7 +2125,7 @@ class	recordholder {
 						if ((int)$s1 == 0)
 							$this->pushstack(array(0));
 						else
-							$this->pushstack(array(floor($s2 / $s1)));
+							$this->pushstack(array(floor((int)$s2 / (int)$s1)));
 						break;
 					case	"mod":
 ## Take two strings from the stack, consider each to be a number, and stack the remainder of the division on the stack.
@@ -2135,7 +2135,7 @@ class	recordholder {
 						if ((int)$s2 == 0)
 							$this->pushstack(array(0));
 						else
-							$this->pushstack(array($s1 % $s2));
+							$this->pushstack(array((int)$s1 % (int)$s2));
 						break;
 					case	"rmod":
 ## Take two strings from the stack, consider each to be a number, divide them in reverse order, and stack the remainder on the stack.
@@ -2145,7 +2145,7 @@ class	recordholder {
 						if ((int)$s1 == 0)
 							$this->pushstack(array(0));
 						else
-							$this->pushstack(array($s2 % $s1));
+							$this->pushstack(array((int)$s2 % (int)$s1));
 						break;
 					case	"eq":
 						list($s1, $s2) = $this->popstack($cmd, "i j");
