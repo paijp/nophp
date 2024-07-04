@@ -280,6 +280,7 @@ EOO;
 			$loginrecord->mailkey = "";
 			$loginrecord->update();
 			execsql("commit;");
+			$loginrecord = null;
 		}
 		setcookie("sessionid", "", 1, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
 		setcookie("sessionkey", "", 1, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
