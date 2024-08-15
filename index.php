@@ -184,9 +184,11 @@ function	log_die($message = "")
 	if (($loginrecord))
 		execsql("commit;", null, 0, 1);
 	
-	if (@$sys->debugdir === null)
-		die($message);
-	
+	if (@$sys->debugdir === null) {
+#		die($message);
+		error_log($message);
+		die();
+	}
 	$debugdir0 = $sys->debugdir;
 	$sys->debugdir = null;
 	
@@ -274,7 +276,9 @@ EOO;
 				addcoveragelog($fn, "{$sys->debugfn}#{$val2}\t{$key}{$key2}\n");
 		addcoveragelog($fn);
 	}
-	die($message);
+#	die($message);
+	error_log($message);
+	die();
 }
 
 
