@@ -184,6 +184,31 @@ function	log_die($message = "")
 	if (($loginrecord))
 		execsql("commit;", null, 0, 1);
 	
+	if ($message != "") {
+		$body = $message."";
+		$link = "";
+		if (@$sys->debugdir !== null)
+			$link = "{$sys->urlbase}/index.php/{$sys->debugdir}/{$orgdebugfn}.php";
+		if (@$sys->reportjsonurl != "") {
+			$list = array();
+			foreach (@$sys->reportjsonbase as $key => $s) {
+				$s = str_replace("@body@", $body, $s);
+				$s = str_replace("@link@", $link, $s);
+				$list[$key] = $s;
+					continue;
+			}
+			$a = array(
+				"http" => array(
+					"method" => "POST", 
+					"protocol_version" => 1.1, 
+					"header" => "Content-Type: application/json\r\nConnection: close\r\n", 
+					"content" => json_encode($list)
+				)
+			);
+			file_get_contents(@$sys->reportjsonurl, FALSE, stream_context_create($a));
+		}
+	}
+	
 	if (@$sys->debugdir === null) {
 #		die($message);
 		error_log($message);
@@ -2763,7 +2788,7 @@ if (($s = @$_POST[":reportbody"]) !== null) {
 	$body = $s."";
 	$link = "";
 	if (@$sys->debugdir !== null)
-		$link = $a[2]."/{$sys->debugdir}/{$orgdebugfn}.php";
+		$link = "{$sys->urlbase}/index.php/{$sys->debugdir}/{$orgdebugfn}.php";
 	if (@$sys->reportjsonurl != "") {
 		$list = array();
 		foreach (@$sys->reportjsonbase as $key => $s) {
