@@ -2787,7 +2787,7 @@ if ($orgdebugfn == "nopost")
 if (($s = @$_POST[":reportbody"]) !== null) {
 	$body = $s."";
 	$link = "";
-	if (@$sys->debugdir !== null)
+	if ((@$sys->debugdir !== null)&&(@$sys->urlbase != ""))
 		$link = "{$sys->urlbase}/index.php/{$sys->debugdir}/{$orgdebugfn}.php";
 	if (@$sys->reportjsonurl != "") {
 		$list = array();
