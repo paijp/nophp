@@ -188,7 +188,7 @@ function	log_die($message = "")
 		$body = $message."";
 		$link = "";
 		if (@$sys->debugdir !== null)
-			$link = "{$sys->urlbase}/index.php/{$sys->debugdir}/{$orgdebugfn}.php";
+			$link = "{$sys->urlbaseparent}/{$sys->debugdir}/{$orgdebugfn}.php";
 		if (@$sys->reportjsonurl != "") {
 			$list = array();
 			foreach (@$sys->reportjsonbase as $key => $s) {
@@ -2774,6 +2774,7 @@ if (!preg_match('%^((.*)/index[.]php)(.*)$%', $sys->url, $a)) {
 }
 
 $sys->urlbase = $a[1];
+$sys->urlbaseparent = $a[2];
 if (!preg_match('%^/([^/]*)/([0-9A-Za-z]+)[.]html$%', $a[3], $a2)) {
 	header("Location: {$sys->urlbase}/nofmt/{$sys->rootpage}.html");
 	log_die();
@@ -2788,7 +2789,7 @@ if (($s = @$_POST[":reportbody"]) !== null) {
 	$body = $s."";
 	$link = "";
 	if ((@$sys->debugdir !== null)&&(@$sys->urlbase != ""))
-		$link = "{$sys->urlbase}/index.php/{$sys->debugdir}/{$orgdebugfn}.php";
+		$link = "{$sys->urlbaseparent}/{$sys->debugdir}/{$orgdebugfn}.php";
 	if (@$sys->reportjsonurl != "") {
 		$list = array();
 		foreach (@$sys->reportjsonbase as $key => $s) {
