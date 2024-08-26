@@ -187,7 +187,7 @@ function	log_die($message = "")
 	if ($message != "") {
 		$body = $message."";
 		$link = "";
-		if (@$sys->debugdir !== null)
+		if (@$sys->urlbaseparent != "")
 			$link = "{$sys->urlbaseparent}/{$sys->debugdir}/{$orgdebugfn}.php";
 		if (@$sys->reportjsonurl != "") {
 			$list = array();
