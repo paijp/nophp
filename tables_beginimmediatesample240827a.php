@@ -9,6 +9,11 @@ function	bq_dbbegin($db, $returnid = 0, $ignoreerror = 0)
 	while ($retry > 0) {
 		if ($db->beginTransaction() == 0) {
 			$retry--;
+			error_log("bq_dbbegin retry0.");
+			if (@$sys->debugdir !== null) {
+				$debuglog .= "<P><B>bq_dbbegin retry0.</B></P>\n";
+				adddebuglog();
+			}
 			sleep(1);
 			continue;
 		}
@@ -16,6 +21,11 @@ function	bq_dbbegin($db, $returnid = 0, $ignoreerror = 0)
 		while ($retry > 0) {
 			if (execsql("begin immediate;", null, 1, -1) == 0) {
 				$retry--;
+				error_log("bq_dbbegin retry1.");
+				if (@$sys->debugdir !== null) {
+					$debuglog .= "<P><B>bq_dbbegin retry1.</B></P>\n";
+					adddebuglog();
+				}
 				sleep(1);
 				continue;
 			}
