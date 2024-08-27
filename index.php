@@ -331,78 +331,12 @@ function	execsql($sql = null, $array = null, $returnid = 0, $ignoreerror = 0)
 		$debuglog .= "</table>\n";
 		adddebuglog();
 	}
-	if (($sql == "begin")||($sql == "begin;")) {
-		if (!$db0->beginTransaction()) {
-			$a = $db0->errorInfo();
-			if (@$sys->debugdir !== null) {
-				$debuglog .= "<P><B>".htmlspecialchars($a[2], ENT_QUOTES)."</B></P>\n";
-				adddebuglog();
-			}
-			if (!$ignoreerror)
-				log_die($a[2]." : ".$sql);
-			if (($returnid))
-				return 0;
-			return array();
-		}
-		if ($ignoreerror < 0) {
-			if (@$sys->debugdir !== null) {
-				$debuglog .= "<P><B>success.</B></P>\n";
-				adddebuglog();
-			}
-			return 1;		# success.
-		}
-		if (($returnid))
-			return 0;
-		return array();
-	}
-	if (($sql == "commit")||($sql == "commit;")) {
-		if (!$db0->commit()) {
-			$a = $db0->errorInfo();
-			if (@$sys->debugdir !== null) {
-				$debuglog .= "<P><B>".htmlspecialchars($a[2], ENT_QUOTES)."</B></P>\n";
-				adddebuglog();
-			}
-			if (!$ignoreerror)
-				log_die($a[2]." : ".$sql);
-			if (($returnid))
-				return 0;
-			return array();
-		}
-		if ($ignoreerror < 0) {
-			if (@$sys->debugdir !== null) {
-				$debuglog .= "<P><B>success.</B></P>\n";
-				adddebuglog();
-			}
-			return 1;		# success.
-		}
-		if (($returnid))
-			return 0;
-		return array();
-	}
-	if (($sql == "rollback")||($sql == "rollback;")) {
-		if (!$db0->rollback()) {
-			$a = $db0->errorInfo();
-			if (@$sys->debugdir !== null) {
-				$debuglog .= "<P><B>".htmlspecialchars($a[2], ENT_QUOTES)."</B></P>\n";
-				adddebuglog();
-			}
-			if (!$ignoreerror)
-				log_die($a[2]." : ".$sql);
-			if (($returnid))
-				return 0;
-			return array();
-		}
-		if ($ignoreerror < 0) {
-			if (@$sys->debugdir !== null) {
-				$debuglog .= "<P><B>success.</B></P>\n";
-				adddebuglog();
-			}
-			return 1;		# success.
-		}
-		if (($returnid))
-			return 0;
-		return array();
-	}
+	if (($sql == "begin")||($sql == "begin;"))
+		return bq_dbbegin($db0, $returnid, $ignoreerror);
+	if (($sql == "commit")||($sql == "commit;"))
+		return bq_dbcommit($db0, $returnid, $ignoreerror);
+	if (($sql == "rollback")||($sql == "rollback;"))
+		return bq_dbrollback($db0, $returnid, $ignoreerror);
 	
 	if (($sp0 = $db0->prepare($sql)) === FALSE) {
 		$a = $db0->errorInfo();
@@ -2439,6 +2373,115 @@ if (!function_exists("myhash")) {
 }
 if (trim(myhash("")) == "")
 	die("hash not work");
+
+
+function	nophp_bq_dbbegin($db, $returnid = 0, $ignoreerror = 0)
+{
+	global	$sys;
+	global	$debuglog;
+	
+	if (!$db->beginTransaction()) {
+		$a = $db->errorInfo();
+		if (@$sys->debugdir !== null) {
+			$debuglog .= "<P><B>".htmlspecialchars($a[2], ENT_QUOTES)."</B></P>\n";
+			adddebuglog();
+		}
+		if (!$ignoreerror)
+			log_die($a[2]." : ".$sql);
+		if (($returnid))
+			return 0;
+		return array();
+	}
+	if ($ignoreerror < 0) {
+		if (@$sys->debugdir !== null) {
+			$debuglog .= "<P><B>success.</B></P>\n";
+			adddebuglog();
+		}
+		return 1;		# success.
+	}
+	if (($returnid))
+		return 0;
+	return array();
+}
+if (!function_exists("bq_dbbegin")) {
+	function	bg_dbbegin($db, $returnid = 0, $ignoreerror = 0)
+	{
+		return nophp_bq_dbbegin($db, $returnid, $ignoreerror);
+	}
+}
+
+
+function	nophp_bq_dbcommit($db, $returnid = 0, $ignoreerror = 0)
+{
+	global	$sys;
+	global	$debuglog;
+	
+	if (!$db->commit()) {
+		$a = $db->errorInfo();
+		if (@$sys->debugdir !== null) {
+			$debuglog .= "<P><B>".htmlspecialchars($a[2], ENT_QUOTES)."</B></P>\n";
+			adddebuglog();
+		}
+		if (!$ignoreerror)
+			log_die($a[2]." : ".$sql);
+		if (($returnid))
+			return 0;
+		return array();
+	}
+	if ($ignoreerror < 0) {
+		if (@$sys->debugdir !== null) {
+			$debuglog .= "<P><B>success.</B></P>\n";
+			adddebuglog();
+		}
+		return 1;		# success.
+	}
+	if (($returnid))
+		return 0;
+	return array();
+}
+if (!function_exists("bq_dbcommit")) {
+	function	bq_dbcommit($db, $returnid, $ignoreerror)
+	{
+		return nophp_bq_dbcommit($db, $returnid, $ignoreerror);
+	}
+}
+
+
+function	nophp_bq_dbrollback($db, $returnid = 0, $ignoreerror = 0)
+{
+	global	$sys;
+	global	$debuglog;
+	
+	if (!$db->rollback()) {
+		$a = $db->errorInfo();
+		if (@$sys->debugdir !== null) {
+			$debuglog .= "<P><B>".htmlspecialchars($a[2], ENT_QUOTES)."</B></P>\n";
+			adddebuglog();
+		}
+		if (!$ignoreerror)
+			log_die($a[2]." : ".$sql);
+		if (($returnid))
+			return 0;
+		return array();
+	}
+	if ($ignoreerror < 0) {
+		if (@$sys->debugdir !== null) {
+			$debuglog .= "<P><B>success.</B></P>\n";
+			adddebuglog();
+		}
+		return 1;		# success.
+	}
+	if (($returnid))
+		return 0;
+	return array();
+}
+if (!function_exists("bq_dbrollback")) {
+	function	bq_dbrollback($db, $returnid = 0, $ignoreerror = 0)
+	{
+		return nophp_bq_dbrollback($db, $returnid, $ignoreerror);
+	}
+}
+
 
 if ((@$logview_fn !== null)) {
 # The name may be like "\000__COMPILER_HALT_OFFSET__\000/var/www/html....php" and it is not documented.
