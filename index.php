@@ -173,6 +173,7 @@ function	log_die($message = "")
 	global	$sys;
 	global	$tablelist;
 	global	$debuglog;
+	global	$orgdebugfn;
 	global	$debugtablelist;
 	global	$loginrecord;
 	global	$targethash;
