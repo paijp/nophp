@@ -2405,7 +2405,7 @@ function	nophp_bq_dbbegin($db, $returnid = 0, $ignoreerror = 0)
 	return array();
 }
 if (!function_exists("bq_dbbegin")) {
-	function	bg_dbbegin($db, $returnid = 0, $ignoreerror = 0)
+	function	bq_dbbegin($db, $returnid = 0, $ignoreerror = 0)
 	{
 		return nophp_bq_dbbegin($db, $returnid, $ignoreerror);
 	}
