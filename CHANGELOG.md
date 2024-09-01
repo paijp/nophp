@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- Add bq_db{begin,commit,rollback} for hook, and add a sample to avoid the sqlite WAL transaction(tables_beginimmediatesample240827a.php).
+### Changed
+- php8 support.
+- Use PDO method for begin/commit/rollback(index.php), fix double-commit.
+- log_die() send to errorlog and report instead of browser.
 
 ## [0.0.2] - 2023-12-29
 ### Added
