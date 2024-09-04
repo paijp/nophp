@@ -148,9 +148,16 @@ EOO;
 		global	$sys;
 		global	$cookiepath;
 		
-		if (($ismaillogin)) {
+		if ($ismaillogin == 1) {
 			if ((int)@$this->v_ismaillogin == 0)
 				log_die("ismaillogin but not v_ismaillogin");
+			$this->v_mailkey = "";
+			$this->v_salt = $this->getrandom();
+			$this->v_pass = "";
+		} else if ($ismaillogin == 2) {
+			$this->v_mailkey = "";
+			$this->v_salt = $this->getrandom();
+			$this->v_pass = "";
 		} else if ((@$this->v_ismaillogin))
 			log_die("v_ismaillogin but not ismaillogin");
 		else if (myhash($pass.$this->v_salt) != $this->v_pass) {
@@ -160,19 +167,16 @@ EOO;
 		}
 		if (function_exists("bq_login"))
 			bq_login("goodlogin", $this);
-		if (($ismaillogin)) {
-			$this->v_mailkey = "";
-			$this->v_salt = $this->getrandom();
-			$this->v_pass = "";
-		}
 		$key = $this->getrandom();
 		$this->v_sessionkey = myhash($this->v_salt.$key);
 		$this->v_submitkey = $this->getrandom();
 		$this->v_lastlogin = $sys->now;
 		parent::update();
 		setcookie("sessionid", $this->id, 0, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
+		setcookie("sessionid", $this->id, 0, $cookiepath."/", "", (@$_SERVER["HTTPS"] == "on"), true);
 		setcookie("sessionkey", $key, 0, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
-		log_die("login success.");
+		setcookie("sessionkey", $key, 0, $cookiepath."/", "", (@$_SERVER["HTTPS"] == "on"), true);
+		log_die("login success({$ismaillogin}).");
 	}
 	function	check_loginform() {
 		global	$sys;
@@ -193,13 +197,14 @@ EOO;
 			else if (@$r->v_mailsent < $sys->now - $sys->mailexpire)
 				log_die("mailexpire.");
 			if (myhash($r->v_login.$key) == $r->v_mailkey) {
-				if (($pass = @$_POST["pass"]) == "")
-					log_die("pass empty.");
+				if (($pass = @$_POST["pass"]) == "") {
+					$r->login("", 2);
+					log_die();
+				}
 				$r->setpassword($pass);
 				log_die("password change success.");
 			}
 			log_die("maillogin fail.");
-			return 0;
 		}
 		
 		if (($login = @$_POST["login"]) === null) {
@@ -207,9 +212,9 @@ EOO;
 				bq_login("badlogin");
 			log_die("login null.");
 		}
-		if (($pass = @$_POST["pass"]) === null) {
+		if (($pass = @$_POST["pass"]) == "") {
 			if (function_exists("bq_login"))
-				bq_login("badlogin");
+				bq_login("emptypass");
 			log_die("pass null.");
 		}
 		$list = $this->getrecordidlist("where login = ?", array($login));
@@ -226,13 +231,13 @@ EOO;
 		global	$sys;
 		
 		if (@$_GET["mode"] != "1login")
-			return 0;
+			return;
 		$uid = (int)@$_GET["uid"];
 		$key = @$_GET["key"]."";
 		
 		$r = $this->getrecord($uid);
 		if ((int)@$r->v_ismaillogin == 0)
-			return 0;
+			return;
 		
 		header("Location: {$sys->url}");
 		
@@ -283,7 +288,9 @@ EOO;
 			$loginrecord = null;
 		}
 		setcookie("sessionid", "", 1, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
+		setcookie("sessionid", "", 1, $cookiepath."/", "", (@$_SERVER["HTTPS"] == "on"), true);
 		setcookie("sessionkey", "", 1, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
+		setcookie("sessionkey", "", 1, $cookiepath."/", "", (@$_SERVER["HTTPS"] == "on"), true);
 		header("Location: {$sys->urlbase}/logout/".@$sys->rootpage.".html");
 	}
 }

@@ -1719,10 +1719,7 @@ r}r(__
 				} else if (($loginrecord === null)&&($a[1] == ":login")&&(@$_POST[":login"] === null))
 					$tablelist["login"]->check_maillogin();
 				else if (($loginrecord === null)&&($a[1] == ":login")) {
-					if (@$_POST["pass"] == "")
-						bq_login("emptypass");
-					else
-						$tablelist["login"]->check_loginform();
+					$tablelist["login"]->check_loginform();
 					log_die();
 				}
 			} else if (($tagtype == "input")&&($type == "checkbox") && preg_match('/name="([^"]+)/', $tag, $a) && preg_match('/value="([^"]+)/', $tag, $a2)) {
@@ -2816,6 +2813,9 @@ if (!preg_match('%^((.*)/index[.]php)(.*)$%', $sys->url, $a)) {
 	header("Location: {$sys->url}/index.php");
 	log_die();
 }
+
+while (substr($cookiepath, -1) == "/")
+	$cookiepath = substr($cookiepath, 0, -1);
 
 $sys->urlbase = $a[1];
 $sys->urlbaseparent = $a[2];
