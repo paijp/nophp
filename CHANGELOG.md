@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - Add bq_db{begin,commit,rollback} for hook, and add a sample to avoid the sqlite WAL transaction(tables_beginimmediatesample240827a.php).
+- Empty password on the change password page now means login via the URL sent by email.
 ### Changed
 - php8 support.
 - Use PDO method for begin/commit/rollback(index.php), fix double-commit.
