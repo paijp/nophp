@@ -2,7 +2,7 @@
 #
 #	nophp	https://github.com/paijp/nophp
 #	
-#	Copyright (c) 2021-2023 paijp
+#	Copyright (c) 2021-2024 paijp
 #
 #	This software is released under the MIT License.
 #	http://opensource.org/licenses/mit-license.php
@@ -18,7 +18,6 @@ salt	text
 sessionkey	text
 lastlogin	int
 lastlogout	int
-ismaillogin	int
 
 EOO;
 	}
@@ -105,6 +104,15 @@ EOO;
 			header("Location: {$sys->urlbase}/index/".@$sys->rootpage.".html");
 			log_die();
 		}
+		
+		if (($loginrecord === null)&&(@$_POST[":login"] !== null)) {
+			$this->check_loginform();
+			log_die();
+		}
+		if ((ispost())&&(@$_POST[":logout"] !== null)) {
+			$this->logout();
+			log_die();
+		}
 	}
 	function	update($ignoreerror = 0) {
 		global	$sys;
@@ -148,19 +156,11 @@ EOO;
 		global	$sys;
 		global	$cookiepath;
 		
-		if ($ismaillogin == 1) {
-			if ((int)@$this->v_ismaillogin == 0)
-				log_die("ismaillogin but not v_ismaillogin");
+		if (($ismaillogin)) {
 			$this->v_mailkey = "";
 			$this->v_salt = $this->getrandom();
 			$this->v_pass = "";
-		} else if ($ismaillogin == 2) {
-			$this->v_mailkey = "";
-			$this->v_salt = $this->getrandom();
-			$this->v_pass = "";
-		} else if ((@$this->v_ismaillogin))
-			log_die("v_ismaillogin but not ismaillogin");
-		else if (myhash($pass.$this->v_salt) != $this->v_pass) {
+		} else if (myhash($pass.$this->v_salt) != $this->v_pass) {
 			if (function_exists("bq_login"))
 				bq_login("badlogin", $this);
 			log_die("login fail.");
@@ -188,8 +188,6 @@ EOO;
 			$key = @$_GET["key"]."";
 			
 			$r = $this->getrecord($uid);
-			if ((int)@$r->v_ismaillogin != 0)
-				log_die("ismaillogin.");
 			if (@$r->v_mailkey == "")
 				log_die("mailkey empty.");
 			if (@$sys->mailexpire <= 0)
@@ -226,30 +224,6 @@ EOO;
 		$r = $this->getrecord($list[0]);
 		$r->login($pass);
 		log_die("login fail.");
-	}
-	function	check_maillogin() {
-		global	$sys;
-		
-		if (@$_GET["mode"] != "1login")
-			return;
-		$uid = (int)@$_GET["uid"];
-		$key = @$_GET["key"]."";
-		
-		$r = $this->getrecord($uid);
-		if ((int)@$r->v_ismaillogin == 0)
-			return;
-		
-		header("Location: {$sys->url}");
-		
-		if (@$r->v_mailkey == "")
-			log_die("mailkey empty.");
-		if (@$sys->mailexpire <= 0)
-			;
-		else if (@$r->v_mailsent < $sys->now - $sys->mailexpire)
-			log_die("mailexpire.");
-		if (myhash($r->v_login.$key) == $r->v_mailkey)
-			$r->login("", 1);
-		log_die("maillogin fail.");
 	}
 	function	is_login() {
 		global	$loginrecord;

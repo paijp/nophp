@@ -1571,9 +1571,10 @@ r}r(__
 #					case	"login":
 #						$tablelist["login"]->check_loginform();
 #						log_die();
-					case	"logout":
-						$tablelist["login"]->logout();
-						log_die();
+# to loginrecord.
+#					case	"logout":
+#						$tablelist["login"]->logout();
+#						log_die();
 				}
 			}
 		}
@@ -1716,11 +1717,6 @@ r}r(__
 				if ((ispost())&&(@$_POST[$postkey] !== null)) {
 					$actionrecordholder = $this;
 					$this->actioncommand = $a[1];
-				} else if (($loginrecord === null)&&($a[1] == ":login")&&(@$_POST[":login"] === null))
-					$tablelist["login"]->check_maillogin();
-				else if (($loginrecord === null)&&($a[1] == ":login")) {
-					$tablelist["login"]->check_loginform();
-					log_die();
 				}
 			} else if (($tagtype == "input")&&($type == "checkbox") && preg_match('/name="([^"]+)/', $tag, $a) && preg_match('/value="([^"]+)/', $tag, $a2)) {
 				if ($this->prefix != "")

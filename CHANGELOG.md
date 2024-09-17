@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - php8 support.
 - Use PDO method for begin/commit/rollback(index.php), fix double-commit.
 - log_die() send to errorlog and report instead of browser.
+- logirecord::v_ismaillogin is now removed. You can login without password by entering blank password on the Change Password page.
 
 ## [0.0.2] - 2023-12-29
 ### Added
