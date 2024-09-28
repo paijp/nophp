@@ -67,7 +67,7 @@ EOO;
 						$r = $tablelist["login"]->getrecord($uid = $list[0]);
 				
 						if (@$r->v_mailsent > $sys->now - $sys->mailinterval)
-							log_die("mail interval too short.");
+							log_die("mail interval too short.".$r->id);
 				
 						$key =$r->getrandom();
 						$r->setmailkey($key);
@@ -80,7 +80,7 @@ EOO;
 							log_die("popen failed: {$mailcmd}");
 						fputs($fp, $mailbody);
 						pclose($fp);
-						log_die("mail sent.");
+						log_die("mail sent.".$r->id);
 					case	"goodlogin":		# login success
 						break;
 					case	"badlogin":		# login fail
@@ -163,7 +163,7 @@ EOO;
 		} else if (myhash($pass.$this->v_salt) != $this->v_pass) {
 			if (function_exists("bq_login"))
 				bq_login("badlogin", $this);
-			log_die("login fail.");
+			log_die("login fail.".$this->id);
 		}
 		if (function_exists("bq_login"))
 			bq_login("goodlogin", $this);
@@ -176,7 +176,7 @@ EOO;
 		setcookie("sessionid", $this->id, 0, $cookiepath."/", "", (@$_SERVER["HTTPS"] == "on"), true);
 		setcookie("sessionkey", $key, 0, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
 		setcookie("sessionkey", $key, 0, $cookiepath."/", "", (@$_SERVER["HTTPS"] == "on"), true);
-		log_die("login success({$ismaillogin}).");
+		log_die("login success({$ismaillogin}).".$this->id);
 	}
 	function	check_loginform() {
 		global	$sys;
@@ -189,20 +189,20 @@ EOO;
 			
 			$r = $this->getrecord($uid);
 			if (@$r->v_mailkey == "")
-				log_die("mailkey empty.");
+				log_die("mailkey empty.".$r->id);
 			if (@$sys->mailexpire <= 0)
 				;
 			else if (@$r->v_mailsent < $sys->now - $sys->mailexpire)
-				log_die("mailexpire.");
+				log_die("mailexpire.".$r->id);
 			if (myhash($r->v_login.$key) == $r->v_mailkey) {
 				if (($pass = @$_POST["pass"]) == "") {
 					$r->login("", 2);
 					log_die();
 				}
 				$r->setpassword($pass);
-				log_die("password change success.");
+				log_die("password change success.".$r->id);
 			}
-			log_die("maillogin fail.");
+			log_die("maillogin fail.".$r->id);
 		}
 		
 		if (($login = @$_POST["login"]) === null) {
@@ -223,7 +223,7 @@ EOO;
 		}
 		$r = $this->getrecord($list[0]);
 		$r->login($pass);
-		log_die("login fail.");
+		log_die("login fail.".$r->id);
 	}
 	function	is_login() {
 		global	$loginrecord;
