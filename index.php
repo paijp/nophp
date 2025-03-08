@@ -2701,6 +2701,9 @@ class	recordholder {
 	function	parsename($text) {
 		return $this->record->getfield($text);
 	}
+	function	parsenamehtmlhighlight($text) {
+		return str_replace("`", "`!", $this->parsename($text));
+	}
 	function	postname($name, $checkval = null, $noclear = 0, $nopost = null) {
 		$postkey = $this->prefix.str_replace(array(" ", "."), "_", $name);
 		if (!ispost()) {
@@ -2736,7 +2739,7 @@ class	recordholder {
 		}
 		return $ret;
 	}
-	function	parsehtmlhighlight($html = "") {
+	function	parsehtmlhighlight($htmlhighlight = "") {
 		global	$tablelist;
 		global	$actionrecordholder;
 		global	$beforename;
@@ -2746,7 +2749,7 @@ class	recordholder {
 		global	$coverage_actionlist;
 		
 		$output = "";
-		foreach (explode("<", $html) as $key => $chunk) {
+		foreach (explode("<", $htmlhighlight) as $key => $chunk) {
 			if ($key == 0) {
 				$taghighlight = "";
 				$body = $chunk;
@@ -2763,12 +2766,12 @@ class	recordholder {
 			if (preg_match('/type="?([a-zA-Z]+)/', $tag, $a))
 				$type = strtolower($a[1]);
 			if (($tagtype == "form")&&(!preg_match("/action=/i", $tag)))
-				$taghighlight .= '`| action="?'.$sys->urlquery.'"`|';
+				$taghighlight .= '`| action="?'.str_replace("`", "`!", $sys->urlquery).'"`|';
 			else if (($tagtype == "/form")&&($loginrecord !== null))
-				$output .= '`|<INPUT type=hidden name=submitkey value="'.($loginrecord->v_submitkey).'">`|'."\n";
+				$output .= '`|<INPUT type=hidden name=submitkey value="'.str_replace("`", "`!", $loginrecord->v_submitkey).'">`|'."\n";
 			else if (($tagtype == "input")&&($type == "submit") && preg_match('/name="([^"]+)"/', $tag, $a)) {
 				if ($this->prefix != "")
-					$taghighlight = preg_replace('/name="/', 'name="`|'.$this->prefix."`|", $taghighlight, 1);
+					$taghighlight = preg_replace('/name="/', 'name="`|'.str_replace("`", "`!", $this->prefix)."`|", $taghighlight, 1);
 				$coverage_actionlist[$a[1]] = 1;
 				$postkey = $this->prefix.str_replace(array(" ", "."), "_", $a[1]);
 				if ((ispost())&&(@$_POST[$postkey] !== null)) {
@@ -2785,38 +2788,38 @@ class	recordholder {
 				}
 			} else if (($tagtype == "input")&&($type == "checkbox") && preg_match('/name="([^"]+)/', $tag, $a) && preg_match('/value="([^"]+)/', $tag, $a2)) {
 				if ($this->prefix != "")
-					$taghighlight = preg_replace('/name="/', 'name="`|'.$this->prefix."`|", $taghighlight, 1);
+					$taghighlight = preg_replace('/name="/', 'name="`|'.str_replace("`", "`!", $this->prefix)."`|", $taghighlight, 1);
 				$this->postname($a[1], $a2[1]);
 				if ($this->parsename($a[1]) == $a2[1])
-					$taghighlight .= " checked";
+					$taghighlight .= "`| checked`|";
 			} else if (($tagtype == "input")&&($type == "radio") && preg_match('/name="([^"]+)/', $tag, $a) && preg_match('/value="([^"]+)/', $tag, $a2)) {
 				if ($this->prefix != "")
-					$taghighlight = preg_replace('/name="/', 'name="`|'.$this->prefix."`|", $taghighlight, 1);
+					$taghighlight = preg_replace('/name="/', 'name="`|'.str_replace("`", "`!", $this->prefix)."`|", $taghighlight, 1);
 				$this->postname($a[1], $a2[1], 1);
-				if ($this->parsename($a[1]) == $a2[1])
-					$taghighlight .= " checked";
+				if ($this->parsenamehtmlhighlight($a[1]) == $a2[1])
+					$taghighlight .= "`| checked`|";
 			} else if (($tagtype == "input") && preg_match('/name="([^"]+)"/', $tag, $a) && preg_match('/x-value="([^"]*)"/', $tag, $a2)) {
 				if ($this->prefix != "")
-					$taghighlight = preg_replace('/name="/', 'name="`|'.$this->prefix."`|", $taghighlight, 1);
+					$taghighlight = preg_replace('/name="/', 'name="`|'.str_replace("`", "`!", $this->prefix)."`|", $taghighlight, 1);
 				$this->postname($a[1], null, 0, $a2[1]);
-				$taghighlight .= ' `|value="'.htmlspecialchars(@$this->parsename($a[1]), ENT_QUOTES).'"`|';
+				$taghighlight .= ' `|value="'.htmlspecialchars(@$this->parsenamehtmlhighlight($a[1]), ENT_QUOTES).'"`|';
 			} else if (($tagtype == "input") && preg_match('/name="([^"]+)"/', $tag, $a) && preg_match('/value=/', $tag)) {
 				if ($this->prefix != "")
-					$taghighlight = preg_replace('/name="/', 'name="`|'.$this->prefix."`|", $taghighlight, 1);
+					$taghighlight = preg_replace('/name="/', 'name="`|'.str_replace("`", "`!", $this->prefix)."`|", $taghighlight, 1);
 				$this->postname($a[1]);
 			} else if (($tagtype == "input") && preg_match('/name="([^"]+)"/', $tag, $a)) {
 				if ($this->prefix != "")
-					$taghighlight = preg_replace('/name="/', 'name="`|'.$this->prefix."`|", $taghighlight, 1);
+					$taghighlight = preg_replace('/name="/', 'name="`|'.str_replace("`", "`!", $this->prefix)."`|", $taghighlight, 1);
 				$this->postname($a[1]);
-				$taghighlight .= ' `|value="'.htmlspecialchars(@$this->parsename($a[1]), ENT_QUOTES).'"`|';
+				$taghighlight .= ' `|value="'.htmlspecialchars(@$this->parsenamehtmlhighlight($a[1]), ENT_QUOTES).'"`|';
 			} else if (($tagtype == "select") && preg_match('/name="([^"]+)"/', $tag, $a) && preg_match('/x-value="([^"]*)"/', $tag, $a2)) {
 				if ($this->prefix != "")
-					$taghighlight = preg_replace('/name="/', 'name="`|'.$this->prefix."`|", $taghighlight, 1);
+					$taghighlight = preg_replace('/name="/', 'name="`|'.str_replace("`", "`!", $this->prefix)."`|", $taghighlight, 1);
 				$beforename = $a[1];
 				$beforenopost = $a2[1];
 			} else if (($tagtype == "select") && preg_match('/name="([^"]+)"/', $tag, $a)) {
 				if ($this->prefix != "")
-					$taghighlight = preg_replace('/name="/', 'name="`|'.$this->prefix."`|", $taghighlight, 1);
+					$taghighlight = preg_replace('/name="/', 'name="`|'.str_replace("`", "`!", $this->prefix)."`|", $taghighlight, 1);
 				$beforename = $a[1];
 				$beforenopost = null;
 			} else if (($tagtype == "option") && preg_match('/value="([^"]*)"/', $tag, $a)) {
@@ -2825,16 +2828,16 @@ class	recordholder {
 					$taghighlight .= " `|selected`|";
 			} else if (($tagtype == "textarea") && preg_match('/name="([_0-9A-Za-z]+)"/', $tag, $a) && preg_match('/x-value="([^"]*)"/', $tag, $a2)) {
 				if ($this->prefix != "")
-					$taghighlight = preg_replace('/name="/', 'name="`|'.$this->prefix."`|", $taghighlight, 1);
+					$taghighlight = preg_replace('/name="/', 'name="`|'.str_replace("`", "`!", $this->prefix)."`|", $taghighlight, 1);
 				$this->postname($a[1], null, 0, $a2[1]);
 				if ($body == "")
-					$body = "`|".htmlspecialchars(@$this->parsename($a[1]), ENT_QUOTES)."`|";
+					$body = "`|".htmlspecialchars(@$this->parsenamehtmlhighlight($a[1]), ENT_QUOTES)."`|";
 			} else if (($tagtype == "textarea") && preg_match('/name="([_0-9A-Za-z]+)"/', $tag, $a)) {
 				if ($this->prefix != "")
-					$taghighlight = preg_replace('/name="/', 'name="`|'.$this->prefix."`|", $taghighlight, 1);
+					$taghighlight = preg_replace('/name="/', 'name="`|'.str_replace("`", "`!", $this->prefix)."`|", $taghighlight, 1);
 				$this->postname($a[1]);
 				if ($body == "")
-					$body = "`|".htmlspecialchars(@$this->parsename($a[1]), ENT_QUOTES)."`|";
+					$body = "`|".htmlspecialchars(@$this->parsenamehtmlhighlight($a[1]), ENT_QUOTES)."`|";
 			}
 			if ($taghighlight != "")
 				$output .= "<{$taghighlight}>";
