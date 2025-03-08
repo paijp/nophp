@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+
+## [0.0.3] - 2025-03-08
 ### Added
 - Add bq_db{begin,commit,rollback} for hook, and add a sample to avoid the sqlite WAL transaction(tables_beginimmediatesample240827a.php).
 - Empty password on the change password page now means login via the URL sent by email.
