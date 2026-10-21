@@ -34,7 +34,7 @@ class recordholder_sendmail(recordholder):
 			else:
 				isbody = 1
 				body += line + "\n"
-		subprocess.run("mail %s %s" % (option, arg), shell=True, input=body.encode(), timeout=60)
+		subprocess.run(["/bin/sh", "-c", ("mail %s %s" % (option, arg)).encode("utf-8", "surrogateescape")], input=body.encode(), timeout=60)
 		return []
 
 

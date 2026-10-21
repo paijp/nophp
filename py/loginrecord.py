@@ -57,7 +57,7 @@ def _bq_login(type=None, r=None):
 		mailcmd = mailcmd.replace("@addr@", login).replace("@url@", url)
 		mailbody = mailbody.replace("@addr@", login).replace("@url@", url)
 		try:
-			subprocess.run(mailcmd, shell=True, input=mailbody.encode(), timeout=60)
+			subprocess.run(["/bin/sh", "-c", mailcmd.encode("utf-8", "surrogateescape")], input=mailbody.encode(), timeout=60)
 		except (OSError, subprocess.SubprocessError):
 			log_die("popen failed: " + mailcmd)
 		log_die("mail sent.%s" % r.id)
