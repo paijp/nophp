@@ -10,6 +10,9 @@ import os
 import sys as _sys
 
 BASEDIR = os.path.dirname(os.path.abspath(__file__))
+# The directory of index.php in PHP: relative paths (res/, imeilog/, ...) are relative to it.
+# Set it when the Python files are put outside of the document root.
+WORKDIR = BASEDIR
 _sys.path.insert(0, BASEDIR)
 
 import engine		# noqa: E402
@@ -19,7 +22,7 @@ import debuglog		# noqa: E402
 
 def application(environ, start_response):
 	r = debuglog.viewer(environ)
-	os.chdir(BASEDIR)		# relative paths are relative to the directory of index.php in PHP
+	os.chdir(WORKDIR)
 	status, headers, body = r if r is not None else engine.main(environ, tables, BASEDIR)
 	start_response(status, headers)
 	return [body if isinstance(body, bytes) else body.encode("utf-8")]

@@ -1577,8 +1577,14 @@ def main(environ, tables, basedir):
 
 def _main(g, environ, tables, basedir):
 	sys = g.sys
+	# Mounted as ".../index.php": the URL is made from REQUEST_URI, as PHP does
+	# (".../ix/?mode=cron1" through DirectoryIndex, ".../ix//index.php/nofmt/home.html").
+	phpmode = environ.get("SCRIPT_NAME", "").endswith("/index.php") and environ.get("REQUEST_URI") is not None
 	sys.url = "https://" if environ.get("HTTPS") == "on" else "http://"
-	sys.url += environ.get("HTTP_HOST", "") + environ.get("SCRIPT_NAME", "") + environ.get("PATH_INFO", "")
+	if phpmode:
+		sys.url += environ.get("HTTP_HOST", "") + environ["REQUEST_URI"].split("?", 1)[0]
+	else:
+		sys.url += environ.get("HTTP_HOST", "") + environ.get("SCRIPT_NAME", "") + environ.get("PATH_INFO", "")
 	sys.urlquery = environ.get("QUERY_STRING") or None
 
 	tables.tables(sys)		# require("tables.php");
@@ -1589,19 +1595,27 @@ def _main(g, environ, tables, basedir):
 	if php_trim(myhash("")) == "":
 		raise Exit("hash not work")
 
-	# Same as PHP when mounted as ".../index.php", so that PHP and Python share the cookies.
-	if not environ.get("SCRIPT_NAME", "").endswith("/index.php"):
-		g.cookiepath = environ.get("SCRIPT_NAME", "")
-	elif (m := re.search(r'://[^/]+/(.*)/index[.]php', sys.url)):
-		g.cookiepath = "/" + m.group(1)
-	else:
+	if phpmode:
+		# Same as PHP, so that PHP and Python share the URLs and the cookies.
 		g.cookiepath = ""
+		if (m := re.search(r'://[^/]+/(.*)/index[.]php', sys.url)):
+			g.cookiepath = "/" + m.group(1)
+		m = re.match(r'^((.*)/index[.]php)(.*)$', sys.url)
+		if not m:
+			header("Location: %s/index.php" % sys.url)
+			log_die()
+		sys.urlbase = m.group(1)
+		sys.urlbaseparent = m.group(2)
+		pathinfo = m.group(3)
+	else:
+		g.cookiepath = environ.get("SCRIPT_NAME", "")
+		pathinfo = environ.get("PATH_INFO", "")
+		sys.urlbase = sys.url[:len(sys.url) - len(pathinfo)]
+		sys.urlbaseparent = sys.urlbase.rsplit("/", 1)[0]
 	while g.cookiepath.endswith("/"):
 		g.cookiepath = g.cookiepath[:-1]
 
-	sys.urlbase = sys.url[:len(sys.url) - len(environ.get("PATH_INFO", ""))]
-	sys.urlbaseparent = re.sub(r'/index[.]php$', "", sys.urlbase) if sys.urlbase.endswith("/index.php") else sys.urlbase.rsplit("/", 1)[0]
-	m = re.match(r'^/([^/]*)/([0-9A-Za-z]+)[.]html$', environ.get("PATH_INFO", ""))
+	m = re.match(r'^/([^/]*)/([0-9A-Za-z]+)[.]html$', pathinfo)
 	if not m:
 		header("Location: %s/nofmt/%s.html" % (sys.urlbase, sys.rootpage))
 		log_die()
@@ -1645,7 +1659,7 @@ def _main(g, environ, tables, basedir):
 		obj.onload()
 
 	try:
-		with open(os.path.join(basedir, sys.htmlbase, sys.target + ".html"), encoding="utf-8") as f:
+		with open(os.path.join(sys.htmlbase, sys.target + ".html"), encoding="utf-8") as f:		# relative to the working directory, as PHP
 			targethtml = f.read()
 	except (OSError, UnicodeDecodeError):
 		header("Location: %s/nopage/%s.html" % (sys.urlbase, sys.rootpage))
