@@ -351,11 +351,13 @@ def bq_g__name(name):
 
 
 @bqfunc
-def bq_p__name(name):
-	# PHP version refers $this->prefix inside a plain function (fatal error on POST).
+def bq2_p__name(rh0, record, name):
+	# PHP version (bq_p__name) refers $this->prefix inside a plain function,
+	# and it is a fatal error on POST. Here the recordholder is used as intended.
 	s = ""
 	if ispost():
-		raise RuntimeError("bq_p__name: $this is not available (same as PHP)")
+		postkey = rh0.prefix + name.replace(" ", "_").replace(".", "_")
+		s = G()._POST.get(postkey)
 	return [s]
 
 

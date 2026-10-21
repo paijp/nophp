@@ -41,7 +41,7 @@ class Client:
 		text = text.decode("utf-8", "replace")
 		if (m := re.search(r'name=submitkey value="([0-9a-f]+)"', text)):
 			self.submitkey = m.group(1)
-		return status, headers.get("Location", ""), self.normalize(text), text
+		return status, self.normalize(headers.get("Location", "")), self.normalize(text), text
 
 	def normalize(self, s):
 		s = s.replace(self.base, "BASE")
