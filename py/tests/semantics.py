@@ -21,7 +21,7 @@ from kana import mb_convert_kana		# noqa: E402
 import phpdate		# noqa: E402
 
 STRS = ["", "0", "1", "01", "1.0", "1e3", " 7", "7 ", "12abc", "abc", "0x1A", "-0", "-5", "+3", ".5", "5.",
-	"1e", "9223372036854775807", "9223372036854775808", "3.8", "2.5", "-2.5", "NAN", "null", " ", "\n1"]
+	"1e", "9223372036854775807", "9223372036854775808", "-9223372036854775809", "1e20", "-1e20", "1e19", "3.8", "2.5", "-2.5", "NAN", "null", " ", "\n1"]
 NUMS = [0.5, 1.5, 2.5, -2.5, 1.005, 0.285, 1.955, 5.055, 1234.5678, -0.4, 1e15, 0.1 + 0.2, 1e20, 123456789012345.678, 3.0]
 FMTS = [("%d", "12abc"), ("%05d", "-42"), ("%.2f", "1.005"), ("%.1f", "2.25"), ("%5.1f", "0.05"), ("%e", "12345"),
 	("%x", "255"), ("%'*8s", "ab"), ("%-6s|", "ab"), ("%u", "-1"), ("%b", "10"), ("%010.3f", "-3.14159"), ("%s%%", "a")]
@@ -37,6 +37,8 @@ def cases():
 	for a, b in itertools.product(STRS[:16], repeat=2):
 		yield ("eq", a, b), loose_eq(a, b)
 		yield ("cmp", a, b), loose_cmp(a, b)
+	for v in NUMS + [9.3e18, 1e19, -1e20, 2.0 ** 63]:
+		yield ("intf", v), to_int(v)
 	for v in NUMS:
 		yield ("str", v), to_str(v)
 		for p in (0, 1, 2, -1):
@@ -62,6 +64,7 @@ $out = array();
 foreach (json_decode(file_get_contents("php://stdin"), true) as $c) {
 	switch ($c[0]) {
 	case "int": $r = (int)$c[1]; break;
+	case "intf": $r = (int)$c[1]; break;
 	case "float": $r = (float)$c[1].""; break;
 	case "eq": $r = ($c[1] == $c[2]); break;
 	case "cmp": $r = ($c[1] <=> $c[2]); break;

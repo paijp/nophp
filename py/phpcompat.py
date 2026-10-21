@@ -39,26 +39,41 @@ def to_float(v):
 	return float(m.group(0).strip(_ws))
 
 
+_INTMAX = 2 ** 63 - 1
+_INTMIN = -2 ** 63
+
+
+def _float2int(f):
+	"""(int)$float: NaN/INF are 0, out of range wraps around (64bit)."""
+	if math.isnan(f) or math.isinf(f):
+		return 0
+	i = int(f) & 0xffffffffffffffff
+	return i - 2 ** 64 if i > _INTMAX else i
+
+
 def to_int(v):
-	"""(int)$v  -- "12abc" -> 12, "1e3" -> 1000, "0x1A" -> 0, " 7" -> 7"""
+	"""(int)$v  -- "12abc" -> 12, "1e3" -> 1000, "0x1A" -> 0, " 7" -> 7.
+	Out of range: a string saturates, a float wraps around."""
 	if v is None:
 		return 0
 	if isinstance(v, (bool, int)):
 		return int(v)
 	if isinstance(v, float):
-		if math.isnan(v) or math.isinf(v):
-			return 0
-		return int(v)
+		return _float2int(v)
 	m = _numprefix.match(str(v))
 	if m is None:
 		return 0
 	s = m.group(0).strip(_ws)
 	if re.search(r'[.eE]', s):
 		f = float(s)
-		if math.isnan(f) or math.isinf(f):
+		if math.isnan(f):
 			return 0
+		if f >= 2.0 ** 63:
+			return _INTMAX
+		if f < -2.0 ** 63:
+			return _INTMIN
 		return int(f)
-	return int(s)
+	return max(_INTMIN, min(_INTMAX, int(s)))
 
 
 def float_str(f):
