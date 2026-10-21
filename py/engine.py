@@ -334,6 +334,13 @@ class PDO:
 		return ["HY000" if self.error else "00000", None, self.error]
 
 	def close(self):
+		# Like the end of a PHP request: roll back an open transaction and release the locks now,
+		# even if a cursor is still referenced (e.g. by a traceback) and would keep the connection alive.
+		try:
+			if self.conn.in_transaction:
+				self.conn.execute("rollback")
+		except sqlite3.Error:
+			pass
 		self.conn.close()
 
 
@@ -397,14 +404,17 @@ def execsql(sql=None, array=None, returnid=0, ignoreerror=0):
 		if returnid:
 			return 0
 		return []
-	if ignoreerror < 0:
-		return 1		# success.
-	if returnid:
-		if debuglog.enabled(g):
-			debuglog.on_sqlresult(g, lastinsertid=cur.lastrowid)
-		return str(cur.lastrowid)
-	cols = [d[0] for d in cur.description] if cur.description else []
-	rows = [PhpArray(dict(zip(cols, [_dbvalue(v) for v in row]))) for row in cur.fetchall()]
+	try:
+		if ignoreerror < 0:
+			return 1		# success.
+		if returnid:
+			if debuglog.enabled(g):
+				debuglog.on_sqlresult(g, lastinsertid=cur.lastrowid)
+			return str(cur.lastrowid)
+		cols = [d[0] for d in cur.description] if cur.description else []
+		rows = [PhpArray(dict(zip(cols, [_dbvalue(v) for v in row]))) for row in cur.fetchall()]
+	finally:
+		cur.close()		# PDOStatement is freed at once in PHP; do not keep the sqlite lock.
 	if debuglog.enabled(g):
 		debuglog.on_sqlresult(g, rows=rows)
 	return rows
