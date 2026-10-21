@@ -38,6 +38,7 @@ EOO;
 	}
 	function	onload() {
 		global	$sys;
+		global	$loginrecord;
 		
 		if (!function_exists("bq_login")) {
 			function	bq_login($type = null, $r = null)

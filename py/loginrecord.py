@@ -98,8 +98,7 @@ class a_login_table(a_table):
 			log_die()
 
 		g = G()
-		# PHP has no "global $loginrecord;" here, so the check is always true there.
-		if g._POST.get(":login") is not None:
+		if g.loginrecord is None and g._POST.get(":login") is not None:
 			self.check_loginform()
 			log_die()
 		if ispost() and g._POST.get(":logout") is not None:

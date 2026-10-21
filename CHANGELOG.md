@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - Python port (py/). See py/README.md and py/MIGRATION.md.
+### Fixed
+- loginrecord: ':login' was handled even when logged in (missing 'global $loginrecord;' in onload()).
 
 
 ## [0.0.4] - 2025-03-08
