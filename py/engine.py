@@ -79,6 +79,7 @@ class Request:
 		self.status = None
 		self.printbuf = []
 		self.db0 = None
+		self.later = []		# calls run after the response (engine.later())
 		self.cookiepath = ""
 		self.orgdebugfn = None
 		self.debuglog = ""
@@ -164,10 +165,28 @@ def report(body, link=""):
 		lst[key] = to_str(s).replace("@body@", body).replace("@link@", link)
 	req = urllib.request.Request(sys.reportjsonurl, json_encode(lst).encode(),
 		{"Content-Type": "application/json", "Connection": "close"})
+	later(_report_post, req)
+
+
+def _report_post(req):
 	try:
 		urllib.request.urlopen(req, timeout=30).read()
 	except OSError as e:
 		error_log("report failed: %s" % e)
+
+
+def later(fn, *args):
+	"""Run fn(*args) after the response is sent and the database is closed
+	(for HTTP posts whose result is not used: they must not hold the sqlite lock)."""
+	G().later.append((fn, args))
+
+
+def run_later(lst):
+	for fn, args in lst:
+		try:
+			fn(*args)
+		except Exception as e:
+			error_log("later: %s %r" % (getattr(fn, "__name__", fn), e))
 
 
 def log_die(message=""):
@@ -1555,8 +1574,9 @@ def _parsecookie(s):
 	return ret
 
 
-def main(environ, tables, basedir):
-	"""Top level of index.php. Returns (status, headers, body)."""
+def main(environ, tables, basedir, later_out=None):
+	"""Top level of index.php. Returns (status, headers, body).
+	The calls queued by later() are appended to later_out (or run here if it is None)."""
 	sys = Sys()
 	get = _parsequery(environ.get("QUERY_STRING", ""))
 	post = PhpArray()
@@ -1583,6 +1603,10 @@ def main(environ, tables, basedir):
 		if g.db0 is not None:
 			g.db0.close()
 		_req.reset(token)
+		if later_out is not None:
+			later_out.extend(g.later)
+		else:
+			run_later(g.later)
 
 
 def _main(g, environ, tables, basedir):

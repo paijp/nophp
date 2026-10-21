@@ -20,9 +20,21 @@ import tables		# noqa: E402
 import debuglog		# noqa: E402
 
 
+class _Response(list):
+	"""The body; close() (called by the server after sending it) runs the calls queued by engine.later()."""
+
+	def __init__(self, body, later):
+		super().__init__([body])
+		self.later = later
+
+	def close(self):
+		engine.run_later(self.later)
+
+
 def application(environ, start_response):
 	r = debuglog.viewer(environ)
 	os.chdir(WORKDIR)
-	status, headers, body = r if r is not None else engine.main(environ, tables, BASEDIR)
+	later = []
+	status, headers, body = r if r is not None else engine.main(environ, tables, BASEDIR, later)
 	start_response(status, headers)
-	return [body if isinstance(body, bytes) else body.encode("utf-8")]
+	return _Response(body if isinstance(body, bytes) else body.encode("utf-8"), later)
