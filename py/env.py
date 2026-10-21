@@ -23,6 +23,18 @@ def env(sys):
 	sys.sqlpath = "sqlite:/var/www/db/nophp.sq3"
 
 	#
+	# If you want to use '?mode=sql', you have to set this basic authentication.
+	# sys.auth_pass = myhash(sys.auth_salt + pass)
+	# (mod_wsgi needs "WSGIPassAuthorization On".)
+	#
+
+	sys.auth_user = "admin"
+	sys.auth_salt = "235ba225813f156690b798dc978099e1e76441ee"
+	# sys.auth_pass = ""
+	sys.useimporter = 1		# code for ?mode=sql.
+	# sys.importlist = PhpArray(["/path/to/data.txt"])
+
+	#
 	# If the password on the login form is empty, a mail with URL will be sent.
 	#
 

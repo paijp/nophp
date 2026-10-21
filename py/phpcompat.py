@@ -91,11 +91,37 @@ def to_str(v):
 	return str(v)
 
 
-def php_round(v, precision=0):
-	"""round() -- PHP rounds half away from zero, Python rounds half to even."""
-	f = to_float(v) * (10 ** precision)
-	r = math.floor(abs(f) + 0.5) * (1 if f >= 0 else -1)
-	return r / (10 ** precision)
+def _round_helper(f):
+	"""PHP_ROUND_HALF_UP (keeps the sign of zero: round(-0.4) is -0)"""
+	r = float(math.floor(f + 0.5) if f >= 0.0 else math.ceil(f - 0.5))
+	return math.copysign(r, f) if r == 0.0 else r
+
+
+def php_round(v, places=0):
+	"""round() of PHP 8.0 -- rounds half away from zero, with "pre-rounding"
+	(round(1.005, 2) is 1.01 in PHP, while Python's round() gives 1.0)."""
+	value = to_float(v)
+	if not math.isfinite(value) or value == 0.0:
+		return value
+	places = max(-4 * 15, min(places, 4 * 15))
+	precision_places = 14 - int(math.floor(math.log10(abs(value))))
+	f1 = 10.0 ** abs(places)
+	if precision_places > places and precision_places - 15 < places:
+		f2 = 10.0 ** abs(precision_places)
+		tmp = value * f2 if precision_places >= 0 else value / f2
+		tmp = _round_helper(tmp)
+		use_precision = max(-4 * 15, places - precision_places)
+		tmp = tmp / (10.0 ** abs(use_precision))
+	else:
+		tmp = value * f1 if places >= 0 else value / f1
+		if abs(tmp) >= 1e15:
+			return value
+	tmp = _round_helper(tmp)
+	if abs(places) < 23:
+		tmp = tmp / f1 if places > 0 else tmp * f1
+	else:
+		tmp = float("%.15e" % tmp)
+	return tmp
 
 
 def to_bool(v):

@@ -75,6 +75,8 @@ class Request:
 		self._COOKIE = PhpArray(cookie or {})
 		self._SERVER = server or {}
 		self.headers = []
+		self.status = None
+		self.printbuf = ""
 		self.db0 = None
 		self.cookiepath = ""
 		self.debuglog = ""
@@ -109,10 +111,18 @@ def trigger_error(s):
 	pass
 
 
+def echo(s):
+	"""print / echo"""
+	G().printbuf += to_str(s)
+
+
 def header(s):
 	"""header("Name: value") replaces the same header."""
-	name, val = s.split(":", 1)
 	g = G()
+	if (m := re.match(r'^HTTP/[0-9.]+ ([0-9]{3}.*)', s)):
+		g.status = m.group(1)
+		return
+	name, val = s.split(":", 1)
 	g.headers = [h for h in g.headers if h[0].lower() != name.strip().lower()]
 	g.headers.append((name.strip(), val.strip()))
 
@@ -1384,11 +1394,11 @@ def main(environ, tables, basedir):
 		try:
 			_main(g, environ, tables, basedir)
 		except Exit as e:
-			body = e.message
+			body = g.printbuf + e.message
 		else:
-			body = ""
-		status = "200 OK"
-		if any(h[0].lower() == "location" for h in g.headers):
+			body = g.printbuf
+		status = g.status or "200 OK"
+		if g.status is None and any(h[0].lower() == "location" for h in g.headers):
 			status = "302 Found"
 		return status, [("Content-Type", "text/html; charset=UTF-8")] + g.headers, body
 	finally:
@@ -1404,6 +1414,9 @@ def _main(g, environ, tables, basedir):
 	sys.urlquery = environ.get("QUERY_STRING") or None
 
 	tables.tables(sys)		# require("tables.php");
+	if sys.useimporter:		# include("importer.php") in env.php
+		import importer
+		importer.handle()
 
 	if php_trim(myhash("")) == "":
 		raise Exit("hash not work")
