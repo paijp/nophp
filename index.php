@@ -2384,7 +2384,7 @@ function	nophp_bq_dbbegin($db, $returnid = 0, $ignoreerror = 0)
 			adddebuglog();
 		}
 		if (!$ignoreerror)
-			log_die($a[2]." : ".$sql);
+			log_die($a[2]);
 		if (($returnid))
 			return 0;
 		return array();
@@ -2420,7 +2420,7 @@ function	nophp_bq_dbcommit($db, $returnid = 0, $ignoreerror = 0)
 			adddebuglog();
 		}
 		if (!$ignoreerror)
-			log_die($a[2]." : ".$sql);
+			log_die($a[2]);
 		if (($returnid))
 			return 0;
 		return array();
@@ -2456,7 +2456,7 @@ function	nophp_bq_dbrollback($db, $returnid = 0, $ignoreerror = 0)
 			adddebuglog();
 		}
 		if (!$ignoreerror)
-			log_die($a[2]." : ".$sql);
+			log_die($a[2]);
 		if (($returnid))
 			return 0;
 		return array();

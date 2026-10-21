@@ -341,7 +341,7 @@ def _nophp_bq_dbtxn(method, db, returnid, ignoreerror):
 	if not getattr(db, method)():
 		a = db.errorInfo()
 		if not ignoreerror:
-			log_die(to_str(a[2]) + " : ")		# (sic) $sql is undefined in PHP
+			log_die(to_str(a[2]))
 		if returnid:
 			return 0
 		return []

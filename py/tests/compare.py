@@ -8,6 +8,7 @@
 #
 
 import html.parser
+import os
 import http.cookiejar
 import re
 import sys
@@ -115,10 +116,11 @@ def main():
 	pages = sys.argv[3:]
 	clients = [Client(php), Client(py)]
 	ok = True
+	first = os.environ.get("LOGINPAGE", "g0000")
 	login = {"login": "nobody@something.com", "pass": "testpass", ":login": "Login"}
-	ok &= step(clients, "login page", "/nofmt/g0000.html")[0]
-	ok &= step(clients, "bad login", "/nofmt/g0000.html", dict(login, **{"pass": "x"}))[0]
-	ok &= step(clients, "login", "/nofmt/g0000.html", login)[0]
+	ok &= step(clients, "login page", "/nofmt/%s.html" % first)[0]
+	ok &= step(clients, "bad login", "/nofmt/%s.html" % first, dict(login, **{"pass": "x"}))[0]
+	ok &= step(clients, "login", "/nofmt/%s.html" % first, login)[0]
 	for page in pages:
 		same, raw = step(clients, "get", "/nofmt/%s.html" % page)
 		ok &= same
@@ -130,7 +132,7 @@ def main():
 				data[sname] = sval
 				ok &= step(clients, "post %s" % sname, "/nofmt/%s.html%s" % (page, f["action"]), data)[0]
 				ok &= step(clients, "after", "/nofmt/%s.html" % page)[0]
-	ok &= step(clients, "logout", "/nofmt/g0000.html", {":logout": "logout", "submitkey": ""})[0]
+	ok &= step(clients, "logout", "/nofmt/%s.html" % first, {":logout": "logout", "submitkey": ""})[0]
 	print("ALL SAME" if ok else "DIFFERENCES FOUND")
 	sys.exit(0 if ok else 1)
 
