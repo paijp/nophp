@@ -61,4 +61,7 @@ compare.py runs the same scenario (login, every form on every page, logout) agai
 ## Not ported yet
 
 - debuglog files, coverage and the log viewer (`debuglog???????*` directory).
+  The hook points are in debuglog.py (called only when sys.debugdir is set).
 - mysql (sqlite only).
+
+See MIGRATION.md for the steps to replace index.php (Japanese).
