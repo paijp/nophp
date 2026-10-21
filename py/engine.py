@@ -7,7 +7,7 @@
 #	http://opensource.org/licenses/mit-license.php
 #
 #	Port of index.php.
-#	Not ported yet: debuglog files, coverage, log viewer, ?mode=sql (importer.php).
+#	Not ported yet: debuglog files, coverage and the log viewer (see debuglog.py for the hook points).
 #
 
 import contextvars
@@ -26,6 +26,7 @@ from phpcompat import (
 	php_round, php_trim, get_class_methods, call_user_func_array,
 )
 import phpdate
+import debuglog
 
 
 class Exit(Exception):
@@ -147,6 +148,8 @@ def log_die(message=""):
 	g = G()
 	if g.loginrecord:
 		execsql("commit;", None, 0, 1)
+	if debuglog.enabled(g):
+		debuglog.on_die(g, message)
 	raise Exit(message)
 
 
@@ -239,9 +242,13 @@ def execsql(sql=None, array=None, returnid=0, ignoreerror=0):
 		return None
 	if array is None:
 		array = []
+	if debuglog.enabled(g):
+		debuglog.on_sql(g, sql, array)
 	try:
 		cur = g.db0.execute(sql, [_dbparam(v) for v in (array.values() if isinstance(array, PhpArray) else array)])
 	except sqlite3.Error as e:
+		if debuglog.enabled(g):
+			debuglog.on_sqlresult(g, error=str(e))
 		if not ignoreerror:
 			log_die("%s : %s" % (e, sql))
 		if returnid:
@@ -250,9 +257,14 @@ def execsql(sql=None, array=None, returnid=0, ignoreerror=0):
 	if ignoreerror < 0:
 		return 1		# success.
 	if returnid:
+		if debuglog.enabled(g):
+			debuglog.on_sqlresult(g, lastinsertid=cur.lastrowid)
 		return str(cur.lastrowid)
 	cols = [d[0] for d in cur.description] if cur.description else []
-	return [PhpArray(dict(zip(cols, [_dbvalue(v) for v in row]))) for row in cur.fetchall()]
+	rows = [PhpArray(dict(zip(cols, [_dbvalue(v) for v in row]))) for row in cur.fetchall()]
+	if debuglog.enabled(g):
+		debuglog.on_sqlresult(g, rows=rows)
+	return rows
 
 
 def object_vars(obj):
@@ -414,7 +426,8 @@ class table(_undef_v_, Registered):
 		execsql("commit;")
 
 	def dumpfields(self, title=""):
-		pass
+		if debuglog.enabled(G()):
+			debuglog.on_fields(G(), self, title)
 
 
 class a_table(table):
@@ -542,7 +555,8 @@ class simpletable(_undef_v_, Registered):
 		log_die("update called.")
 
 	def dumpfields(self, title=""):
-		pass
+		if debuglog.enabled(G()):
+			debuglog.on_fields(G(), self, title)
 
 	def h_set__val__field(self, rh0, record, val, field):
 		self.setfield(field, val)
@@ -609,7 +623,8 @@ class rootrecord(_undef_v_, Registered):
 		setattr(self, field, val)
 
 	def dumpfields(self, title=""):
-		pass
+		if debuglog.enabled(G()):
+			debuglog.on_fields(G(), self, title)
 
 
 def _methodlist(obj):
@@ -745,7 +760,7 @@ class recordholder(Registered):
 	def flush_coverage(self):
 		if G().coverage_list is None:
 			return
-		# coverage log is not ported yet.
+		debuglog.on_coverage(G(), self)
 
 	def _gohome(self):
 		sys = G().sys
@@ -1120,7 +1135,8 @@ class selectrecord(Registered):
 		return self.fields.get(field)
 
 	def dumpfields(self, title=""):
-		pass
+		if debuglog.enabled(G()):
+			debuglog.on_fields(G(), self, title)
 
 
 # ---- command parsers ----
@@ -1143,7 +1159,10 @@ class commandparser(Registered):		# volatile object
 		self.children.append(commandparser)
 
 	def parsehtml(self, rh=None, record=None, index=1):
-		G().coverage_id = self.index
+		g = G()
+		g.coverage_id = self.index
+		if debuglog.enabled(g):
+			debuglog.on_parse(g, self)
 		self.parsehtmlinner(rh, record)
 
 	def parsehtmlinner(self, rh=None, record=None):
@@ -1189,6 +1208,8 @@ class commandparserhtml(commandparser):
 				sclose = "</span>"
 			html += s + val[1:]
 			htmlhighlight += htmlspecialchars(s + val[1:]) + sclose
+		if debuglog.enabled(G()):
+			debuglog.on_html(G(), self, html, htmlhighlight)
 		self.output(html, htmlhighlight)
 
 
@@ -1421,8 +1442,13 @@ def _main(g, environ, tables, basedir):
 	if php_trim(myhash("")) == "":
 		raise Exit("hash not work")
 
-	# There is no "index.php" in the URL, so SCRIPT_NAME is used instead.
-	g.cookiepath = environ.get("SCRIPT_NAME", "")
+	# Same as PHP when mounted as ".../index.php", so that PHP and Python share the cookies.
+	if not environ.get("SCRIPT_NAME", "").endswith("/index.php"):
+		g.cookiepath = environ.get("SCRIPT_NAME", "")
+	elif (m := re.search(r'://[^/]+/(.*)/index[.]php', sys.url)):
+		g.cookiepath = "/" + m.group(1)
+	else:
+		g.cookiepath = ""
 	sys.urlbase = sys.url[:len(sys.url) - len(environ.get("PATH_INFO", ""))]
 	m = re.match(r'^/([^/]*)/([0-9A-Za-z]+)[.]html$', environ.get("PATH_INFO", ""))
 	if not m:
@@ -1477,6 +1503,9 @@ def _main(g, environ, tables, basedir):
 	except (OSError, UnicodeDecodeError):
 		header("Location: %s/nopage/%s.html" % (sys.urlbase, sys.rootpage))
 		log_die()
+
+	if debuglog.enabled(g):
+		debuglog.on_request(g, targethtml)
 
 	g.recordholderlist = PhpArray()
 	g.actionrecordholder = None
