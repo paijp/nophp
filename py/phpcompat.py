@@ -175,6 +175,14 @@ def rawurlencode(s):
 	return urllib.parse.quote(to_str(s).encode("utf-8"), safe="-_.~")
 
 
+def php_trim(s):
+	return to_str(s).strip(" \t\n\r\0\x0b")
+
+
+def escapeshellarg(s):
+	return "'" + to_str(s).replace("'", "'\\''") + "'"
+
+
 def explode(sep, s, limit=None):
 	s = to_str(s)
 	if limit is None:

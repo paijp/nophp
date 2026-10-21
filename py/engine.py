@@ -6,51 +6,84 @@
 #	This software is released under the MIT License.
 #	http://opensource.org/licenses/mit-license.php
 #
-#	Proof of concept: template engine core of index.php
-#	(commandparser*, recordholder::parsebq and friends).
-#	Database tables, login, debuglog files and coverage are not ported yet.
+#	Port of index.php.
+#	Not ported yet: debuglog files, coverage, log viewer, ?mode=sql (importer.php).
 #
 
 import contextvars
+import hashlib
+import json
+import os
 import re
+import sqlite3
+import time
+import urllib.parse
+import urllib.request
 
 from phpcompat import (
 	ClassRegistry, Registered, PhpArray, ENT_QUOTES,
-	to_int, to_float, to_str, htmlspecialchars, nl2br, rawurlencode,
-	php_round, get_class_methods, call_user_func_array,
+	to_int, to_float, to_str, loose_eq, htmlspecialchars, nl2br, rawurlencode,
+	php_round, php_trim, get_class_methods, call_user_func_array,
 )
+import phpdate
 
 
 class Exit(Exception):
-	"""log_die() / header("Location: ...") + exit."""
-	def __init__(self, status="200 OK", headers=None, body=""):
-		super().__init__(status)
-		self.status = status
-		self.headers = headers or []
-		self.body = body
-
-
-def redirect(url):
-	return Exit("302 Found", [("Location", url)])
+	"""die() / log_die(). The response is built from Request.headers and the message."""
+	def __init__(self, message=""):
+		super().__init__(message)
+		self.message = to_str(message)
 
 
 class Sys:
-	pass
+	htmlbase = "./res/nofmt/"
+	rootpage = "g0000"
+	debugdir = None
+	debugmaxlogrecords = 500
+	debugchunksize = 4000
+	debuggz = 1
+	debugdiff = 1
+
+	mailinterval = 60
+	mailexpire = 1800
+	forcelogoutonupdate = 1
+	noredirectonlogin = 0
+
+	urlbase = None
+	target = None
+
+	def __init__(self):
+		self.importlist = PhpArray()
+		t = time.time()
+		self.debugfn = time.strftime("%y%m%d_%H%M%S_", time.localtime(int(t))) + "%08d" % int((t - int(t)) * 1e8)
+		self.now = str(int(t))
+
+	def __getattr__(self, name):
+		"""@$sys->undefined is null."""
+		if name.startswith("__"):
+			raise AttributeError(name)
+		return None
 
 
 class Request:
 	"""All PHP globals that live for one request.
 	mod_wsgi keeps the module loaded between requests, so these must not be module globals."""
-	def __init__(self, sys, get=None, post=None):
+	def __init__(self, sys, get=None, post=None, cookie=None, server=None):
 		self.sys = sys
 		self._GET = PhpArray(get or {})
 		self._POST = PhpArray(post or {})
+		self._COOKIE = PhpArray(cookie or {})
+		self._SERVER = server or {}
+		self.headers = []
+		self.db0 = None
+		self.cookiepath = ""
 		self.debuglog = ""
 		self.htmloutput = ""
 		self.phase = 0
 		self.invalid = 0
 		self.loginrecord = None
 		self.tablelist = PhpArray()
+		self.debugtablelist = PhpArray()
 		self.recordholderlist = PhpArray()
 		self.actionrecordholder = None
 		self.beforename = ""
@@ -76,45 +109,482 @@ def trigger_error(s):
 	pass
 
 
+def header(s):
+	"""header("Name: value") replaces the same header."""
+	name, val = s.split(":", 1)
+	g = G()
+	g.headers = [h for h in g.headers if h[0].lower() != name.strip().lower()]
+	g.headers.append((name.strip(), val.strip()))
+
+
+def setcookie(name, value, expires, path, domain, secure, httponly):
+	s = "%s=%s" % (name, rawurlencode(value) if value != "" else "deleted")
+	if expires or value == "":
+		e = 1 if value == "" else expires
+		s += "; expires=" + time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(e)) + "; Max-Age=0"
+	if path:
+		s += "; path=" + path
+	if domain:
+		s += "; domain=" + domain
+	if secure:
+		s += "; secure"
+	if httponly:
+		s += "; HttpOnly"
+	G().headers.append(("Set-Cookie", s))
+
+
+def log_die(message=""):
+	g = G()
+	if g.loginrecord:
+		execsql("commit;", None, 0, 1)
+	raise Exit(message)
+
+
 def ispost():
 	g = G()
 	if g.loginrecord is None:
 		return 0
-	if to_str(getattr(g.loginrecord, "v_submitkey", "")) == "":
+	if to_str(g.loginrecord.v_submitkey) == "":
 		return 0
-	if to_str(g._POST.get("submitkey")) == to_str(g.loginrecord.v_submitkey):
+	if loose_eq(to_str(g._POST.get("submitkey")), to_str(g.loginrecord.v_submitkey)):
 		return 1
 	return 0
 
 
-# ---- bq functions (get_defined_functions()["user"] replacement) ----
+# ---- user functions (get_defined_functions()["user"] replacement) ----
 
-_bqfunctions = {}
+_functions = {}
 
 
-def bqfunc(f):
-	"""Register bq_*/bq2_* function. Later registration (tables.py) overrides builtin,
-	like the function_exists() guard in builtinfunc.php."""
-	_bqfunctions[f.__name__] = f
+def phpfunction(f):
+	"""Register a global function that tables.py may override (bq_*, bq2_*, bq_login, myhash).
+	Later registration overrides, like the function_exists() guard in builtinfunc.php."""
+	_functions[f.__name__] = f
 	return f
+
+
+bqfunc = phpfunction
+
+
+def function_exists(name):
+	return name in _functions
+
+
+def call_function(name, *args):
+	return _functions[name](*args)
 
 
 def _getfunclist():
 	g = G()
 	if g.funclist is None:
 		g.funclist = {}
-		for s in _bqfunctions:
+		for s in _functions:
 			m = re.match(r'^bq2?_(.*)', s)
 			if m is None:
 				continue
 			s0 = m.group(1).split("__", 1)[0]
+			if g.funclist.get(s0) is not None:
+				trigger_error("duplexed function(%s)" % s)
 			g.funclist[s0] = s
 	return g.funclist
 
 
+def myhash(s):
+	return _functions["myhash"](s)
+
+
+def _myhash(s):
+	return hashlib.sha256(to_str(s).encode()).hexdigest()
+
+
+_functions["myhash"] = _myhash		# tables.py may override it with @phpfunction def myhash
+
+
+# ---- database ----
+
+def _dbparam(v):
+	"""PDO binds every value as a string."""
+	return None if v is None else to_str(v)
+
+
+def _dbvalue(v):
+	"""PDO sqlite (PHP 8.0) returns every value as a string."""
+	if v is None:
+		return None
+	if isinstance(v, float):
+		s = repr(v)
+		return s[:-2] if s.endswith(".0") else s
+	if isinstance(v, bytes):
+		return v.decode("utf-8", "replace")
+	return str(v)
+
+
+def execsql(sql=None, array=None, returnid=0, ignoreerror=0):
+	g = G()
+	sys = g.sys
+	if g.db0 is None:
+		path = re.sub(r'^sqlite:', "", sys.sqlpath)
+		g.db0 = sqlite3.connect(path, timeout=60, isolation_level=None)
+	if sql is None:
+		return None
+	if array is None:
+		array = []
+	try:
+		cur = g.db0.execute(sql, [_dbparam(v) for v in (array.values() if isinstance(array, PhpArray) else array)])
+	except sqlite3.Error as e:
+		if not ignoreerror:
+			log_die("%s : %s" % (e, sql))
+		if returnid:
+			return 0
+		return []
+	if ignoreerror < 0:
+		return 1		# success.
+	if returnid:
+		return str(cur.lastrowid)
+	cols = [d[0] for d in cur.description] if cur.description else []
+	return [PhpArray(dict(zip(cols, [_dbvalue(v) for v in row]))) for row in cur.fetchall()]
+
+
+def object_vars(obj):
+	"""get_object_vars(): properties in the order they were set."""
+	return list(vars(obj).items())
+
+
+class _undef_v_:
+	"""Reading an undefined $this->v_xxx is null in PHP (with a warning)."""
+	def __getattr__(self, name):
+		if name.startswith("v_"):
+			return None
+		raise AttributeError(name)
+
+
+class table(_undef_v_, Registered):
+	tablename = None
+	id = -1
+	methodlist = None
+
+	def __init__(self, recordid=None, configlist=None):
+		g = G()
+		self.configlist = configlist
+		if self.configlist is None:
+			self.configlist = re.split(r'\r|\n|\r\n', php_trim(self.getconfig()))
+		if self.tablename is None:
+			s = type(self).__name__
+			m = re.match(r'^([_0-9A-Za-z]+)_table$', s)
+			if m:
+				s = m.group(1)
+			self.tablename = s
+		if recordid is None:
+			g.tablelist[self.tablename] = self
+			return			# debugtablelist is not ported yet.
+		self.id = 0
+		if to_int(recordid) <= 0:
+			return
+		sql = "select * from %s where id = ?;" % self.tablename
+		lst = execsql(sql, [recordid], 0, 1)
+		if len(lst) <= 0:
+			return
+		self.id = recordid
+		mixed = None
+		for key, val in lst[0].items():
+			if key == "id":
+				self.id = to_int(val)
+			elif key == "mixed":
+				mixed = val
+			else:
+				self.setfield(key, val)
+		if mixed is not None:
+			for chunk in mixed.split("\t"):
+				a = chunk.split("=", 1)
+				if len(a) < 2:
+					continue
+				self.setfield(a[0], urllib.parse.unquote(a[1]))
+
+	def getconfig(self):
+		return "created\tint\nupdated\tint\ndeleted\tint\n"
+
+	def onload(self):
+		pass
+
+	def getrecord(self, id=0):
+		return type(self)(id, self.configlist)
+
+	def getrecordidlist(self, cond="", lst=None):
+		sql = "select %s.id as id from %s %s;" % (self.tablename, self.tablename, cond)
+		lst = execsql(sql, lst, 0, 1)
+		return [to_int(r["id"]) for r in lst]
+
+	def getlist(self):
+		lst = PhpArray()
+		for varname, varval in object_vars(self):
+			m = re.match(r'^v_(.*)', varname)
+			if m:
+				lst[m.group(1)] = varval
+		return lst
+
+	def getfield(self, field):
+		if field != "id":
+			field = "v_" + field
+		return getattr(self, field, None)
+
+	def setfield(self, field, val):
+		if field != "id":
+			field = "v_" + field
+		setattr(self, field, val)
+
+	def update(self, ignoreerror=0):
+		sys = G().sys
+		if self.id < 0:
+			log_die("update called.")
+		if self.id <= 0:
+			self.v_updated = sys.now
+			self.v_created = sys.now
+		else:
+			self.v_updated = sys.now
+
+		if sys.debugfn is not None:
+			self.v_debuglogfn = sys.debugfn
+		elif "v_debuglogfn" in vars(self):
+			del self.v_debuglogfn
+
+		fieldlist = PhpArray()
+		mixedlist = PhpArray()
+		for line in self.configlist:
+			name = re.split(r'[ \t]+', line, maxsplit=1)[0]
+			fieldlist[name] = to_str(self.getfield(name))
+		for varname, val in object_vars(self):
+			m = re.match(r'^v_(.*)', varname)
+			if not m:
+				continue
+			name = m.group(1)
+			if fieldlist.get(name) is not None:
+				continue
+			if re.match(r'^:', name) or "__" in name:
+				continue
+			if re.match(r'^[0-9]', name):
+				return
+			mixedlist[name] = name + "=" + rawurlencode(val)
+		fieldlist["mixed"] = "\t".join(mixedlist.values())
+
+		if self.id <= 0:
+			skeys = ", ".join(str(k) for k in fieldlist.keys())
+			svals = ", ".join(["?"] * len(fieldlist))
+			sql = "insert into %s(%s) values(%s);" % (self.tablename, skeys, svals)
+			self.id = to_int(execsql(sql, list(fieldlist.values()), 1))
+		else:
+			s = ", ".join("%s = ?" % k for k in fieldlist.keys())
+			sql = "update %s set %s where id = ?" % (self.tablename, s)
+			execsql(sql, list(fieldlist.values()) + [self.id], 0, ignoreerror)
+
+	def delete(self):
+		if self.id <= 0:
+			return
+		execsql("delete from %s where id = ?;" % self.tablename, [self.id])
+		self.id = 0
+
+	def createtable(self):
+		s = ",".join(self.configlist)
+		execsql()
+		sql = "create table %s(\n\tid\tinteger primary key, \n\tmixed\ttext, \n\t%s\n);" % (self.tablename, s)
+		execsql(sql, None, 0, 1)
+
+		updated = 0
+		for line in self.configlist:
+			fieldname = re.split(r'[ \t]+', php_trim(line), maxsplit=1)[0]
+			if execsql("alter table %s add %s;" % (self.tablename, php_trim(line)), None, 1, -1):
+				updated = 1
+			if "/*indexed*/" not in line:
+				continue
+			execsql("create index %s%s_index on %s(%s);" % (self.tablename, fieldname, self.tablename, fieldname), None, 0, 1)
+		if updated == 0:
+			return
+		execsql("begin;")
+		for recordid in self.getrecordidlist():
+			self.getrecord(recordid).update()
+		execsql("commit;")
+
+	def dumpfields(self, title=""):
+		pass
+
+
+class a_table(table):
+	def t_id__id__field(self, rh0, record, s1, s3):
+		r = self.getrecord(to_int(s1))
+		return [to_str(r.getfield(s3))]
+
+	def t_find__val__field(self, rh0, record, val, field):
+		for id in self.getrecordidlist():
+			r = self.getrecord(id)
+			if loose_eq(r.getfield(field), val):
+				return [id]
+		return [""]
+
+	def h_set__val__field(self, rh0, record, val, field):
+		self.setfield(field, val)
+		return []
+
+	def hs_update(self, rh0, record=None):
+		s = ""
+		if to_int(self.update()) == 0:
+			s = self.id
+		return [s]
+
+	def hs_delete(self, rh0, record=None):
+		self.delete()
+		return [""]
+
+	def tv_len(self, par, s):
+		m = re.match(r'^(-?[0-9]*)-(-?[0-9]*)', par)
+		if not m:
+			return 0
+		s = to_str(s)
+		if m.group(1) != "" and len(s.encode()) < to_int(m.group(1)):
+			return 1
+		if m.group(2) != "" and len(s.encode()) > to_int(m.group(2)):
+			return 1
+		return 0
+
+	def tv_lenopt(self, par, s):
+		if loose_eq(s, ""):
+			return 0
+		return self.tv_len(par, s)
+
+	def tv_num(self, par, s):
+		m = re.match(r'^(-?[0-9]*)-(-?[0-9]*)', par)
+		if not m:
+			return 0
+		if not re.fullmatch(r'-?[0-9]+\n?', to_str(s)):		# PHP '$' also matches before a final newline
+			return 1
+		if m.group(1) != "" and to_int(s) < to_int(m.group(1)):
+			return 1
+		if m.group(2) != "" and to_int(s) > to_int(m.group(2)):
+			return 1
+		return 0
+
+	def tv_numopt(self, par, s):
+		if loose_eq(s, ""):
+			return 0
+		return self.tv_num(par, s)
+
+
+def explodetab(s, opt="asKV"):
+	from kana import mb_convert_kana
+	return ["" if v == "NULL" else mb_convert_kana(v, opt) for v in s.split("\t")]
+
+
+class simpletable(_undef_v_, Registered):
+	methodlist = None
+
+	def __init__(self, record, tablename="", lst=None, id=0):
+		self.record = record
+		self.tablename = tablename
+		self.id = id
+		if lst is not None:
+			self.list = lst
+			for key, val in lst.items():
+				self.setfield(key, val)
+			return
+		self.list = PhpArray()
+		s = self.record.v_contents
+		if s is None:
+			return
+		for key, line in enumerate(s.split("\n")):
+			self.list[key] = PhpArray()
+			for chunk in line.split("\t"):
+				a = chunk.split("=", 1)
+				if len(a) < 2:
+					continue
+				self.list[key][a[0]] = urllib.parse.unquote(a[1])
+
+	def getfield(self, field):
+		if field != "id":
+			field = "v_" + field
+		return getattr(self, field, None)
+
+	def setfield(self, field, val):
+		if field != "id":
+			field = "v_" + field
+		setattr(self, field, val)
+
+	def getrecord(self, id=0):
+		a = self.list.get(to_int(id) - 1)
+		if a is None:
+			return type(self)(None, self.tablename, PhpArray(), 0)
+		return type(self)(None, self.tablename, a, id)
+
+	def getrecordidlist(self, dummy0="", dummy1=None):
+		return [key + 1 for key in self.list.keys()]
+
+	def getlist(self):
+		return self.list
+
+	def updatelist(self, lst=None):
+		if self.record is None:
+			log_die("updatelist called.")
+		self.list = lst
+		rowlist = []
+		for fields in self.list.values():
+			rowlist.append("\t".join("%s=%s" % (key, rawurlencode(val)) for key, val in fields.items()))
+		self.record.v_contents = "\n".join(rowlist)
+		self.record.update()
+
+	def update(self):
+		log_die("update called.")
+
+	def dumpfields(self, title=""):
+		pass
+
+	def h_set__val__field(self, rh0, record, val, field):
+		self.setfield(field, val)
+		return []
+
+	def hs_update(self, rh0, record=None):
+		t = G().tablelist["simple"].gettable(self.tablename)
+		lst = t.getlist().copy()		# PHP arrays are copied on assignment
+		fields = PhpArray()
+		for varname, varval in object_vars(self):
+			m = re.match(r'^v_(.*)', varname)
+			if m:
+				fields[m.group(1)] = varval
+		if lst.get(to_int(self.id) - 1) is None:
+			lst.append(fields)
+		else:
+			lst[to_int(self.id) - 1] = fields
+		t.updatelist(lst)
+		return []
+
+	def s_id__id__field(self, rh0, record, s1, s3):
+		r = self.getrecord(to_int(s1))
+		return [to_str(r.getfield(s3))]
+
+	def s_find__val__field(self, rh0, record, s1, s3):
+		for k3, v3 in self.getlist().items():
+			if loose_eq(v3.get(s3), s1):
+				return [k3 + 1]
+		return [""]
+
+
+class innersimpletable(table):
+	tablename = "simple"
+
+	def getconfig(self):
+		return super().getconfig() + "name\ttext unique not null\ncontents\ttext\n"
+
+	def gettable(self, tablename="test"):
+		a = self.getrecordidlist("where name = ?", [tablename])
+		if len(a) > 0:
+			r = self.getrecord(a[0])
+		else:
+			r = self.getrecord()
+		r.v_name = tablename
+		if ClassRegistry.exists(s := "simpletable_" + tablename):
+			return ClassRegistry.new(s, r, tablename)
+		return simpletable(r, tablename)
+
+
 # ---- records ----
 
-class rootrecord(Registered):
+class rootrecord(_undef_v_, Registered):
 	tablename = "root"
 	methodlist = None
 
@@ -177,9 +647,27 @@ class recordholder(Registered):
 		self.debugpoplog = ""
 		self.stack.extend(array)
 
+	def parsewhere(self, sql):
+		args = []
+		a = re.split(r'where ', sql, maxsplit=1, flags=re.I)
+		if len(a) < 2:
+			return [sql, []]
+		sql0 = a[0] + "where "
+		sql1 = a[1]
+		for key, vals in self.whereargs.items():
+			sql0 += "%s and " % key
+			args.extend(vals)
+		return [sql0 + sql1, args]
+
 	def _call(self, obj, fn, cmd, record):
 		pars = self.popstack(cmd, " ".join(fn.split("__")[1:]))
 		self.pushstack(call_user_func_array([obj, fn], [self, record] + pars))
+
+	def _nofunc(self, s):
+		g = G()
+		trigger_error(s)
+		g.debuglog += "<h3>" + htmlspecialchars(s) + "</h3>"
+		self.pushstack([])
 
 	def callfunc(self, rh, cmd, record=None, issubmit=0):
 		g = G()
@@ -188,10 +676,7 @@ class recordholder(Registered):
 			rh = g.recordholderlist.get(s1)
 			if rh is None:
 				self.pushstack([])
-				s = "no recordholder(%s)" % s1
-				trigger_error(s)
-				g.debuglog += "<h3>" + htmlspecialchars(s) + "</h3>"
-				self.pushstack([])
+				self._nofunc("no recordholder(%s)" % s1)
 				return
 		_methodlist(rh)
 		if rh.record is not None:
@@ -209,10 +694,7 @@ class recordholder(Registered):
 			return self._call(rh, fn, cmd, record)
 		if rh.record is not None and (fn := rh.record.methodlist.get(cmd)) is not None:
 			return self._call(rh.record, fn, cmd, record)
-		s = "no recordholder function(%s in %s)" % (cmd, type(self).__name__)
-		trigger_error(s)
-		g.debuglog += "<h3>" + htmlspecialchars(s) + "</h3>"
-		self.pushstack([])
+		self._nofunc("no recordholder function(%s in %s)" % (cmd, type(self).__name__))
 
 	def callfunctable(self, t, cmd, record=None, issubmit=0):
 		g = G()
@@ -221,10 +703,7 @@ class recordholder(Registered):
 			t = g.tablelist.get(s1)
 			if t is None:
 				self.pushstack([])
-				s = "no table(%s)" % s1
-				trigger_error(s)
-				g.debuglog += "<h3>" + htmlspecialchars(s) + "</h3>"
-				self.pushstack([])
+				self._nofunc("no table(%s)" % s1)
 				return
 		_methodlist(t)
 		cmd = "t" + cmd[1:]
@@ -236,15 +715,34 @@ class recordholder(Registered):
 		fn = t.methodlist.get(cmd)
 		if fn is not None:
 			return self._call(t, fn, cmd, record)
-		s = "no table function(%s in %s)" % (cmd, type(self).__name__)
-		trigger_error(s)
-		g.debuglog += "<h3>" + htmlspecialchars(s) + "</h3>"
-		self.pushstack([])
+		self._nofunc("no table function(%s in %s)" % (cmd, type(self).__name__))
+
+	def callfuncstable(self, cmd, record=None, issubmit=0):
+		g = G()
+		s1, = self.popstack(cmd, "stable")
+		t = g.tablelist["simple"].gettable(s1)
+		_methodlist(t)
+		if issubmit:
+			cmds = "ss" + cmd[1:]
+			fn = t.methodlist.get(cmds)
+			if fn is not None:
+				return self._call(t, fn, cmds, record)
+		fn = t.methodlist.get(cmd)
+		if fn is not None:
+			return self._call(t, fn, cmd, record)
+		self._nofunc("no stable function(%s in %s)" % (cmd, type(self).__name__))
 
 	def flush_coverage(self):
 		if G().coverage_list is None:
 			return
 		# coverage log is not ported yet.
+
+	def _gohome(self):
+		sys = G().sys
+		self.pushstack(["HOME"])
+		self.flush_coverage()
+		header("Location: %s/nofmt/%s.html" % (sys.urlbase, sys.rootpage))
+		log_die()
 
 	def parsebq(self, text="", record=None, issubmit=0, initstack=None):
 		g = G()
@@ -308,15 +806,11 @@ class recordholder(Registered):
 					self.pushstack([])
 				elif cmd == "home":
 					self.popstack(cmd, "")
-					self.pushstack(["HOME"])
-					self.flush_coverage()
-					raise redirect("%s/nofmt/%s.html" % (sys.urlbase, sys.rootpage))
+					self._gohome()
 				elif cmd in ("andhome", "iandhome", "orhome", "iorhome"):
 					s1, = self.popstack(cmd, "val")
 					if (to_int(s1) != 0) == cmd.endswith("andhome"):
-						self.pushstack(["HOME"])
-						self.flush_coverage()
-						raise redirect("%s/nofmt/%s.html" % (sys.urlbase, sys.rootpage))
+						self._gohome()
 					self.pushstack([s1] if cmd.startswith("i") else [])
 				elif cmd == "pop":
 					self.popstack(cmd, "drop")
@@ -340,10 +834,11 @@ class recordholder(Registered):
 							s += "=" + v3
 					self.pushstack([s])
 					self.flush_coverage()
-					raise redirect(s)
+					header("Location: " + s)
+					log_die()
 				elif cmd == "logout":
 					g.tablelist["login"].logout()
-					raise Exit()
+					log_die()
 				elif re.match(r'^h_', cmd):
 					self.callfunc(None, cmd, record, issubmit)
 				elif re.match(r'^H_', cmd):
@@ -353,15 +848,11 @@ class recordholder(Registered):
 				elif re.match(r'^T_', cmd):
 					self.callfunctable(self.record, cmd, record, issubmit)
 				elif re.match(r'^s_', cmd):
-					raise NotImplementedError("stable is not ported yet")
+					self.callfuncstable(cmd, record, issubmit)
 				elif (m := re.match(r'^([a-z]id)([_0-9A-Za-z]*)$', cmd)):
-					s = m.group(1)
-					tablename2 = getattr(sys, s, None)
+					tablename2 = getattr(sys, m.group(1))
 					if tablename2 is None:
-						s = "no table shortcut(%s in %s)" % (cmd, type(self).__name__)
-						trigger_error(s)
-						g.debuglog += "<h3>" + htmlspecialchars(s) + "</h3>"
-						self.pushstack([])
+						self._nofunc("no table shortcut(%s in %s)" % (cmd, type(self).__name__))
 						continue
 					tablename, = self.popstack(cmd, "table")
 					id2 = 0
@@ -397,15 +888,12 @@ class recordholder(Registered):
 				else:
 					s = _getfunclist().get(cmd)
 					if s is None:
-						s = "unknown command(%s in %s)" % (cmd, type(self).__name__)
-						trigger_error(s)
-						g.debuglog += "<h3>" + htmlspecialchars(s) + "</h3>"
-						self.pushstack([])
+						self._nofunc("unknown command(%s in %s)" % (cmd, type(self).__name__))
 						continue
 					a0 = self.popstack(cmd, " ".join(s.split("__")[1:]))
 					if re.match(r'^bq2_', s):
 						a0 = [self, record] + a0
-					a = _bqfunctions[s](*a0)
+					a = _functions[s](*a0)
 					if not isinstance(a, list):
 						return a		# avoid debuglog
 					self.pushstack(a)
@@ -471,7 +959,7 @@ class recordholder(Registered):
 			return
 		if checkval is None:
 			pass
-		elif to_str(checkval) == to_str(val):
+		elif loose_eq(checkval, val):
 			pass
 		elif noclear:
 			return
@@ -526,17 +1014,23 @@ class recordholder(Registered):
 				if ispost() and g._POST.get(postkey) is not None:
 					g.actionrecordholder = self
 					self.actioncommand = a.group(1)
+				elif g.loginrecord is None and a.group(1) == ":login" and g._POST.get(":login") is None:
+					g.tablelist["login"].check_maillogin()
 				elif g.loginrecord is None and a.group(1) == ":login":
-					raise NotImplementedError("login is not ported yet")
+					if loose_eq(g._POST.get("pass"), ""):
+						call_function("bq_login", "emptypass")
+					else:
+						g.tablelist["login"].check_loginform()
+					log_die()
 			elif tagtype == "input" and type == "checkbox" and (a := re.search(r'name="([^"]+)', tag)) and (a2 := re.search(r'value="([^"]+)', tag)):
 				taghighlight = self._prefixname(taghighlight)
 				self.postname(a.group(1), a2.group(1))
-				if to_str(self.parsename(a.group(1))) == a2.group(1):
+				if loose_eq(self.parsename(a.group(1)), a2.group(1)):
 					taghighlight += "`| checked`|"
 			elif tagtype == "input" and type == "radio" and (a := re.search(r'name="([^"]+)', tag)) and (a2 := re.search(r'value="([^"]+)', tag)):
 				taghighlight = self._prefixname(taghighlight)
 				self.postname(a.group(1), a2.group(1), 1)
-				if self.parsenamehtmlhighlight(a.group(1)) == a2.group(1):
+				if loose_eq(self.parsenamehtmlhighlight(a.group(1)), a2.group(1)):
 					taghighlight += "`| checked`|"
 			elif tagtype == "input" and (a := re.search(r'name="([^"]+)"', tag)) and (a2 := re.search(r'x-value="([^"]*)"', tag)):
 				taghighlight = self._prefixname(taghighlight)
@@ -559,7 +1053,7 @@ class recordholder(Registered):
 				g.beforenopost = None
 			elif tagtype == "option" and (a := re.search(r'value="([^"]*)"', tag)):
 				self.postname(g.beforename, a.group(1), 1, g.beforenopost)
-				if to_str(self.parsename(g.beforename)) == a.group(1):
+				if loose_eq(self.parsename(g.beforename), a.group(1)):
 					taghighlight += " `|selected`|"
 			elif tagtype == "textarea" and (a := re.search(r'name="([_0-9A-Za-z]+)"', tag)) and (a2 := re.search(r'x-value="([^"]*)"', tag)):
 				taghighlight = self._prefixname(taghighlight)
@@ -578,6 +1072,45 @@ class recordholder(Registered):
 
 	def action(self):
 		self.parsebq(self.actioncommand, self.record, 1)
+
+
+class recordholder_tableid(recordholder):
+	def __init__(self, rh=None, record=None, tablename="", prefix="", par=""):
+		super().__init__(rh, record, tablename, prefix, par)
+		t = G().tablelist.get(tablename)
+		if t is None:
+			return
+		self.record = t.getrecord(to_int(rh.parsewithbq(par, record)))
+
+
+class recordholder_stableid(recordholder):
+	def __init__(self, rh=None, record=None, tablename="", prefix="", par=""):
+		super().__init__(rh, record, tablename, prefix, par)
+		t = G().tablelist["simple"].gettable(tablename)
+		self.record = t.getrecord(to_int(rh.parsewithbq(par, record)))
+
+
+class selectrecord(Registered):
+	tablename = "select"
+
+	def __init__(self, fields):
+		self.fields = PhpArray()
+		for key, val in fields.items():
+			m = re.match(r'^mixed(.*)', key)
+			if not m:
+				self.fields[key] = val
+				continue
+			for chunk in to_str(val).split("\t"):
+				a2 = chunk.split("=", 1)
+				if len(a2) < 2:
+					continue
+				self.fields[a2[0] + urllib.parse.unquote(m.group(1))] = urllib.parse.unquote(a2[1])
+
+	def getfield(self, field):
+		return self.fields.get(field)
+
+	def dumpfields(self, title=""):
+		pass
 
 
 # ---- command parsers ----
@@ -623,13 +1156,30 @@ class commandparserhtml(commandparser):
 	def parsehtml(self, rh=None, record=None, index=1):
 		highlight = rh.parsehtmlhighlight(rh.parsewithbqhighlight(self.par, record))
 		html = ""
+		htmlhighlight = ""
+		flag = 0
 		for key, val in enumerate(highlight.split("`")):
 			if key == 0:
 				html += val
+				htmlhighlight += htmlspecialchars(val)
 				continue
-			s = "`" if val[:1] == "!" else ""
+			s = ""
+			if val[:1] == "!":
+				s = "`"
+			elif val[:1] == "?":
+				flag ^= 1
+			elif val[:1] == "|":
+				flag ^= 2
+			sclose = ""
+			if flag in (1, 3):
+				htmlhighlight += '<b style="color: #ff0000;">'
+				sclose = "</b>"
+			elif flag == 2:
+				htmlhighlight += '<span style="color: #0000ff;">'
+				sclose = "</span>"
 			html += s + val[1:]
-		self.output(html)
+			htmlhighlight += htmlspecialchars(s + val[1:]) + sclose
+		self.output(html, htmlhighlight)
 
 
 class commandparserrecordholder(commandparser):
@@ -646,7 +1196,7 @@ class commandparserrecordholder(commandparser):
 			prefix = alias + "_"
 		h = g.recordholderlist.get(alias)
 		if h is None:
-			h = ClassRegistry.new("recordholder_" + self.name, rh, record, tablename, prefix, (a[1] if len(a) > 1 else "").strip())
+			h = ClassRegistry.new("recordholder_" + self.name, rh, record, tablename, prefix, php_trim(a[1] if len(a) > 1 else ""))
 			g.recordholderlist[alias] = h
 		super().parsehtmlinner(h)
 
@@ -683,58 +1233,285 @@ class commandparser__else(commandparser):
 		super().parsehtmlinner(rh, record)
 
 
-# ---- page ----
+class commandparser_selectrows(commandparser):
+	def parsehtmlinner(self, rh=None, record=None):
+		if record is None and rh is not None:
+			record = rh.record
+		rh2 = recordholder()
+		sql = "select * " + rh2.parsewithbqinsql(self.par, record)
+		s, lst = rh2.parsewhere(sql)
+		self.cond = 0
+		for val in execsql(s, lst, 0, 1):
+			self.cond = 1
+			super().parsehtmlinner(rh, selectrecord(val))
 
-def renderpage(targethtml, g):
-	"""Main loop of index.php (from "$rootparser = new commandparser();")."""
+
+class commandparser_stablerows(commandparser):
+	def parsehtmlinner(self, rh=None, record=None):
+		self.cond = 0
+		stable = G().tablelist["simple"].gettable(php_trim(self.par))
+		if stable is None:
+			return ""
+		for recordid in stable.getrecordidlist():
+			self.cond = 1
+			super().parsehtmlinner(rh, stable.getrecord(recordid))
+
+
+class daterecord(rootrecord):
+	tablename = "date"
+
+	def __init__(self, t, s=""):
+		self.v_t = t
+		self.v_s = phpdate.date(to_str(s), t)
+		self.v_Y = phpdate.date("Y", t)
+		self.v_y = phpdate.date("y", t)
+		self.v_m = phpdate.date("m", t)
+		self.v_n = phpdate.date("n", t)
+		self.v_w = phpdate.date("w", t)
+		self.v_W = phpdate.date("W", t)
+		self.v_d = phpdate.date("d", t)
+		self.v_j = phpdate.date("j", t)
+
+
+class commandparser_dayrows(commandparser):
+	def parsehtmlinner(self, rh=None, record=None):
+		a = rh.parsewithbq(self.par, record).split(" ", 2)
+		t = to_int(a[0])
+		count = to_int(a[1] if len(a) > 1 else None)
+		if count == 0:
+			count = 1
+		fmt = a[2] if len(a) > 2 else None
+		while count > 0:
+			super().parsehtmlinner(rh, daterecord(t, fmt))
+			t += 86400
+			count -= 1
+		while count < 0:
+			super().parsehtmlinner(rh, daterecord(t, fmt))
+			t -= 86400
+			count += 1
+
+
+class commandparser_wdayrows(commandparser):
+	def parsehtmlinner(self, rh=None, record=None):
+		a = rh.parsewithbq(self.par, record).split(" ", 3)
+		t = to_int(a[0])
+		count = to_int(a[1] if len(a) > 1 else None)
+		if count == 0:
+			count = 1
+		start = to_int(a[2] if len(a) > 2 else None)
+		fmt = a[3] if len(a) > 3 else None
+
+		for i in range(7):
+			r = daterecord(t)
+			if loose_eq(r.v_w, start):
+				break
+			t -= 86400
+
+		while count > 0:
+			super().parsehtmlinner(rh, daterecord(t, fmt))
+			t += 86400
+			count -= 1
+		while count < 0:
+			for i in range(7):
+				super().parsehtmlinner(rh, daterecord(t, fmt))
+				t += 86400
+				count += 1
+			t -= 86400 * 14
+
+
+class commandparser_valid(commandparser):
+	def parsehtmlinner(self, rh=None, record=None):
+		g = G()
+		self.cond = 0
+		if not ispost():
+			return
+		a = self.par.split(" ", 1)
+		s0 = a[1] if len(a) > 1 else ""
+		if s0 == "":
+			s0 = g.beforename
+		s = rh.record.getfield(s0)
+		m = re.match(r'^([_A-Za-z]+)(.*)', a[0])
+		if not m:
+			return
+		cmd = "tv_" + m.group(1)
+		fn = getattr(rh.record, cmd, None)
+		if not callable(fn):
+			return
+		if not fn(m.group(2), s):
+			return
+		g.invalid = self.cond = 1
+		super().parsehtmlinner(rh, record)
+
+
+# ---- request ----
+
+def _phpkey(k):
+	"""PHP converts " ", "." and "[" in incoming variable names to "_"."""
+	k = k.lstrip(" ")
+	return re.sub(r'[ .\[]', "_", k)
+
+
+def _parsequery(s):
+	ret = PhpArray()
+	for k, v in urllib.parse.parse_qsl(s, keep_blank_values=True):
+		ret[_phpkey(k)] = v
+	return ret
+
+
+def _parsecookie(s):
+	ret = PhpArray()
+	for chunk in s.split(";"):
+		a = chunk.split("=", 1)
+		if len(a) < 2:
+			continue
+		k = _phpkey(a[0].strip())
+		if k not in ret:
+			ret[k] = urllib.parse.unquote_plus(a[1].strip())
+	return ret
+
+
+def main(environ, tables, basedir):
+	"""Top level of index.php. Returns (status, headers, body)."""
+	sys = Sys()
+	get = _parsequery(environ.get("QUERY_STRING", ""))
+	post = PhpArray()
+	if environ.get("REQUEST_METHOD") == "POST" and environ.get("CONTENT_TYPE", "").startswith("application/x-www-form-urlencoded"):
+		n = to_int(environ.get("CONTENT_LENGTH"))
+		post = _parsequery(environ["wsgi.input"].read(n).decode("utf-8", "replace"))
+	g = Request(sys, get, post, _parsecookie(environ.get("HTTP_COOKIE", "")), environ)
 	token = _req.set(g)
 	try:
-		g.rootparser = commandparser()
-		for phase in range(2):
-			g.phase = phase
-			g.beforename = ""
-			g.beforenopost = None
-			g.invalid = 0
-			lastparser = commandparser("", g.rootparser, None, "(phase%d)" % phase)
-			parserstack = [lastparser]
-			g.htmloutput = ""
-			for key, chunk in enumerate(targethtml.split("<!--{")):
-				if key == 0:
-					commandparserhtml(chunk, parserstack[0])
-					continue
-				for key2, chunk2 in enumerate(chunk.split("<!--}")):
-					if key2 == 0:
-						a = chunk2.split("-->", 1)
-						a2 = a[0].split(" ", 1)
-						par = a2[1] if len(a2) > 1 else ""
-						if ClassRegistry.exists(s := "commandparser_" + a2[0]):
-							obj = ClassRegistry.new(s, par, parserstack[0], None, a2[0])
-						elif ClassRegistry.exists("recordholder_" + a2[0]):
-							obj = commandparserrecordholder(par, parserstack[0], None, a2[0])
-						else:
-							obj = commandparser(par, parserstack[0], None)
-						parserstack.insert(0, obj)
-						commandparserhtml(a[1] if len(a) > 1 else "", parserstack[0])
-						continue
-					if len(parserstack) > 1:
-						beforeparser = parserstack.pop(0)
-					else:
-						trigger_error("stack empty.")
-						beforeparser = parserstack[0]
-					a = chunk2.split("-->", 1)
-					rest = a[1] if len(a) > 1 else ""
-					if a[0][:1] == "{":
-						a2 = a[0].split(" ", 1)
-						s = "commandparser__" + a2[0][1:]
-						cls = ClassRegistry.get(s) or commandparser
-						parserstack.insert(0, cls(a2[1] if len(a2) > 1 else "", parserstack[0], beforeparser, a2[0][1:]))
-					commandparserhtml(rest, parserstack[0])
-			lastparser.parsehtml(recordholder())
-		if g.actionrecordholder is not None:
-			g.actionrecordholder.action()
-		return g.htmloutput
+		try:
+			_main(g, environ, tables, basedir)
+		except Exit as e:
+			body = e.message
+		else:
+			body = ""
+		status = "200 OK"
+		if any(h[0].lower() == "location" for h in g.headers):
+			status = "302 Found"
+		return status, [("Content-Type", "text/html; charset=UTF-8")] + g.headers, body
 	finally:
+		if g.db0 is not None:
+			g.db0.close()
 		_req.reset(token)
+
+
+def _main(g, environ, tables, basedir):
+	sys = g.sys
+	sys.url = "https://" if environ.get("HTTPS") == "on" else "http://"
+	sys.url += environ.get("HTTP_HOST", "") + environ.get("SCRIPT_NAME", "") + environ.get("PATH_INFO", "")
+	sys.urlquery = environ.get("QUERY_STRING") or None
+
+	tables.tables(sys)		# require("tables.php");
+
+	if php_trim(myhash("")) == "":
+		raise Exit("hash not work")
+
+	# There is no "index.php" in the URL, so SCRIPT_NAME is used instead.
+	g.cookiepath = environ.get("SCRIPT_NAME", "")
+	sys.urlbase = sys.url[:len(sys.url) - len(environ.get("PATH_INFO", ""))]
+	m = re.match(r'^/([^/]*)/([0-9A-Za-z]+)[.]html$', environ.get("PATH_INFO", ""))
+	if not m:
+		header("Location: %s/nofmt/%s.html" % (sys.urlbase, sys.rootpage))
+		log_die()
+	orgdebugfn = m.group(1)
+	sys.target = m.group(2)
+
+	if orgdebugfn == "nopost":
+		raise Exit("<h1>view only.</h1>")
+
+	if (s := g._POST.get(":reportbody")) is not None:
+		body = to_str(s)
+		link = ""
+		if to_str(sys.reportjsonurl) != "":
+			lst = {}
+			for key, s in sys.reportjsonbase.items():
+				lst[key] = s.replace("@body@", body).replace("@link@", link)
+			req = urllib.request.Request(sys.reportjsonurl, json.dumps(lst).encode(), {"Content-Type": "application/json"})
+			try:
+				urllib.request.urlopen(req, timeout=30).read()
+			except OSError:
+				pass
+			log_die('<HEAD><META http-equiv=refresh content="2; %s"></HEAD>\n<H2>Report sent! Thank you!</H2>\n' % sys.url)
+		log_die()
+
+	innersimpletable()
+
+	t = g.tablelist["simple"].gettable("__dbinfo")
+	a = t.getlist()
+	updated = 0
+	row0 = a.get(0)
+	for key, obj in g.tablelist.items():
+		if not loose_eq(row0.get(key) if row0 is not None else None, obj.getconfig()):
+			updated = 1
+			break
+	if updated:
+		for key, obj in g.tablelist.items():
+			obj.createtable()
+		t = g.tablelist["simple"].gettable("__dbinfo")
+		a = PhpArray()
+		for key, obj in g.tablelist.items():
+			a[key] = obj.getconfig()
+		t.updatelist(PhpArray([a]))
+
+	for obj in list(g.tablelist.values()):
+		obj.onload()
+
+	try:
+		with open(os.path.join(basedir, sys.htmlbase, sys.target + ".html"), encoding="utf-8") as f:
+			targethtml = f.read()
+	except (OSError, UnicodeDecodeError):
+		header("Location: %s/nopage/%s.html" % (sys.urlbase, sys.rootpage))
+		log_die()
+
+	g.recordholderlist = PhpArray()
+	g.actionrecordholder = None
+
+	g.rootparser = commandparser()
+	for phase in range(2):
+		g.phase = phase
+		g.beforename = ""
+		g.beforenopost = None
+		g.invalid = 0
+		lastparser = commandparser("", g.rootparser, None, "(phase%d)" % phase)
+		parserstack = [lastparser]
+		g.htmloutput = ""
+		for key, chunk in enumerate(targethtml.split("<!--{")):
+			if key == 0:
+				commandparserhtml(chunk, parserstack[0])
+				continue
+			for key2, chunk2 in enumerate(chunk.split("<!--}")):
+				if key2 == 0:
+					a = chunk2.split("-->", 1)
+					a2 = a[0].split(" ", 1)
+					par = a2[1] if len(a2) > 1 else ""
+					if ClassRegistry.exists(s := "commandparser_" + a2[0]):
+						obj = ClassRegistry.new(s, par, parserstack[0], None, a2[0])
+					elif ClassRegistry.exists("recordholder_" + a2[0]):
+						obj = commandparserrecordholder(par, parserstack[0], None, a2[0])
+					else:
+						obj = commandparser(par, parserstack[0], None)
+					parserstack.insert(0, obj)
+					commandparserhtml(a[1] if len(a) > 1 else "", parserstack[0])
+					continue
+				if len(parserstack) > 1:
+					beforeparser = parserstack.pop(0)
+				else:
+					trigger_error("stack empty.")
+					beforeparser = parserstack[0]
+				a = chunk2.split("-->", 1)
+				rest = a[1] if len(a) > 1 else ""
+				if a[0][:1] == "{":
+					a2 = a[0].split(" ", 1)
+					cls = ClassRegistry.get("commandparser__" + a2[0][1:]) or commandparser
+					parserstack.insert(0, cls(a2[1] if len(a2) > 1 else "", parserstack[0], beforeparser, a2[0][1:]))
+				commandparserhtml(rest, parserstack[0])
+		lastparser.parsehtml(recordholder())
+
+	if g.actionrecordholder is not None:
+		g.actionrecordholder.action()
+	log_die(g.htmloutput)
 
 
 import builtinfunc  # noqa: E402,F401  (registers bq_* functions)

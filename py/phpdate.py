@@ -40,6 +40,7 @@ def date(fmt, t):
 			"g": str((d.hour + 11) % 12 + 1), "h": "%02d" % ((d.hour + 11) % 12 + 1),
 			"i": "%02d" % d.minute, "s": "%02d" % d.second,
 			"U": str(int(t)),
+			"W": "%02d" % d.isocalendar()[1],
 		}.get(c, c))
 	return "".join(out)
 

@@ -368,3 +368,71 @@ def bq2_r__field(rh0, record, field):
 def bq2_set__val__field(rh0, record, val, field):
 	record.setfield(field, val)
 	return []
+
+
+@bqfunc
+def bq2_sqlisnull__field(rh0, record, field):
+	rh0.whereargs["%s is null" % field] = []
+	return []
+
+
+@bqfunc
+def bq2_sqlisnotnull__field(rh0, record, field):
+	rh0.whereargs["%s is not null" % field] = []
+	return []
+
+
+@bqfunc
+def bq2_sqlisempty__field(rh0, record, field):
+	rh0.whereargs["(%s is null or %s = ?)" % (field, field)] = [""]
+	return []
+
+
+@bqfunc
+def bq2_sqlisnotempty__field(rh0, record, field):
+	rh0.whereargs["%s is not null" % field] = []
+	rh0.whereargs["%s <> ?" % field] = [""]
+	return []
+
+
+@bqfunc
+def bq2_sqllike__val__field(rh0, record, val, field):
+	rh0.whereargs["%s like ?" % field] = ["%" + val + "%"]
+	return []
+
+
+@bqfunc
+def bq2_sqllike2__val__field1__field2(rh0, record, val, field1, field2):
+	rh0.whereargs["(%s like ? or %s like ?)" % (field1, field2)] = ["%" + val + "%"] * 2
+	return []
+
+
+@bqfunc
+def bq2_sqllike3__val__field1__field2__field3(rh0, record, val, field1, field2, field3):
+	rh0.whereargs["(%s like ? or %s like ? or %s like ?)" % (field1, field2, field3)] = ["%" + val + "%"] * 3
+	return []
+
+
+@bqfunc
+def bq2_sqllike4__val__field1__field2__field3__field4(rh0, record, val, field1, field2, field3, field4):
+	rh0.whereargs["(%s like ? or %s like ? or %s like ? or %s like ?)" % (field1, field2, field3, field4)] = ["%" + val + "%"] * 4
+	return []
+
+
+@bqfunc
+def bq2_sqlnotlike__val__field(rh0, record, val, field):
+	rh0.whereargs["%s not like ?" % field] = ["%" + val + "%"]
+	return []
+
+
+def _sqlcmp(op):
+	def f(rh0, record, val, field):
+		rh0.whereargs["? %s %s" % (op, field)] = [val]
+		return []
+	return f
+
+
+for _name, _op in (("eq", "="), ("ne", "<>"), ("lt", "<"), ("le", "<="), ("gt", ">"), ("ge", ">=")):
+	_f = _sqlcmp(_op)
+	_f.__name__ = "bq2_sql%s__val__field" % _name
+	bqfunc(_f)
