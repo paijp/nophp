@@ -173,6 +173,7 @@ function	log_die($message = "")
 	global	$sys;
 	global	$tablelist;
 	global	$debuglog;
+	global	$orgdebugfn;
 	global	$debugtablelist;
 	global	$loginrecord;
 	global	$targethash;
@@ -184,9 +185,36 @@ function	log_die($message = "")
 	if (($loginrecord))
 		execsql("commit;", null, 0, 1);
 	
-	if (@$sys->debugdir === null)
-		die($message);
+	if ($message != "") {
+		$body = $message."";
+		$link = "";
+		if (@$sys->urlbaseparent != "")
+			$link = "{$sys->urlbaseparent}/{$sys->debugdir}/{$orgdebugfn}.php";
+		if (@$sys->reportjsonurl != "") {
+			$list = array();
+			foreach (@$sys->reportjsonbase as $key => $s) {
+				$s = str_replace("@body@", $body, $s);
+				$s = str_replace("@link@", $link, $s);
+				$list[$key] = $s;
+					continue;
+			}
+			$a = array(
+				"http" => array(
+					"method" => "POST", 
+					"protocol_version" => 1.1, 
+					"header" => "Content-Type: application/json\r\nConnection: close\r\n", 
+					"content" => json_encode($list)
+				)
+			);
+			file_get_contents(@$sys->reportjsonurl, FALSE, stream_context_create($a));
+		}
+	}
 	
+	if (@$sys->debugdir === null) {
+#		die($message);
+		error_log($message);
+		die();
+	}
 	$debugdir0 = $sys->debugdir;
 	$sys->debugdir = null;
 	
@@ -274,7 +302,9 @@ EOO;
 				addcoveragelog($fn, "{$sys->debugfn}#{$val2}\t{$key}{$key2}\n");
 		addcoveragelog($fn);
 	}
-	die($message);
+#	die($message);
+	error_log($message);
+	die();
 }
 
 
@@ -302,6 +332,12 @@ function	execsql($sql = null, $array = null, $returnid = 0, $ignoreerror = 0)
 		$debuglog .= "</table>\n";
 		adddebuglog();
 	}
+	if (($sql == "begin")||($sql == "begin;"))
+		return bq_dbbegin($db0, $returnid, $ignoreerror);
+	if (($sql == "commit")||($sql == "commit;"))
+		return bq_dbcommit($db0, $returnid, $ignoreerror);
+	if (($sql == "rollback")||($sql == "rollback;"))
+		return bq_dbrollback($db0, $returnid, $ignoreerror);
 	
 	if (($sp0 = $db0->prepare($sql)) === FALSE) {
 		$a = $db0->errorInfo();
@@ -1535,9 +1571,10 @@ r}r(__
 #					case	"login":
 #						$tablelist["login"]->check_loginform();
 #						log_die();
-					case	"logout":
-						$tablelist["login"]->logout();
-						log_die();
+# to loginrecord.
+#					case	"logout":
+#						$tablelist["login"]->logout();
+#						log_die();
 				}
 			}
 		}
@@ -1683,14 +1720,6 @@ r}r(__
 				if ((ispost())&&(@$_POST[$postkey] !== null)) {
 					$actionrecordholder = $this;
 					$this->actioncommand = $a[1];
-				} else if (($loginrecord === null)&&($a[1] == ":login")&&(@$_POST[":login"] === null))
-					$tablelist["login"]->check_maillogin();
-				else if (($loginrecord === null)&&($a[1] == ":login")) {
-					if (@$_POST["pass"] == "")
-						bq_login("emptypass");
-					else
-						$tablelist["login"]->check_loginform();
-					log_die();
 				}
 			} else if (($tagtype == "input")&&($type == "checkbox") && preg_match('/name="([^"]+)/', $tag, $a) && preg_match('/value="([^"]+)/', $tag, $a2)) {
 				if ($this->prefix != "")
@@ -2342,6 +2371,115 @@ if (!function_exists("myhash")) {
 if (trim(myhash("")) == "")
 	die("hash not work");
 
+
+function	nophp_bq_dbbegin($db, $returnid = 0, $ignoreerror = 0)
+{
+	global	$sys;
+	global	$debuglog;
+	
+	if (!$db->beginTransaction()) {
+		$a = $db->errorInfo();
+		if (@$sys->debugdir !== null) {
+			$debuglog .= "<P><B>".htmlspecialchars($a[2], ENT_QUOTES)."</B></P>\n";
+			adddebuglog();
+		}
+		if (!$ignoreerror)
+			log_die($a[2]." : ".$sql);
+		if (($returnid))
+			return 0;
+		return array();
+	}
+	if ($ignoreerror < 0) {
+		if (@$sys->debugdir !== null) {
+			$debuglog .= "<P><B>success.</B></P>\n";
+			adddebuglog();
+		}
+		return 1;		# success.
+	}
+	if (($returnid))
+		return 0;
+	return array();
+}
+if (!function_exists("bq_dbbegin")) {
+	function	bq_dbbegin($db, $returnid = 0, $ignoreerror = 0)
+	{
+		return nophp_bq_dbbegin($db, $returnid, $ignoreerror);
+	}
+}
+
+
+function	nophp_bq_dbcommit($db, $returnid = 0, $ignoreerror = 0)
+{
+	global	$sys;
+	global	$debuglog;
+	
+	if (!$db->commit()) {
+		$a = $db->errorInfo();
+		if (@$sys->debugdir !== null) {
+			$debuglog .= "<P><B>".htmlspecialchars($a[2], ENT_QUOTES)."</B></P>\n";
+			adddebuglog();
+		}
+		if (!$ignoreerror)
+			log_die($a[2]." : ".$sql);
+		if (($returnid))
+			return 0;
+		return array();
+	}
+	if ($ignoreerror < 0) {
+		if (@$sys->debugdir !== null) {
+			$debuglog .= "<P><B>success.</B></P>\n";
+			adddebuglog();
+		}
+		return 1;		# success.
+	}
+	if (($returnid))
+		return 0;
+	return array();
+}
+if (!function_exists("bq_dbcommit")) {
+	function	bq_dbcommit($db, $returnid, $ignoreerror)
+	{
+		return nophp_bq_dbcommit($db, $returnid, $ignoreerror);
+	}
+}
+
+
+function	nophp_bq_dbrollback($db, $returnid = 0, $ignoreerror = 0)
+{
+	global	$sys;
+	global	$debuglog;
+	
+	if (!$db->rollback()) {
+		$a = $db->errorInfo();
+		if (@$sys->debugdir !== null) {
+			$debuglog .= "<P><B>".htmlspecialchars($a[2], ENT_QUOTES)."</B></P>\n";
+			adddebuglog();
+		}
+		if (!$ignoreerror)
+			log_die($a[2]." : ".$sql);
+		if (($returnid))
+			return 0;
+		return array();
+	}
+	if ($ignoreerror < 0) {
+		if (@$sys->debugdir !== null) {
+			$debuglog .= "<P><B>success.</B></P>\n";
+			adddebuglog();
+		}
+		return 1;		# success.
+	}
+	if (($returnid))
+		return 0;
+	return array();
+}
+if (!function_exists("bq_dbrollback")) {
+	function	bq_dbrollback($db, $returnid = 0, $ignoreerror = 0)
+	{
+		return nophp_bq_dbrollback($db, $returnid, $ignoreerror);
+	}
+}
+
+
 if ((@$logview_fn !== null)) {
 # The name may be like "\000__COMPILER_HALT_OFFSET__\000/var/www/html....php" and it is not documented.
 	$log_fp = null;
@@ -2675,7 +2813,11 @@ if (!preg_match('%^((.*)/index[.]php)(.*)$%', $sys->url, $a)) {
 	log_die();
 }
 
+while (substr($cookiepath, -1) == "/")
+	$cookiepath = substr($cookiepath, 0, -1);
+
 $sys->urlbase = $a[1];
+$sys->urlbaseparent = $a[2];
 if (!preg_match('%^/([^/]*)/([0-9A-Za-z]+)[.]html$%', $a[3], $a2)) {
 	header("Location: {$sys->urlbase}/nofmt/{$sys->rootpage}.html");
 	log_die();
@@ -2689,8 +2831,8 @@ if ($orgdebugfn == "nopost")
 if (($s = @$_POST[":reportbody"]) !== null) {
 	$body = $s."";
 	$link = "";
-	if (@$sys->debugdir !== null)
-		$link = $a[2]."/{$sys->debugdir}/{$orgdebugfn}.php";
+	if ((@$sys->debugdir !== null)&&(@$sys->urlbase != ""))
+		$link = "{$sys->urlbaseparent}/{$sys->debugdir}/{$orgdebugfn}.php";
 	if (@$sys->reportjsonurl != "") {
 		$list = array();
 		foreach (@$sys->reportjsonbase as $key => $s) {

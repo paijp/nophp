@@ -659,7 +659,8 @@ if (!function_exists("bq_p__name")) {
 	{
 		$s = "";
 		if ((ispost())) {
-			$postkey = $this->prefix.str_replace(array(" ", "."), "_", $name);
+#TODO:			$postkey = $this->prefix.str_replace(array(" ", "."), "_", $name);
+			$postkey = str_replace(array(" ", "."), "_", $name);
 			$s = @$_POST[$postkey];
 		}
 		return array($s);

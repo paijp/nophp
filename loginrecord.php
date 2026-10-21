@@ -2,7 +2,7 @@
 #
 #	nophp	https://github.com/paijp/nophp
 #	
-#	Copyright (c) 2021-2023 paijp
+#	Copyright (c) 2021-2024 paijp
 #
 #	This software is released under the MIT License.
 #	http://opensource.org/licenses/mit-license.php
@@ -18,7 +18,6 @@ salt	text
 sessionkey	text
 lastlogin	int
 lastlogout	int
-ismaillogin	int
 
 EOO;
 	}
@@ -68,7 +67,7 @@ EOO;
 						$r = $tablelist["login"]->getrecord($uid = $list[0]);
 				
 						if (@$r->v_mailsent > $sys->now - $sys->mailinterval)
-							log_die("mail interval too short.");
+							log_die("mail interval too short.".$r->id);
 				
 						$key =$r->getrandom();
 						$r->setmailkey($key);
@@ -81,7 +80,7 @@ EOO;
 							log_die("popen failed: {$mailcmd}");
 						fputs($fp, $mailbody);
 						pclose($fp);
-						log_die("mail sent.");
+						log_die("mail sent.".$r->id);
 					case	"goodlogin":		# login success
 						break;
 					case	"badlogin":		# login fail
@@ -103,6 +102,15 @@ EOO;
 			;
 		else if (@$sys->target == "index") {
 			header("Location: {$sys->urlbase}/index/".@$sys->rootpage.".html");
+			log_die();
+		}
+		
+		if (($loginrecord === null)&&(@$_POST[":login"] !== null)) {
+			$this->check_loginform();
+			log_die();
+		}
+		if ((ispost())&&(@$_POST[":logout"] !== null)) {
+			$this->logout();
 			log_die();
 		}
 	}
@@ -149,30 +157,26 @@ EOO;
 		global	$cookiepath;
 		
 		if (($ismaillogin)) {
-			if ((int)@$this->v_ismaillogin == 0)
-				log_die("ismaillogin but not v_ismaillogin");
-		} else if ((@$this->v_ismaillogin))
-			log_die("v_ismaillogin but not ismaillogin");
-		else if (myhash($pass.$this->v_salt) != $this->v_pass) {
-			if (function_exists("bq_login"))
-				bq_login("badlogin", $this);
-			log_die("login fail.");
-		}
-		if (function_exists("bq_login"))
-			bq_login("goodlogin", $this);
-		if (($ismaillogin)) {
 			$this->v_mailkey = "";
 			$this->v_salt = $this->getrandom();
 			$this->v_pass = "";
+		} else if (myhash($pass.$this->v_salt) != $this->v_pass) {
+			if (function_exists("bq_login"))
+				bq_login("badlogin", $this);
+			log_die("login fail.".$this->id);
 		}
+		if (function_exists("bq_login"))
+			bq_login("goodlogin", $this);
 		$key = $this->getrandom();
 		$this->v_sessionkey = myhash($this->v_salt.$key);
 		$this->v_submitkey = $this->getrandom();
 		$this->v_lastlogin = $sys->now;
 		parent::update();
 		setcookie("sessionid", $this->id, 0, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
+		setcookie("sessionid", $this->id, 0, $cookiepath."/", "", (@$_SERVER["HTTPS"] == "on"), true);
 		setcookie("sessionkey", $key, 0, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
-		log_die("login success.");
+		setcookie("sessionkey", $key, 0, $cookiepath."/", "", (@$_SERVER["HTTPS"] == "on"), true);
+		log_die("login success({$ismaillogin}).".$this->id);
 	}
 	function	check_loginform() {
 		global	$sys;
@@ -184,22 +188,21 @@ EOO;
 			$key = @$_GET["key"]."";
 			
 			$r = $this->getrecord($uid);
-			if ((int)@$r->v_ismaillogin != 0)
-				log_die("ismaillogin.");
 			if (@$r->v_mailkey == "")
-				log_die("mailkey empty.");
+				log_die("mailkey empty.".$r->id);
 			if (@$sys->mailexpire <= 0)
 				;
 			else if (@$r->v_mailsent < $sys->now - $sys->mailexpire)
-				log_die("mailexpire.");
+				log_die("mailexpire.".$r->id);
 			if (myhash($r->v_login.$key) == $r->v_mailkey) {
-				if (($pass = @$_POST["pass"]) == "")
-					log_die("pass empty.");
+				if (($pass = @$_POST["pass"]) == "") {
+					$r->login("", 2);
+					log_die();
+				}
 				$r->setpassword($pass);
-				log_die("password change success.");
+				log_die("password change success.".$r->id);
 			}
-			log_die("maillogin fail.");
-			return 0;
+			log_die("maillogin fail.".$r->id);
 		}
 		
 		if (($login = @$_POST["login"]) === null) {
@@ -207,9 +210,9 @@ EOO;
 				bq_login("badlogin");
 			log_die("login null.");
 		}
-		if (($pass = @$_POST["pass"]) === null) {
+		if (($pass = @$_POST["pass"]) == "") {
 			if (function_exists("bq_login"))
-				bq_login("badlogin");
+				bq_login("emptypass");
 			log_die("pass null.");
 		}
 		$list = $this->getrecordidlist("where login = ?", array($login));
@@ -220,31 +223,7 @@ EOO;
 		}
 		$r = $this->getrecord($list[0]);
 		$r->login($pass);
-		log_die("login fail.");
-	}
-	function	check_maillogin() {
-		global	$sys;
-		
-		if (@$_GET["mode"] != "1login")
-			return 0;
-		$uid = (int)@$_GET["uid"];
-		$key = @$_GET["key"]."";
-		
-		$r = $this->getrecord($uid);
-		if ((int)@$r->v_ismaillogin == 0)
-			return 0;
-		
-		header("Location: {$sys->url}");
-		
-		if (@$r->v_mailkey == "")
-			log_die("mailkey empty.");
-		if (@$sys->mailexpire <= 0)
-			;
-		else if (@$r->v_mailsent < $sys->now - $sys->mailexpire)
-			log_die("mailexpire.");
-		if (myhash($r->v_login.$key) == $r->v_mailkey)
-			$r->login("", 1);
-		log_die("maillogin fail.");
+		log_die("login fail.".$r->id);
 	}
 	function	is_login() {
 		global	$loginrecord;
@@ -280,9 +259,12 @@ EOO;
 			$loginrecord->mailkey = "";
 			$loginrecord->update();
 			execsql("commit;");
+			$loginrecord = null;
 		}
 		setcookie("sessionid", "", 1, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
+		setcookie("sessionid", "", 1, $cookiepath."/", "", (@$_SERVER["HTTPS"] == "on"), true);
 		setcookie("sessionkey", "", 1, $cookiepath, "", (@$_SERVER["HTTPS"] == "on"), true);
+		setcookie("sessionkey", "", 1, $cookiepath."/", "", (@$_SERVER["HTTPS"] == "on"), true);
 		header("Location: {$sys->urlbase}/logout/".@$sys->rootpage.".html");
 	}
 }
