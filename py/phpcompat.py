@@ -139,6 +139,22 @@ def php_round(v, places=0):
 	return tmp
 
 
+def to_num(v):
+	"""The number used by PHP arithmetic: int for "12", float for "1.5"."""
+	if isinstance(v, (int, float)) and not isinstance(v, bool):
+		return v
+	if v is None or isinstance(v, bool):
+		return int(bool(v))
+	m = _numprefix.match(str(v))
+	if m is None:
+		return 0
+	s = m.group(0).strip(_ws)
+	if re.search(r'[.eE]', s):
+		return float(s)
+	i = int(s)
+	return i if _INTMIN <= i <= _INTMAX else float(i)
+
+
 def to_bool(v):
 	"""PHP truthiness: "", "0", 0, 0.0, null, empty array are false."""
 	if v is None:
@@ -216,10 +232,35 @@ def rawurlencode(s):
 	return urllib.parse.quote(to_str(s).encode("utf-8"), safe="-_.~")
 
 
-def json_encode(v):
-	"""json_encode() without flags: compact, with "/" and non-ASCII characters escaped."""
+def json_encode(v, unescaped_unicode=False):
+	"""json_encode(): compact, "/" escaped, non-ASCII escaped unless JSON_UNESCAPED_UNICODE."""
 	import json
-	return json.dumps(v, separators=(",", ":")).replace("/", "\\/")
+	return json.dumps(v, separators=(",", ":"), ensure_ascii=not unescaped_unicode).replace("/", "\\/")
+
+
+def substr_bytes(s, start, length=None):
+	"""substr() counts bytes. Broken UTF-8 is kept with surrogateescape."""
+	b = to_str(s).encode("utf-8", "surrogateescape")
+	n = len(b)
+	if start < 0:
+		start = max(0, n + start)
+	if length is None:
+		r = b[start:]
+	elif length < 0:
+		r = b[start:n + length]
+	else:
+		r = b[start:start + length]
+	return r.decode("utf-8", "surrogateescape")
+
+
+def strlen(s):
+	return len(to_str(s).encode("utf-8", "surrogateescape"))
+
+
+def mb_scrub(s):
+	"""mb_convert_encoding($s, "UTF-8", "UTF-8"): invalid bytes become "?"."""
+	b = to_str(s).encode("utf-8", "surrogateescape")
+	return b.decode("utf-8", "replace").replace("\ufffd", "?")
 
 
 def php_trim(s):

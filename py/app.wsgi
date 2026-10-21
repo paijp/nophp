@@ -19,6 +19,7 @@ import debuglog		# noqa: E402
 
 def application(environ, start_response):
 	r = debuglog.viewer(environ)
+	os.chdir(BASEDIR)		# relative paths are relative to the directory of index.php in PHP
 	status, headers, body = r if r is not None else engine.main(environ, tables, BASEDIR)
 	start_response(status, headers)
-	return [body.encode("utf-8")]
+	return [body if isinstance(body, bytes) else body.encode("utf-8")]

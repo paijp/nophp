@@ -77,7 +77,7 @@ class Request:
 		self._SERVER = server or {}
 		self.headers = []
 		self.status = None
-		self.printbuf = ""
+		self.printbuf = []
 		self.db0 = None
 		self.cookiepath = ""
 		self.orgdebugfn = None
@@ -114,8 +114,13 @@ def trigger_error(s):
 
 
 def echo(s):
-	"""print / echo"""
-	G().printbuf += to_str(s)
+	"""print / echo. A str is sent as UTF-8; surrogate-escaped characters are sent as the original bytes."""
+	G().printbuf.append(to_str(s).encode("utf-8", "surrogateescape"))
+
+
+def echo_bytes(b):
+	"""print of a binary string."""
+	G().printbuf.append(bytes(b))
 
 
 def header(s):
@@ -398,8 +403,19 @@ def execsql(sql=None, array=None, returnid=0, ignoreerror=0):
 
 
 def object_vars(obj):
-	"""get_object_vars(): properties in the order they were set."""
-	return list(vars(obj).items())
+	"""get_object_vars(): declared properties ("var $v_xxx = 0;" = class attributes named v_xxx)
+	first in declaration order, then the dynamic ones in the order they were set."""
+	ret = []
+	seen = set()
+	for cls in reversed(type(obj).__mro__):
+		for name in vars(cls):
+			if name.startswith("v_") and name not in seen:
+				seen.add(name)
+				ret.append((name, getattr(obj, name)))
+	for name, val in vars(obj).items():
+		if name not in seen:
+			ret.append((name, val))
+	return ret
 
 
 class _undef_v_:
@@ -1535,13 +1551,16 @@ def main(environ, tables, basedir):
 		try:
 			_main(g, environ, tables, basedir)
 		except Exit as e:
-			body = g.printbuf + e.message
+			body = b"".join(g.printbuf) + e.message.encode("utf-8", "surrogateescape")
 		else:
-			body = g.printbuf
+			body = b"".join(g.printbuf)
 		status = g.status or "200 OK"
 		if g.status is None and any(h[0].lower() == "location" for h in g.headers):
 			status = "302 Found"
-		return status, [("Content-Type", "text/html; charset=UTF-8")] + g.headers, body
+		headers = g.headers
+		if not any(h[0].lower() == "content-type" for h in headers):
+			headers = [("Content-Type", "text/html; charset=UTF-8")] + headers
+		return status, headers, body
 	finally:
 		if g.db0 is not None:
 			g.db0.close()
