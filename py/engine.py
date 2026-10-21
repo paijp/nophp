@@ -11,8 +11,8 @@
 #
 
 import contextvars
+import sys as _sys
 import hashlib
-import json
 import os
 import re
 import sqlite3
@@ -23,7 +23,7 @@ import urllib.request
 from phpcompat import (
 	ClassRegistry, Registered, PhpArray, ENT_QUOTES,
 	to_int, to_float, to_str, loose_eq, htmlspecialchars, nl2br, rawurlencode,
-	php_round, php_trim, get_class_methods, call_user_func_array,
+	php_round, php_trim, json_encode, get_class_methods, call_user_func_array,
 )
 import phpdate
 import debuglog
@@ -80,6 +80,7 @@ class Request:
 		self.printbuf = ""
 		self.db0 = None
 		self.cookiepath = ""
+		self.orgdebugfn = None
 		self.debuglog = ""
 		self.htmloutput = ""
 		self.phase = 0
@@ -144,13 +145,42 @@ def setcookie(name, value, expires, path, domain, secure, httponly):
 	G().headers.append(("Set-Cookie", s))
 
 
+def error_log(message):
+	_sys.stderr.write(to_str(message) + "\n")
+
+
+def report(body, link=""):
+	"""POST {"text": ...} to $sys->reportjsonurl (slack / zulip)."""
+	sys = G().sys
+	if to_str(sys.reportjsonurl) == "":
+		return
+	lst = {}
+	for key, s in (sys.reportjsonbase or PhpArray()).items():
+		lst[key] = to_str(s).replace("@body@", body).replace("@link@", link)
+	req = urllib.request.Request(sys.reportjsonurl, json_encode(lst).encode(),
+		{"Content-Type": "application/json", "Connection": "close"})
+	try:
+		urllib.request.urlopen(req, timeout=30).read()
+	except OSError as e:
+		error_log("report failed: %s" % e)
+
+
 def log_die(message=""):
+	"""The message is sent to the error log and the report, not to the browser."""
 	g = G()
+	sys = g.sys
 	if g.loginrecord:
 		execsql("commit;", None, 0, 1)
+	if to_str(message) != "":
+		link = ""
+		if to_str(sys.urlbaseparent) != "":
+			link = "%s/%s/%s.php" % (sys.urlbaseparent, to_str(sys.debugdir), to_str(g.orgdebugfn))
+		report(to_str(message), link)
 	if debuglog.enabled(g):
 		debuglog.on_die(g, message)
-	raise Exit(message)
+	if to_str(message) != "":
+		error_log(message)
+	raise Exit()
 
 
 def ispost():
@@ -232,18 +262,118 @@ def _dbvalue(v):
 	return str(v)
 
 
+class PDOException(Exception):
+	pass
+
+
+class PDO:
+	"""The part of PDO (sqlite) used by nophp and the bq_db* hooks.
+	Like PDO, beginTransaction()/commit()/rollback() keep their own "in transaction" flag,
+	so "rollback;;" or "begin immediate;" through execsql() do not change it."""
+
+	def __init__(self, path):
+		self.conn = sqlite3.connect(path, timeout=60, isolation_level=None)		# PDO sqlite: 60s
+		self.in_txn = False
+		self.error = None
+
+	def execute(self, sql, params=()):
+		return self.conn.execute(sql, params)
+
+	def _txn(self, sql):
+		try:
+			self.conn.execute(sql)
+		except sqlite3.Error as e:
+			self.error = str(e)
+			return False
+		self.error = None
+		return True
+
+	def beginTransaction(self):
+		if self.in_txn:
+			raise PDOException("There is already an active transaction")
+		if not self._txn("BEGIN"):
+			return False
+		self.in_txn = True
+		return True
+
+	def commit(self):
+		if not self.in_txn:
+			raise PDOException("There is no active transaction")
+		if not self._txn("COMMIT"):
+			return False		# still in transaction, as PDO
+		self.in_txn = False
+		return True
+
+	def rollback(self):
+		if not self.in_txn:
+			raise PDOException("There is no active transaction")
+		if not self._txn("ROLLBACK"):
+			return False
+		self.in_txn = False
+		return True
+
+	rollBack = rollback
+
+	def inTransaction(self):
+		return self.in_txn
+
+	def errorInfo(self):
+		return ["HY000" if self.error else "00000", None, self.error]
+
+	def close(self):
+		self.conn.close()
+
+
+def _nophp_bq_dbtxn(method, db, returnid, ignoreerror):
+	if not getattr(db, method)():
+		a = db.errorInfo()
+		if not ignoreerror:
+			log_die(to_str(a[2]) + " : ")		# (sic) $sql is undefined in PHP
+		if returnid:
+			return 0
+		return []
+	if ignoreerror < 0:
+		return 1		# success.
+	if returnid:
+		return 0
+	return []
+
+
+def nophp_bq_dbbegin(db, returnid=0, ignoreerror=0):
+	return _nophp_bq_dbtxn("beginTransaction", db, returnid, ignoreerror)
+
+
+def nophp_bq_dbcommit(db, returnid=0, ignoreerror=0):
+	return _nophp_bq_dbtxn("commit", db, returnid, ignoreerror)
+
+
+def nophp_bq_dbrollback(db, returnid=0, ignoreerror=0):
+	return _nophp_bq_dbtxn("rollback", db, returnid, ignoreerror)
+
+
+# tables.py may override them with @phpfunction def bq_dbbegin(db, returnid=0, ignoreerror=0)
+_functions["bq_dbbegin"] = nophp_bq_dbbegin
+_functions["bq_dbcommit"] = nophp_bq_dbcommit
+_functions["bq_dbrollback"] = nophp_bq_dbrollback
+
+
 def execsql(sql=None, array=None, returnid=0, ignoreerror=0):
 	g = G()
 	sys = g.sys
 	if g.db0 is None:
-		path = re.sub(r'^sqlite:', "", sys.sqlpath)
-		g.db0 = sqlite3.connect(path, timeout=60, isolation_level=None)
+		g.db0 = PDO(re.sub(r'^sqlite:', "", sys.sqlpath))
 	if sql is None:
 		return None
 	if array is None:
 		array = []
 	if debuglog.enabled(g):
 		debuglog.on_sql(g, sql, array)
+	if sql in ("begin", "begin;"):
+		return call_function("bq_dbbegin", g.db0, returnid, ignoreerror)
+	if sql in ("commit", "commit;"):
+		return call_function("bq_dbcommit", g.db0, returnid, ignoreerror)
+	if sql in ("rollback", "rollback;"):
+		return call_function("bq_dbrollback", g.db0, returnid, ignoreerror)
 	try:
 		cur = g.db0.execute(sql, [_dbparam(v) for v in (array.values() if isinstance(array, PhpArray) else array)])
 	except sqlite3.Error as e:
@@ -861,9 +991,7 @@ class recordholder(Registered):
 					self.flush_coverage()
 					header("Location: " + s)
 					log_die()
-				elif cmd == "logout":
-					g.tablelist["login"].logout()
-					log_die()
+				# "logout" moved to loginrecord (a_login_table.onload).
 				elif re.match(r'^h_', cmd):
 					self.callfunc(None, cmd, record, issubmit)
 				elif re.match(r'^H_', cmd):
@@ -1039,14 +1167,6 @@ class recordholder(Registered):
 				if ispost() and g._POST.get(postkey) is not None:
 					g.actionrecordholder = self
 					self.actioncommand = a.group(1)
-				elif g.loginrecord is None and a.group(1) == ":login" and g._POST.get(":login") is None:
-					g.tablelist["login"].check_maillogin()
-				elif g.loginrecord is None and a.group(1) == ":login":
-					if loose_eq(g._POST.get("pass"), ""):
-						call_function("bq_login", "emptypass")
-					else:
-						g.tablelist["login"].check_loginform()
-					log_die()
 			elif tagtype == "input" and type == "checkbox" and (a := re.search(r'name="([^"]+)', tag)) and (a2 := re.search(r'value="([^"]+)', tag)):
 				taghighlight = self._prefixname(taghighlight)
 				self.postname(a.group(1), a2.group(1))
@@ -1449,12 +1569,16 @@ def _main(g, environ, tables, basedir):
 		g.cookiepath = "/" + m.group(1)
 	else:
 		g.cookiepath = ""
+	while g.cookiepath.endswith("/"):
+		g.cookiepath = g.cookiepath[:-1]
+
 	sys.urlbase = sys.url[:len(sys.url) - len(environ.get("PATH_INFO", ""))]
+	sys.urlbaseparent = re.sub(r'/index[.]php$', "", sys.urlbase) if sys.urlbase.endswith("/index.php") else sys.urlbase.rsplit("/", 1)[0]
 	m = re.match(r'^/([^/]*)/([0-9A-Za-z]+)[.]html$', environ.get("PATH_INFO", ""))
 	if not m:
 		header("Location: %s/nofmt/%s.html" % (sys.urlbase, sys.rootpage))
 		log_die()
-	orgdebugfn = m.group(1)
+	g.orgdebugfn = orgdebugfn = m.group(1)
 	sys.target = m.group(2)
 
 	if orgdebugfn == "nopost":
@@ -1463,16 +1587,12 @@ def _main(g, environ, tables, basedir):
 	if (s := g._POST.get(":reportbody")) is not None:
 		body = to_str(s)
 		link = ""
+		if sys.debugdir is not None and to_str(sys.urlbase) != "":
+			link = "%s/%s/%s.php" % (sys.urlbaseparent, sys.debugdir, orgdebugfn)
 		if to_str(sys.reportjsonurl) != "":
-			lst = {}
-			for key, s in sys.reportjsonbase.items():
-				lst[key] = s.replace("@body@", body).replace("@link@", link)
-			req = urllib.request.Request(sys.reportjsonurl, json.dumps(lst).encode(), {"Content-Type": "application/json"})
-			try:
-				urllib.request.urlopen(req, timeout=30).read()
-			except OSError:
-				pass
-			log_die('<HEAD><META http-equiv=refresh content="2; %s"></HEAD>\n<H2>Report sent! Thank you!</H2>\n' % sys.url)
+			report(body, link)
+			echo('<HEAD><META http-equiv=refresh content="2; %s"></HEAD>\n<H2>Report sent! Thank you!</H2>\n' % sys.url)
+			log_die()
 		log_die()
 
 	innersimpletable()
@@ -1553,7 +1673,8 @@ def _main(g, environ, tables, basedir):
 
 	if g.actionrecordholder is not None:
 		g.actionrecordholder.action()
-	log_die(g.htmloutput)
+	echo(g.htmloutput)
+	log_die()
 
 
 import builtinfunc  # noqa: E402,F401  (registers bq_* functions)

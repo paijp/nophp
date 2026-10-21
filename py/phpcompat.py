@@ -216,6 +216,12 @@ def rawurlencode(s):
 	return urllib.parse.quote(to_str(s).encode("utf-8"), safe="-_.~")
 
 
+def json_encode(v):
+	"""json_encode() without flags: compact, with "/" and non-ASCII characters escaped."""
+	import json
+	return json.dumps(v, separators=(",", ":")).replace("/", "\\/")
+
+
 def php_trim(s):
 	return to_str(s).strip(" \t\n\r\0\x0b")
 

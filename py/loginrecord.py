@@ -6,7 +6,7 @@
 #	This software is released under the MIT License.
 #	http://opensource.org/licenses/mit-license.php
 #
-#	Port of loginrecord.php.
+#	Port of loginrecord.php (v0.0.4).
 #
 
 import os
@@ -14,10 +14,10 @@ import re
 import subprocess
 
 from engine import (
-	G, a_table, execsql, header, setcookie, log_die, myhash,
+	G, a_table, ispost, execsql, header, setcookie, log_die, myhash,
 	phpfunction, function_exists, call_function,
 )
-from phpcompat import to_int, to_str, to_bool, loose_eq
+from phpcompat import to_int, to_str, loose_eq
 
 
 def _bq_login(type=None, r=None):
@@ -48,7 +48,7 @@ def _bq_login(type=None, r=None):
 		r = g.tablelist["login"].getrecord(uid)
 
 		if r.v_mailsent is not None and to_int(r.v_mailsent) > to_int(sys.now) - to_int(sys.mailinterval):
-			log_die("mail interval too short.")
+			log_die("mail interval too short.%s" % r.id)
 
 		key = r.getrandom()
 		r.setmailkey(key)
@@ -60,14 +60,14 @@ def _bq_login(type=None, r=None):
 			subprocess.run(mailcmd, shell=True, input=mailbody.encode(), timeout=60)
 		except (OSError, subprocess.SubprocessError):
 			log_die("popen failed: " + mailcmd)
-		log_die("mail sent.")
+		log_die("mail sent.%s" % r.id)
 	# "goodlogin", "badlogin", "logout", "changelogin", "changepass": nothing to do.
 	return []
 
 
 class a_login_table(a_table):
 	def getconfig(self):
-		return super().getconfig() + "login\ttext unique not null\npass\ttext\nsalt\ttext\nsessionkey\ttext\nlastlogin\tint\nlastlogout\tint\nismaillogin\tint\n"
+		return super().getconfig() + "login\ttext unique not null\npass\ttext\nsalt\ttext\nsessionkey\ttext\nlastlogin\tint\nlastlogout\tint\n"
 
 	def createtable(self):
 		sys = G().sys
@@ -95,6 +95,14 @@ class a_login_table(a_table):
 			pass
 		elif sys.target == "index":
 			header("Location: %s/index/%s.html" % (sys.urlbase, sys.rootpage))
+			log_die()
+
+		g = G()
+		if g.loginrecord is None and g._POST.get(":login") is not None:
+			self.check_loginform()
+			log_die()
+		if ispost() and g._POST.get(":logout") is not None:
+			self.logout()
 			log_die()
 
 	def update(self, ignoreerror=0):
@@ -131,20 +139,15 @@ class a_login_table(a_table):
 		g = G()
 		sys = g.sys
 		if ismaillogin:
-			if to_int(self.v_ismaillogin) == 0:
-				log_die("ismaillogin but not v_ismaillogin")
-		elif to_bool(self.v_ismaillogin):
-			log_die("v_ismaillogin but not ismaillogin")
-		elif not loose_eq(myhash(to_str(pass_) + to_str(self.v_salt)), self.v_pass):
-			if function_exists("bq_login"):
-				call_function("bq_login", "badlogin", self)
-			log_die("login fail.")
-		if function_exists("bq_login"):
-			call_function("bq_login", "goodlogin", self)
-		if ismaillogin:
 			self.v_mailkey = ""
 			self.v_salt = self.getrandom()
 			self.v_pass = ""
+		elif not loose_eq(myhash(to_str(pass_) + to_str(self.v_salt)), self.v_pass):
+			if function_exists("bq_login"):
+				call_function("bq_login", "badlogin", self)
+			log_die("login fail.%s" % self.id)
+		if function_exists("bq_login"):
+			call_function("bq_login", "goodlogin", self)
 		key = self.getrandom()
 		self.v_sessionkey = myhash(to_str(self.v_salt) + key)
 		self.v_submitkey = self.getrandom()
@@ -152,8 +155,10 @@ class a_login_table(a_table):
 		a_table.update(self)
 		https = g._SERVER.get("HTTPS") == "on"
 		setcookie("sessionid", to_str(self.id), 0, g.cookiepath, "", https, True)
+		setcookie("sessionid", to_str(self.id), 0, g.cookiepath + "/", "", https, True)
 		setcookie("sessionkey", key, 0, g.cookiepath, "", https, True)
-		log_die("login success.")
+		setcookie("sessionkey", key, 0, g.cookiepath + "/", "", https, True)
+		log_die("login success(%s).%s" % (to_str(ismaillogin), self.id))
 
 	def check_loginform(self):
 		g = G()
@@ -164,22 +169,20 @@ class a_login_table(a_table):
 			uid = to_int(g._GET.get("uid"))
 			key = to_str(g._GET.get("key"))
 			r = self.getrecord(uid)
-			if to_int(r.v_ismaillogin) != 0:
-				log_die("ismaillogin.")
 			if to_str(r.v_mailkey) == "":
-				log_die("mailkey empty.")
+				log_die("mailkey empty.%s" % r.id)
 			if to_int(sys.mailexpire) <= 0:
 				pass
 			elif to_int(r.v_mailsent) < to_int(sys.now) - to_int(sys.mailexpire):
-				log_die("mailexpire.")
+				log_die("mailexpire.%s" % r.id)
 			if loose_eq(myhash(to_str(r.v_login) + key), r.v_mailkey):
 				pass_ = g._POST.get("pass")
-				if to_str(pass_) == "":
-					log_die("pass empty.")
+				if loose_eq(pass_, ""):
+					r.login("", 2)
+					log_die()
 				r.setpassword(pass_)
-				log_die("password change success.")
-			log_die("maillogin fail.")
-			return 0
+				log_die("password change success.%s" % r.id)
+			log_die("maillogin fail.%s" % r.id)
 
 		login = g._POST.get("login")
 		if login is None:
@@ -187,9 +190,9 @@ class a_login_table(a_table):
 				call_function("bq_login", "badlogin")
 			log_die("login null.")
 		pass_ = g._POST.get("pass")
-		if pass_ is None:
+		if loose_eq(pass_, ""):
 			if function_exists("bq_login"):
-				call_function("bq_login", "badlogin")
+				call_function("bq_login", "emptypass")
 			log_die("pass null.")
 		lst = self.getrecordidlist("where login = ?", [login])
 		if len(lst) < 1:
@@ -198,30 +201,7 @@ class a_login_table(a_table):
 			log_die("no login found")
 		r = self.getrecord(lst[0])
 		r.login(pass_)
-		log_die("login fail.")
-
-	def check_maillogin(self):
-		g = G()
-		sys = g.sys
-		if not loose_eq(g._GET.get("mode"), "1login"):
-			return 0
-		uid = to_int(g._GET.get("uid"))
-		key = to_str(g._GET.get("key"))
-		r = self.getrecord(uid)
-		if to_int(r.v_ismaillogin) == 0:
-			return 0
-
-		header("Location: " + sys.url)
-
-		if to_str(r.v_mailkey) == "":
-			log_die("mailkey empty.")
-		if to_int(sys.mailexpire) <= 0:
-			pass
-		elif to_int(r.v_mailsent) < to_int(sys.now) - to_int(sys.mailexpire):
-			log_die("mailexpire.")
-		if loose_eq(myhash(to_str(r.v_login) + key), r.v_mailkey):
-			r.login("", 1)
-		log_die("maillogin fail.")
+		log_die("login fail.%s" % r.id)
 
 	def is_login(self):
 		g = G()
@@ -255,7 +235,10 @@ class a_login_table(a_table):
 			g.loginrecord.mailkey = ""		# (sic) same as PHP
 			g.loginrecord.update()
 			execsql("commit;")
+			g.loginrecord = None
 		https = g._SERVER.get("HTTPS") == "on"
 		setcookie("sessionid", "", 1, g.cookiepath, "", https, True)
+		setcookie("sessionid", "", 1, g.cookiepath + "/", "", https, True)
 		setcookie("sessionkey", "", 1, g.cookiepath, "", https, True)
+		setcookie("sessionkey", "", 1, g.cookiepath + "/", "", https, True)
 		header("Location: %s/logout/%s.html" % (sys.urlbase, sys.rootpage))

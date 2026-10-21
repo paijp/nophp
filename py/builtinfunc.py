@@ -351,12 +351,11 @@ def bq_g__name(name):
 
 
 @bqfunc
-def bq2_p__name(rh0, record, name):
-	# PHP version (bq_p__name) refers $this->prefix inside a plain function,
-	# and it is a fatal error on POST. Here the recordholder is used as intended.
+def bq_p__name(name):
+	# Same as PHP (v0.0.3 "Ad hoc fix: ':p'"): the recordholder prefix is not added (#TODO in PHP).
 	s = ""
 	if ispost():
-		postkey = rh0.prefix + name.replace(" ", "_").replace(".", "_")
+		postkey = name.replace(" ", "_").replace(".", "_")
 		s = G()._POST.get(postkey)
 	return [s]
 

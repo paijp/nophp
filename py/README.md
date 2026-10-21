@@ -54,7 +54,6 @@ compare.py runs the same scenario (login, every form on every page, logout) agai
 
 ## Differences from PHP (bug fixes)
 
-- `:p` works (PHP: fatal error on POST because of `$this` in a plain function).
 - `?mode=sql` works (PHP: fatal error, myhash() is called before it is defined) and "create" creates the tables.
 - `?mode=import` lists `$sys->importlist` (PHP refers an undefined global).
 
