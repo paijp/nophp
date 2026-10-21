@@ -281,8 +281,16 @@ class PDO:
 		self.in_txn = False
 		self.error = None
 
+	@staticmethod
+	def first_statement(sql):
+		"""PDO (sqlite3_prepare) compiles only the first statement and ignores the rest ("rollback;;")."""
+		for i, c in enumerate(sql):
+			if c == ";" and sqlite3.complete_statement(sql[:i + 1]):
+				return sql[:i + 1]
+		return sql
+
 	def execute(self, sql, params=()):
-		return self.conn.execute(sql, params)
+		return self.conn.execute(self.first_statement(sql), params)
 
 	def _txn(self, sql):
 		try:
