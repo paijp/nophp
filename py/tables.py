@@ -22,14 +22,18 @@ class commandparser_htmlsrc(commandparser):
 		super().output(nl2br(htmlspecialchars(s, ENT_QUOTES)))
 
 
+# Note: a PHP heredoc does not include the newline just before the closing "EOO;".
+# The config string must be identical to the PHP version, or all tables are recreated
+# (see __dbinfo in engine._main) when the database is shared with the PHP version.
+
 class message0_table(a_table):
 	def getconfig(self):
-		return super().getconfig() + "\n"
+		return super().getconfig() + ""
 
 
 class message1_table(a_table):
 	def getconfig(self):
-		return super().getconfig() + "\n"
+		return super().getconfig() + ""
 
 	def tv_mail(self, par, s):
 		if "@" not in (s or ""):
@@ -39,22 +43,22 @@ class message1_table(a_table):
 
 class message2_table(a_table):
 	def getconfig(self):
-		return super().getconfig() + "owner\tinteger\t/*indexed*/\nbody\ttext\n\n"
+		return super().getconfig() + "owner\tinteger\t/*indexed*/\nbody\ttext\n"
 
 
 class test2_table(a_table):
 	def getconfig(self):
-		return super().getconfig() + "\n"
+		return super().getconfig() + ""
 
 
 class master0_table(a_table):
 	def getconfig(self):
-		return super().getconfig() + "\n\n"
+		return super().getconfig() + "\n"
 
 
 class test3_table(a_table):
 	def getconfig(self):
-		return super().getconfig() + "\n"
+		return super().getconfig() + ""
 
 
 def tables(sys):
