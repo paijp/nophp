@@ -5,7 +5,6 @@
 #	Statements at the top level of tables.php are written in tables(), which runs on every request.
 #
 
-from env import env
 from engine import commandparser, a_table
 import builtinfunc		# noqa: F401
 from loginrecord import a_login_table
@@ -62,7 +61,7 @@ class test3_table(a_table):
 
 
 def tables(sys):
-	env(sys)
+	sys.env(sys)		# require("env.php");
 	sys.rootpage = "g9999"
 	login_table()
 	message0_table()

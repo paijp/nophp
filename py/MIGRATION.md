@@ -8,11 +8,29 @@ Python 版は、PHP 版と同じ HTML テンプレート（res/*.html）と同�
 同じ URL のまま Python 版に切り替える手順です（ix を5台のサーバで切り替えたときの手順です）。
 `app` は実際のディレクトリ名に読み替えてください。
 
-## 1. tables.php → tables.py、env.php → env.py
+## 構成
 
-### tables.php → tables.py
+nophp のプログラムは1か所（`/var/www/nophp-py/`）に置き、サイトごとに次の2つのファイルを置きます。
+
+```
+/var/www/nophp-py/
+    nophp.py engine.py phpcompat.py loginrecord.py ...   共通（nophp/py/*.py）
+    tables_app.py      サイトの tables.php
+    env_app.py         サイトの env.php、兼 WSGI の入口（root:apache 640）
+    tables_chatmail.py
+    env_chatmail.py
+```
+
+`env_app.py` は設定 `env(sys)` と、入口 `application = nophp.make_application(env, tables_app, WORKDIR)` を持ちます。
+Apache の `WSGIScriptAlias` は `env_app.py` を指します。`tables_app.tables(sys)` は、tables.php が `require("env.php")` していた位置で
+`sys.env(sys)` を呼びます。
+
+## 1. tables.php → tables_app.py、env.php → env_app.py
+
+### tables.php → tables_app.py
 - `class xxx_table extends a_table` → `class xxx_table(a_table)`
 - `new xxx_table();` などトップレベルの文 → `tables(sys)` 関数の中に書きます（リクエストごとに実行されます）。
+- `require("env.php");` → `sys.env(sys)`
 - `$sys->mid = "master0";` → `sys.mid = "master0"`
 - `function bq_xxx__a__b($a, $b)` → `@bqfunc` を付けた `def bq_xxx__a__b(a, b):`。戻り値は `array(...)` の代わりに `[...]` です。
 - **getconfig() の文字列は PHP 版と完全に同じにしてください。** PHP のヒアドキュメントは `EOO;` の直前の改行を含みません。
@@ -21,14 +39,16 @@ Python 版は、PHP 版と同じ HTML テンプレート（res/*.html）と同�
 - 結果を使わない外部への HTTP 送信（Slack/Zulip/LINE などへの通知）は、`engine.later(関数, 引数...)` で
   応答の後に回してください。DB の書き込みロックを持ったまま外部の応答を待つと、他のリクエストが止まります。
 
-### env.php → env.py
+### env.php → env_app.py
 秘密の値（API キー、パスワード）をチャットや git に出さないよう、サーバ上で env.php から生成します。
 
 ```bash
-sudo php tools/genenv.php /var/www/html/app/env.php | sudo tee /var/www/app-py/env.py >/dev/null
-sudo sed -E 's/= .*/= .../' /var/www/app-py/env.py      # 値を伏せて項目だけ確認
+sudo php tools/genenv.php /var/www/html/app/env.php tables_app /var/www/html/app | sudo tee /var/www/nophp-py/env_app.py >/dev/null
+sudo sed -E 's/= .*/= .../' /var/www/nophp-py/env_app.py      # 値を伏せて項目だけ確認
 ```
 
+2番目の引数は tables のモジュール名、3番目は PHP 版の `index.php` があったディレクトリ（`WORKDIR`）です。
+`res/` などの相対パスは、PHP 版と同じくこのディレクトリからの相対になります。
 `$sys->xxx = ...;` の設定だけが変換されます。`require()` や `header()` など、それ以外の文は必要に応じて書き足してください。
 
 ### 確認
@@ -51,22 +71,18 @@ sudo cp -r /etc/httpd/conf.d $B/httpd-conf.d
 
 ## 3. プログラムの配置
 
-Python のファイルはドキュメントルートの外に置きます（`.py` や `env.py` が Web から見えないようにするため）。
+Python のファイルはドキュメントルートの外に置きます（`.py` が Web から見えないようにするため）。
 
 ```bash
-sudo mkdir -p /var/www/app-py
-sudo cp nophp/py/*.py nophp/py/app.wsgi /var/www/app-py/     # tables.py と env.py は上で作ったもの
-sudo cp tables.py /var/www/app-py/
-sudo chown -R root:apache /var/www/app-py
-sudo chmod 640 /var/www/app-py/env.py
+sudo mkdir -p /var/www/nophp-py
+sudo cp nophp/py/*.py /var/www/nophp-py/          # 共通（env.py と tables.py はサンプルなので不要）
+sudo rm /var/www/nophp-py/env.py /var/www/nophp-py/tables.py
+sudo cp tables_app.py /var/www/nophp-py/          # env_app.py は上で生成したもの
+sudo chown -R root:apache /var/www/nophp-py
+sudo chmod 640 /var/www/nophp-py/env_*.py
 ```
 
-`app.wsgi` の `WORKDIR` を、PHP 版の `index.php` があったディレクトリにします。
-`res/` などの相対パスは、PHP 版と同じくこのディレクトリからの相対になります。
-
-```python
-WORKDIR = "/var/www/html/app"
-```
+開発用に、`python3 env_app.py 8000` で `http://localhost:8000/index.php/nofmt/xxx.html` として動かせます。
 
 ## 4. Apache の設定
 
@@ -76,10 +92,10 @@ VirtualHost の外に書くと、:443 と :80 の両方に効きます。
 
 ```apache
 # nophp Python version of /app (replaces php-fpm).
-WSGIDaemonProcess app user=apache group=apache processes=4 threads=1 python-path=/var/www/app-py home=/var/www/html/app lang=en_US.UTF-8 locale=en_US.UTF-8
-WSGIScriptAlias /app/index.php /var/www/app-py/app.wsgi process-group=app application-group=%{GLOBAL}
+WSGIDaemonProcess app user=apache group=apache processes=4 threads=1 python-path=/var/www/nophp-py home=/var/www/html/app lang=en_US.UTF-8 locale=en_US.UTF-8
+WSGIScriptAlias /app/index.php /var/www/nophp-py/env_app.py process-group=app application-group=%{GLOBAL}
 WSGIPassAuthorization On
-<Directory /var/www/app-py>
+<Directory /var/www/nophp-py>
 	Require all granted
 </Directory>
 ```
@@ -88,8 +104,13 @@ WSGIPassAuthorization On
   `/app//index.php/...` がすべて Python 版に来ます。PHP 版の `index.php` は消さずに置いたままで構いません。
 - `threads=1` は必須です。同時に処理できる数は `processes` で増やします（php-fpm の子プロセス数が目安、メモリ 512MB なら 4 程度）。
 - `lang` / `locale` は必須です。ないと ASCII で動くため、件名が日本語のメールコマンドなどが失敗します。
-- 複数のアプリを動かす場合は、`WSGIDaemonProcess` の名前を変えてアプリごとに1ファイル作ります。
-  あるアプリが別のアプリを `https://localhost/...` で呼ぶ場合（wifi0 → ix2401 など）も、デーモンを分けてください。
+- **サイトごとに別の `WSGIDaemonProcess` が必要です**（orbbs と違い、1つのデーモンを共有できません）。
+  nophp は PHP と同じくクラスや `bq_*` 関数を名前で登録するので、`login_table` などが別のサイトのものとぶつかります。
+  同じプロセスに2つのサイトが来た場合は、`make_application()` がエラーにします。
+  サイトを追加するときは、`WSGIDaemonProcess`（名前と `home`）と `WSGIScriptAlias`（URL、`env_xxx.py`、`process-group`）をコピーして書き換えます。
+- `env_app.py` を編集すると、そのサイトだけが自動で読み込み直されます。`tables_app.py` や共通の `*.py` を変えたときは
+  `env_app.py` を touch するか、httpd を reload します。
+- あるアプリが別のアプリを `https://localhost/...` で呼ぶ場合（wifi0 → ix2401 など）も、デーモンを分けてください。
 
 ### 応答の Content-Length
 Python 版は応答に必ず `Content-Length` を付けます（chunked にしません）。chunked を受け付けないデバイス向けに
@@ -106,7 +127,7 @@ curl -sk -o /dev/null -w "%{http_code}\n" https://localhost/app/env.php -H "Host
 sudo tail /var/log/httpd/error_log        # Python のエラーは [wsgi:error] として出ます
 ```
 
-2回目以降の更新（*.py の差し替え）は、`app.wsgi` を touch するか httpd を reload します。
+2回目以降の更新（*.py の差し替え）は、`env_app.py` を touch するか httpd を reload します。
 
 SELinux が有効な場合: mod_wsgi のプロセスは php-fpm と同じ `httpd_t` で動くので、
 PHP 版で DB への書き込みやメール送信ができていたなら追加の設定は要りません。
@@ -142,11 +163,25 @@ sudo systemctl restart httpd
 
 データベースと Cookie は PHP 版と共通なので、そのまま PHP 版に戻ります。
 
+## 以前の構成（app.wsgi + env.py + tables.py）からの移行
+
+以前は、サイトごとに nophp のファイル一式と `app.wsgi`、`env.py`（`def env(sys)`）、`tables.py` を1つのディレクトリに置き、
+`WSGIScriptAlias` で `app.wsgi` を指していました。この構成も、新しい `nophp.py` と `app.wsgi` で引き続き動きます
+（`tables.py` の `env(sys)` の呼び出しを `sys.env(sys)` に、`from env import env` を削除する必要があります）。
+
+新しい構成にするには:
+
+1. `/var/www/nophp-py/` に共通のファイルを置き、`tables.py` を `tables_app.py` として置きます（`sys.env(sys)` に修正済みのもの）。
+2. 今の `env.py` の内容に、先頭の `import nophp` / `import tables_app` と `WORKDIR`、末尾の `application = ...` を加えて
+   `env_app.py` として置きます（`app.wsgi` の `WORKDIR` の値を使います）。
+3. conf.d の `python-path` と `WSGIScriptAlias` の行を書き換えて、`apachectl configtest && systemctl reload httpd`。
+
 ## 検証済みの事項（Rocky Linux 9 コンテナ、PHP 8.0.30 / Python 3.12.15）
 
 - サンプルの全ページで、表示とフォーム送信の結果（HTML、リダイレクト、DB の内容）が PHP 版と一致すること。
 - PHP 版で作った DB を Python 版で開いても、テーブルが再作成されないこと。
 - PHP 版でログインしたセッションのまま Python 版を使えること。Python 版で書き込んだデータを PHP 版で読めること。Python 版でログアウトすると PHP 版のセッションも無効になること。
+- 新しい構成（`env_xxx.py` が入口）と以前の構成（`app.wsgi`）のどちらでも、サンプルの全ページ、chatmail の実ページ、ix のデバイス通信が PHP 版と一致すること。
 - 処理速度：PHP 版の約7〜8割（同じマシン、4並列、processes=2 で測定）。
 
 ## 未対応

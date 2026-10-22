@@ -1,6 +1,13 @@
 #
-#	Port of env.php.
+#	Port of env.php, and the WSGI entry point of the site (see nophp.py).
+#	Apache: WSGIScriptAlias /nophp/index.php /path/to/py/env.py
+#	Development: python3 env.py 8000
 #
+
+import os
+
+import nophp
+import tables
 
 from phpcompat import PhpArray
 
@@ -47,3 +54,9 @@ def env(sys):
 
 	# sys.reportjsonurl = "https://hooks.slack.com/services/9999"
 	sys.reportjsonbase = PhpArray({"text": "@body@\n<@link@>"})
+
+
+application = nophp.make_application(env, tables, os.path.dirname(os.path.abspath(__file__)))
+
+if __name__ == "__main__":
+	nophp.serve(application)

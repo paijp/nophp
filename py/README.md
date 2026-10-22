@@ -9,17 +9,21 @@ dnf install httpd python3.12 python3.12-mod_wsgi
 ```
 
 ```
-WSGIDaemonProcess nophppy processes=2 threads=1 python-path=/path/to/py
-WSGIScriptAlias /nophp-py /path/to/py/app.wsgi process-group=nophppy application-group=%{GLOBAL}
+WSGIDaemonProcess nophppy processes=2 threads=1 python-path=/path/to/py lang=en_US.UTF-8 locale=en_US.UTF-8
+WSGIScriptAlias /nophp/index.php /path/to/py/env.py process-group=nophppy application-group=%{GLOBAL}
 WSGIPassAuthorization On
 ```
 
-- URL: `/nophp-py/nofmt/g0000.html` (instead of `/index.php/nofmt/g0000.html`).
-- Settings: `env.py` (env.php), tables: `tables.py` (tables.php).
+- `env.py` (env.php) is the settings `env(sys)` and the WSGI entry point of the site:
+  `application = nophp.make_application(env, tables, WORKDIR)`. A site is `env_xxx.py` + `tables_xxx.py`;
+  the other files are shared. Each site needs its own `WSGIDaemonProcess` (classes are registered by name).
+- `tables(sys)` calls `sys.env(sys)` where tables.php did `require("env.php")`.
+- URL: `/nophp/index.php/nofmt/g0000.html`, the same as PHP (and the same cookies).
 - The database directory must be writable by the apache user.
-- Restart (or touch app.wsgi) after editing *.py; mod_wsgi keeps modules loaded.
-- To replace a PHP site with the same URL (`/app/index.php`), see [MIGRATION.md](MIGRATION.md)
-  (Japanese): `/etc/httpd/conf.d/` file, `WORKDIR`, env.php to env.py (`tools/genenv.php`), disabling php-fpm.
+- Development: `python3 env.py 8000`.
+- The old layout (`app.wsgi` + `env.py` + `tables.py` in one directory) still works.
+- To replace a PHP site with the same URL, see [MIGRATION.md](MIGRATION.md)
+  (Japanese): `/etc/httpd/conf.d/` file, `env_xxx.py` from env.php (`tools/genenv.php`), disabling php-fpm.
 
 ## Files
 
@@ -30,10 +34,11 @@ WSGIPassAuthorization On
 | loginrecord.py | loginrecord.php |
 | sendmail.py | sendmail.php |
 | importer.py | importer.php |
-| env.py / tables.py | env.php / tables.php |
+| nophp.py | WSGI application (`make_application`, development server) |
+| env.py / tables.py | env.php / tables.php (sample site) |
 | phpcompat.py | PHP semantics: (int)/(float) casts, float to string, round(), loose ==/<, htmlspecialchars, PhpArray, class_exists/new $s |
 | kana.py / phpdate.py | mb_convert_kana("ASKV"/"as"), date()/mktime() |
-| app.wsgi | entry point |
+| app.wsgi | entry point of the old layout |
 
 ## Writing tables.py
 
