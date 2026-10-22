@@ -104,6 +104,7 @@ WSGIPassAuthorization On
   `/app//index.php/...` がすべて Python 版に来ます。PHP 版の `index.php` は消さずに置いたままで構いません。
 - `threads=1` は必須です。同時に処理できる数は `processes` で増やします（php-fpm の子プロセス数が目安、メモリ 512MB なら 4 程度）。
 - `lang` / `locale` は必須です。ないと ASCII で動くため、件名が日本語のメールコマンドなどが失敗します。
+  error_log に `Unsupported locale setting en_US.UTF-8` と出る場合は `dnf install glibc-langpack-en` を入れます。
 - **サイトごとに別の `WSGIDaemonProcess` が必要です**（orbbs と違い、1つのデーモンを共有できません）。
   nophp は PHP と同じくクラスや `bq_*` 関数を名前で登録するので、`login_table` などが別のサイトのものとぶつかります。
   同じプロセスに2つのサイトが来た場合は、`make_application()` がエラーにします。
@@ -181,6 +182,8 @@ sudo systemctl restart httpd
 - サンプルの全ページで、表示とフォーム送信の結果（HTML、リダイレクト、DB の内容）が PHP 版と一致すること。
 - PHP 版で作った DB を Python 版で開いても、テーブルが再作成されないこと。
 - PHP 版でログインしたセッションのまま Python 版を使えること。Python 版で書き込んだデータを PHP 版で読めること。Python 版でログアウトすると PHP 版のセッションも無効になること。
+- Rocky Linux 9 のコンテナ（httpd + python3.12-mod_wsgi）で、2つのサイト（サンプルと chatmail）を別のデーモンで同時に動かし、
+  DB が分かれること、`.py` が配信されないこと、同じデーモンに2つ目のサイトを向けると 500 になり error_log に理由が出ることを確認しました。
 - 新しい構成（`env_xxx.py` が入口）と以前の構成（`app.wsgi`）のどちらでも、サンプルの全ページ、chatmail の実ページ、ix のデバイス通信が PHP 版と一致すること。
 - 処理速度：PHP 版の約7〜8割（同じマシン、4並列、processes=2 で測定）。
 
