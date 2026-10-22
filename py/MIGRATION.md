@@ -113,6 +113,50 @@ WSGIPassAuthorization On
   `env_app.py` を touch するか、httpd を reload します。
 - あるアプリが別のアプリを `https://localhost/...` で呼ぶ場合（wifi0 → ix2401 など）も、デーモンを分けてください。
 
+### 複数のサイトがある場合
+
+例として、`/var/www/html/chatmail/index.php`（chatmail）と `/var/www/html/ix2401/index.php`（ix）の2つを、
+1つの `/var/www/nophp-py/` で動かす場合です。
+
+```
+/var/www/nophp-py/
+    nophp.py engine.py phpcompat.py loginrecord.py ...   共通
+    tables_chatmail.py   env_chatmail.py      WORKDIR = "/var/www/html/chatmail"
+    tables_ix.py         env_ix.py            WORKDIR = "/var/www/html/ix2401"
+```
+
+`/etc/httpd/conf.d/nophp-wsgi.conf`（1つのファイルにまとめても、サイトごとに分けても構いません）:
+
+```apache
+# nophp Python version (replaces php-fpm). One WSGIDaemonProcess for each site.
+WSGIPassAuthorization On
+<Directory /var/www/nophp-py>
+	Require all granted
+</Directory>
+
+# /chatmail
+WSGIDaemonProcess chatmail user=apache group=apache processes=2 threads=1 python-path=/var/www/nophp-py home=/var/www/html/chatmail lang=en_US.UTF-8 locale=en_US.UTF-8
+WSGIScriptAlias /chatmail/index.php /var/www/nophp-py/env_chatmail.py process-group=chatmail application-group=%{GLOBAL}
+
+# /ix2401
+WSGIDaemonProcess ix2401 user=apache group=apache processes=4 threads=1 python-path=/var/www/nophp-py home=/var/www/html/ix2401 lang=en_US.UTF-8 locale=en_US.UTF-8
+WSGIScriptAlias /ix2401/index.php /var/www/nophp-py/env_ix.py process-group=ix2401 application-group=%{GLOBAL}
+```
+
+- サイトごとに `WSGIDaemonProcess` と `WSGIScriptAlias` の2行を1組で書きます。サイトを追加するときはこの2行をコピーして、
+  次の4か所を書き換えます。
+  - `WSGIDaemonProcess` の名前と、`WSGIScriptAlias` の `process-group=`（同じ名前にします）
+  - `home=`（PHP 版の `index.php` があったディレクトリ。`env_xxx.py` の `WORKDIR` と同じ）
+  - `WSGIScriptAlias` の URL（`/xxx/index.php`）
+  - `WSGIScriptAlias` のファイル（`env_xxx.py`）
+- `WSGIPassAuthorization` と `<Directory>` は全サイトで1つで構いません。
+- 同じ tables を使う別のサイト（DB だけが違う、など）も、`env_a.py` と `env_b.py` を作り、デーモンを分けて書きます。
+- `processes` はサイトごとの数です。合計がメモリに収まるようにします（1プロセスあたり 30MB 程度）。
+- 同じデーモンに2つのサイトを向けてしまうと、2つ目のサイトへのアクセスが 500 になり、error_log に
+  `nophp: tables_xxx and tables_yyy in one process; use a WSGIDaemonProcess for each site` と出ます。
+- 共通の `*.py` を更新したときは、httpd を reload すると全サイトに反映されます（`env_xxx.py` の touch はそのサイトだけ）。
+- サイトごとの切り戻しは、そのサイトの2行を削除（またはコメントアウト）して reload します。
+
 ### 応答の Content-Length
 Python 版は応答に必ず `Content-Length` を付けます（chunked にしません）。chunked を受け付けないデバイス向けに
 `SetEnv ap_trust_cgilike_cl` を設定しているサーバでも、そのまま使えます。
