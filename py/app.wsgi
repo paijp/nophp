@@ -36,5 +36,9 @@ def application(environ, start_response):
 	os.chdir(WORKDIR)
 	later = []
 	status, headers, body = r if r is not None else engine.main(environ, tables, BASEDIR, later)
+	if not isinstance(body, bytes):
+		body = body.encode("utf-8")
+	if not any(h[0].lower() == "content-length" for h in headers):
+		headers = list(headers) + [("Content-Length", str(len(body)))]		# as PHP-FPM: not chunked (devices)
 	start_response(status, headers)
-	return _Response(body if isinstance(body, bytes) else body.encode("utf-8"), later)
+	return _Response(body, later)
