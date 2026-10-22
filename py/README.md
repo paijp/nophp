@@ -18,6 +18,8 @@ WSGIPassAuthorization On
 - Settings: `env.py` (env.php), tables: `tables.py` (tables.php).
 - The database directory must be writable by the apache user.
 - Restart (or touch app.wsgi) after editing *.py; mod_wsgi keeps modules loaded.
+- To replace a PHP site with the same URL (`/app/index.php`), see [MIGRATION.md](MIGRATION.md)
+  (Japanese): `/etc/httpd/conf.d/` file, `WORKDIR`, env.php to env.py (`tools/genenv.php`), disabling php-fpm.
 
 ## Files
 
