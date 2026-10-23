@@ -1578,6 +1578,9 @@ def main(environ, tables, basedir, later_out=None):
 	"""Top level of index.php. Returns (status, headers, body).
 	The calls queued by later() are appended to later_out (or run here if it is None)."""
 	sys = Sys()
+	# mod_wsgi sets HTTPS=1 (not "on" as PHP): use $_SERVER["HTTPS"] == "on" for https.
+	if environ.get("wsgi.url_scheme") == "https" or environ.get("HTTPS") in ("1", "on"):
+		environ["HTTPS"] = "on"
 	get = _parsequery(environ.get("QUERY_STRING", ""))
 	post = PhpArray()
 	if environ.get("REQUEST_METHOD") == "POST" and environ.get("CONTENT_TYPE", "").startswith("application/x-www-form-urlencoded"):
