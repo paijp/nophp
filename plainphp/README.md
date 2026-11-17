@@ -1,164 +1,188 @@
-# nophp のアプリケーションを通常の PHP に書き直す
+# Rewriting a nophp application in plain PHP
 
-nophp で動いているアプリケーションを、**データベース・URL・ログインをそのままにして**、
-テンプレートと式を使わない通常の PHP に書き直すための手引きです。
-作業するのは Claude（AI のコーディングエージェント）で、読むのも Claude である想定で書いています。
-人が読む場合は「進め方」と「切り替え」だけで足ります。
+How to rewrite an application that runs on nophp in plain PHP, without templates and
+expressions, **keeping its database, its URLs and its logins**. The work is meant to be done
+by Claude (an AI coding agent), and this guide is written for Claude to read. A person only
+needs "Steps" and "Switching".
 
-chatmail（メールとタスクの管理、テンプレート5つ、約8万6千レコード）を 2026-11 に書き直したときの
-手順と、そこで分かったことをまとめたものです。nophp 本体と tables.php の約4700行が、約1400行になりました。
+It is what was done, and what was learned, when chatmail (mail and task management, five
+templates, about 86,000 records) was rewritten in 2026-11. About 4700 lines (nophp itself and
+tables.php) became about 1400.
 
-- [lib.php](lib.php) … 書き直したあとも要るもの（データベースの形式、ログイン、フォームの保護、入口）
-- [example/](example/) … lib.php を使った小さなアプリケーション（メモの一覧）
-- [check.php](check.php) … 本番のデータベースを新しいコードが読めるかの点検（件数だけを出す）
-- [test/](test/) … 書き直しの前後で動作が同じことを確かめるテスト
+- [lib.php](lib.php) … what stays after the rewrite (database format, login, form protection, front controller)
+- [example/](example/) … a small application on lib.php (a list of memos)
+- [check.php](check.php) … checks that the new code understands a production database (prints counts only)
+- [test/](test/) … the test that shows the behaviour is the same before and after
 
-Python への切り替え（テンプレートはそのまま、エンジンを Python にする）は [../py/MIGRATION.md](../py/MIGRATION.md) です。
-この文書は、テンプレートと式そのものをやめる場合です。
+For moving to Python (same templates, the engine in Python) see [../py/MIGRATION.md](../py/MIGRATION.md).
+This guide is for giving up the templates and the expressions themselves.
 
-## いつ書き直すか
+## When to rewrite
 
-nophp は、HTML を書く人が PHP を書く人に頼まずにページを増やせるようにするものです。次のときは、
-書き直したほうが扱いやすくなります。
+nophp lets people who write HTML add pages without asking people who write PHP. A rewrite
+makes the application easier to work on when:
 
-- ページが少なく（数個）、増やすのも PHP を書く人（や Claude）である。
-- 処理が中心の機能（外部 API、集計、他のシステムとの連携）を足していく。
-- `name="newtask__:p:T_newtask:popall:curpage__rid__rid__:g:jump"` のような式を、読み違えずに保守するのが負担になっている。
+- there are few pages (a handful), and whoever adds pages writes PHP anyway (or is Claude);
+- the features to come are mostly logic (external APIs, reports, links to other systems);
+- expressions like `name="newtask__:p:T_newtask:popall:curpage__rid__rid__:g:jump"` have
+  become a burden to maintain without misreading them.
 
-ページが多く、HTML を書く人がいるなら、nophp のまま（または Python 版）が向いています。
+With many pages and people who write HTML, stay on nophp (or its Python version).
 
-## 進め方
+## Steps
 
-**機能は変えずに、作りだけを変えます。** 機能の追加を混ぜると、違いが「バグ」なのか「意図した変更」なのか
-区別できなくなります。直したい不具合が見つかっても、まず同じ動作で書き、切り替えてから直します
-（安全上の問題だけは例外。「意図して変えてよいもの」を参照）。
+**Change the construction, not the behaviour.** If features are added at the same time, a
+difference can no longer be told apart as "bug" or "intended". When a defect turns up, first
+write the same behaviour, switch, and fix it afterwards (security problems are the exception,
+see "What may be changed on purpose").
 
-1. **棚卸し**: アプリケーションが使っている nophp 本体（`index.php` など）、`tables.php`、`res/*.html`、`env.php` を全部読む。
-   **このリポジトリの最新版ではなく、そのアプリケーションに置いてある版を読むこと。** 版によって動作が違う（「版による違い」）。
-   ページと、ページごとのボタン（submit）の一覧を作る。
-2. **現状の記録**: `test/golden.py` で、nophp 版の全ページ・全ボタンの応答とデータベースの変化を記録する（「テスト」）。
-   これが正解になる。書く前に必ず取る。nophp の細かい動作は、コードを読むより記録を見るほうが確実に分かる。
-3. **新しいコードを書く**: `lib.php` を土台に、ページごとの関数を書く（「テンプレートから PHP へ」）。
-   同じシナリオを新しいコードに流し、`test/compare.py` で差が無くなるまで直す。
-4. **本番のデータで点検**: `check.php` を本番で人に実行してもらう（「点検」）。
-5. **切り替え**: 同じ URL で新しいコードに向ける。旧コードは残し、すぐ戻せるようにする（「切り替え」）。
+1. **Inventory**: read all of the nophp code the application uses (`index.php` etc.),
+   `tables.php`, `res/*.html` and `env.php`. **Read the copy that is installed with the
+   application, not the latest version in this repository**: behaviour differs between
+   versions ("Differences between versions"). List the pages and the buttons (submit) of each page.
+2. **Record the present behaviour**: with `test/golden.py`, record the answer of every page
+   and every button of the nophp version, and what changes in the database ("Test"). This is
+   the reference. Take it before writing anything. The fine points of nophp are found more
+   reliably in the records than by reading its code.
+3. **Write the new code**: page functions on top of `lib.php` ("From templates to PHP").
+   Run the same scenario against the new code and fix it until `test/compare.py` shows no difference.
+4. **Check with production data**: have a person run `check.php` on production ("Check").
+5. **Switch**: point the same URL at the new code. Keep the old code so that going back is
+   immediate ("Switching").
 
-## nophp が黙ってやっていること
+## What nophp does without being asked
 
-テンプレートには書かれていないが、nophp 本体がやっていることです。書き直すと消えるので、
-同じことを明示的に書きます。`lib.php` に入っているものは「lib」と書きました。
+Things that are not written in the templates but that nophp does. They disappear in a
+rewrite, so write them out. "lib" marks what `lib.php` contains.
 
-### リクエストの流れ
+### The course of a request
 
-| nophp の動作 | 書き直し |
+| nophp | Rewrite |
 |---|---|
-| URL は `.../index.php/<任意>/<ページ>.html`。`index.php` が無ければ `{URL}/index.php` へ、形が違えば `{urlbase}/nofmt/{rootpage}.html` へリダイレクト | lib `run()` |
-| 2番目の部分（`nofmt` など）は debuglog 用の名前で、何でもよい。空でもよい（`index.php//page.html`） | lib は何でも受け、自分では `nofmt` を使う |
-| ログインしていなければ、どのページ名でも `index.html` を表示する | lib `run()` |
-| ログインしていて `index.html` なら `{urlbase}/index/{rootpage}.html` へリダイレクト（`noredirectonlogin` が無いとき） | lib `run()` |
-| ページのファイルが無ければ `{urlbase}/nopage/{rootpage}.html` へリダイレクト | lib `run()`（ページ名の一覧に無いとき） |
-| **ページを先に全部作ってから**、押されたボタンの式を実行する。式が `:jump` などで終われば、作ったページは捨てる | lib `run()`：ページの関数が「押されたボタンの処理」を返し、ページを作ったあとで実行する |
-| ページを作るときにレコードを保存する関数（表示用の値をキャッシュする、など）は、POST のときも先に走る | 同じ順序にするため、POST でも必ずページを作る |
-| ログイン中は、リクエスト全体が1つのトランザクション。`log_die()` が commit する。素の `die()`（メール送信の失敗など）では commit されず、そのリクエストの書き込みは無かったことになる | lib `finish()` が commit。素の `die()` は rollback になる |
+| The URL is `.../index.php/<anything>/<page>.html`. Without `index.php` it redirects to `{URL}/index.php`; with another shape, to `{urlbase}/nofmt/{rootpage}.html` | lib `run()` |
+| The second part (`nofmt` etc.) is a name for the debug log and may be anything, even empty (`index.php//page.html`) | lib accepts anything and uses `nofmt` itself |
+| While not logged in, `index.html` is shown whatever the page name is | lib `run()` |
+| Logged in and asking for `index.html`: redirect to `{urlbase}/index/{rootpage}.html` (unless `noredirectonlogin`) | lib `run()` |
+| No file for the page: redirect to `{urlbase}/nopage/{rootpage}.html` | lib `run()` (page not in the list) |
+| **The whole page is made first**, then the expression of the pressed button runs. If that ends with `:jump` etc., the page is thrown away | lib `run()`: a page function returns the action of the pressed button, which runs after the page was made |
+| Functions that store a record while a page is made (caching a value for display, …) therefore run before the action on a POST too | make the page on every POST as well, to keep the order |
+| While logged in, the whole request is one transaction. `log_die()` commits. A plain `die()` (a mail that cannot be sent, …) does not: what the request wrote is undone | lib `finish()` commits; a plain `die()` rolls back |
 
-### フォーム
+### Forms
 
-| nophp の動作 | 書き直し |
+| nophp | Rewrite |
 |---|---|
-| `action` の無い `<form>` に `action="?<いまのクエリ>"` を足す。**クエリはエスケープされない** | lib `formopen()`（エスケープする） |
-| ログイン中は `</form>` の前に `<INPUT type=hidden name=submitkey value="...">` を足す | lib `formclose()` |
-| POST は、`submitkey` がログインレコードの値と一致するときだけ処理する（`ispost()`）。一致しなければ、ページを表示するだけ | lib `ispost()`。**全部のボタンの処理で確かめる** |
-| ボタンは、ページを作る途中でその `<input type=submit name="...">` が出力され、同じ name が POST されているときに実行される。条件分岐や繰り返しの中のボタンは、その行が表示されたときだけ有効 | ページの関数の中で、ボタンを出力した場所で `ispost() && isset($_POST[名前])` を見る |
-| `<input name="x">`、`<textarea name="x">`、checkbox、select は、現在のレコードの `x` の値を表示し、POST された値を現在のレコードの `x` に入れる（保存は `:h_update` などのとき） | 表示は `h($r->v("x"))`、保存はボタンの処理で `$r->f["x"] = poststr("x")` |
-| **その結果、ボタンと同じ `tableid` の中にある入力欄は、関係ないものもレコードに保存される**（例：`newtask` という空の欄が、別のボタンの `:H_update` でレコードの `mixed` に入る） | 保存しない。データベースに残っている分は消さずに保持する（「データベース」） |
+| Adds `action="?<the present query>"` to a `<form>` without `action`. **The query is not escaped** | lib `formopen()` (escaped) |
+| While logged in, adds `<INPUT type=hidden name=submitkey value="...">` before `</form>` | lib `formclose()` |
+| A POST is handled only when `submitkey` equals the value in the login record (`ispost()`); otherwise the page is just shown | lib `ispost()`. **Check it in the action of every button** |
+| A button runs when its `<input type=submit name="...">` is output while the page is made and the same name was posted. A button inside a condition or a loop is valid only when that row is shown | in the page function, test `ispost() && isset($_POST[name])` where the button is printed |
+| `<input name="x">`, `<textarea name="x">`, checkboxes and selects show field `x` of the current record and put the posted value into field `x` of the current record (stored by `:h_update` etc.) | show `h($r->v("x"))`; in the action `$r->f["x"] = poststr("x")` |
+| **So every input inside the same `tableid` as the button is stored in the record, related or not** (e.g. an empty field `newtask` ends up in `mixed` through the `:H_update` of another button) | do not store them. What is already in the database is kept ("Database") |
 
-### 式（バッククォートの中）
+### Expressions (between backquotes)
 
-`__` で区切り、`:` で始まらないものはスタックに積み、`:` で始まるものは命令です。
-出力はスタックの底の値で、既定では `htmlspecialchars(…, ENT_QUOTES)` されます。
+Split at `__`; a part that does not start with `:` is pushed on the stack, a part that does
+is a list of commands. The output is the bottom of the stack, by default through
+`htmlspecialchars(…, ENT_QUOTES)`.
 
-| 式 | 意味 | PHP |
+| Expression | Meaning | PHP |
 |---|---|---|
-| `` `name__:r` `` | 現在のレコードのフィールド | `h($r->v("name"))` |
-| `` `id__:g` `` | `$_GET["id"]` の**数字とカンマだけ** | `getnum("id")` |
-| `` `x__:p` `` | `$_POST["x"]`（`ispost()` のときだけ。違えば空） | `ispost() ? poststr("x") : ""` |
-| `` `f__:loginrecord` `` | ログインレコードのフィールド | `h($loginrecord->v("f"))` |
-| `` `body__:r:nl2br` `` / `:raw` / `:url` / `:js` | 出力のしかた | `hbr(…)` / そのまま / `rawurlencode` / JS の文字列 |
-| `` `a__b__:seq` `` / `:ieq` | 文字列として / 整数として等しければ 1 | `===` / `(int) ==` |
-| `` `r__:aid:r_name` `` | 現在のレコードの `aid` を id として、`$sys->aid` のテーブルの `name` | `rec::get("…", $r->v("aid"))->v("name")` |
-| `` `id__:g:orhome` `` | 値が 0 なら `{urlbase}/nofmt/{rootpage}.html` へ | `if ((int)getnum("id") == 0) jump($sys->rootpage);` |
-| `` `v__field__:sqleq` `` | 外側の `selectrows` の where に `field = ?` を足す | SQL に書く（下の注意） |
-| `:xxx`（その他） | `tables.php` の `function bq_xxx__a__b($a, $b)`。引数をスタックから取り、戻り値の配列を積む | 普通の関数にする |
-| `:t_xxx` / `:T_xxx` | テーブル（スタックの名前）/ 現在のレコードの `t_xxx__a__b($rh, $record, $a, $b)`。submit のときは `ts_xxx` が先 | 普通の関数にする |
-| `:h_xxx` / `:H_xxx` | recordholder（`tableid` など）/ 現在のレコードの `h_xxx`、submit では `hs_xxx`。`:H_update` は保存 | `$r->save()` |
-| `:set` | `値__フィールド__:set` で現在のレコードに代入 | `$r->f["フィールド"] = 値` |
-| `:popall:curpage__k__v__:g:jump` | `{urlbase}/{debugfn}/{ページ}.html?k=v` へ | `jump("ページ", "k", getnum("v"))` |
+| `` `name__:r` `` | field of the current record | `h($r->v("name"))` |
+| `` `id__:g` `` | **the digits and commas** of `$_GET["id"]` | `getnum("id")` |
+| `` `x__:p` `` | `$_POST["x"]` (only when `ispost()`, else empty) | `ispost() ? poststr("x") : ""` |
+| `` `f__:loginrecord` `` | field of the login record | `h($loginrecord->v("f"))` |
+| `` `body__:r:nl2br` `` / `:raw` / `:url` / `:js` | how it is output | `hbr(…)` / as it is / `rawurlencode` / a JS string |
+| `` `a__b__:seq` `` / `:ieq` | 1 when equal as strings / as integers | `===` / `(int) ==` |
+| `` `r__:aid:r_name` `` | field `name` of the table of `$sys->aid`, the id being field `aid` of the current record | `rec::get("…", $r->v("aid"))->v("name")` |
+| `` `id__:g:orhome` `` | when the value is 0, go to `{urlbase}/nofmt/{rootpage}.html` | `if ((int)getnum("id") == 0) jump($sys->rootpage);` |
+| `` `v__field__:sqleq` `` | adds `field = ?` to the where of the enclosing `selectrows` | write it in the SQL (see below) |
+| `:xxx` (others) | `function bq_xxx__a__b($a, $b)` of `tables.php`: arguments from the stack, the returned array is pushed | an ordinary function |
+| `:t_xxx` / `:T_xxx` | `t_xxx__a__b($rh, $record, $a, $b)` of the table named on the stack / of the current record; for a submit `ts_xxx` comes first | an ordinary function |
+| `:h_xxx` / `:H_xxx` | `h_xxx` of the record holder (`tableid` …) / of the current record, `hs_xxx` for a submit. `:H_update` stores the record | `$r->save()` |
+| `:set` | `value__field__:set` assigns to the current record | `$r->f["field"] = value` |
+| `:popall:curpage__k__v__:g:jump` | go to `{urlbase}/{debugfn}/{page}.html?k=v` | `jump("page", "k", getnum("v"))` |
 
-注意すること:
+Watch out:
 
-- **`:g` は数字とカンマ以外を捨てる。** `?mode=1login` は `1` になる（ログイン画面の `` `1__mode__:g:seq` `` はこれに頼っている）。
-  文字列をそのまま取るのは、`tables.php` の関数が `$_GET` を直接読む場合だけ。
-- **`{if}` は整数として 0 でなければ真。** 空文字列、`"0"`、数字で始まらない文字列は偽。`"1@abc"` は真。
-- **`selectrows` の where**: `` `v__f__:sqleq` `` は `f = ?` を where の**先頭**に `and` で足す。
-  `from t where 1 or x = 0 `v__f__:sqleq`` は `where f = ? and 1 or x = 0`、つまり `(f = ?) or x = 0` になる。
-  `where 1` は、この仕組みのための詰め物。
-- **`selectrows` の行**は、列に加えて `mixed` の中のフィールドも読める。
-- **`tableid`** で同じテーブル名（別名）が1ページに2回以上あると、**最初のもののレコード**が使われる。
-  id を書かない `tableid` は、新しい空のレコード（保存すると insert）。
-- **二重のエスケープ**: `bq_` 関数が `htmlspecialchars()` 済みの文字列を返し、式に `:raw` が無いと、もう一度エスケープされる
-  （`&` が画面に `&amp;` と出る）。逆に `:raw` の式に、クエリ由来の文字列がそのまま入っていることがある（XSS）。
-  どちらも記録（テスト）に特殊文字を入れると見つかる。
-- **戻り値が配列でない `bq_` 関数**や、対象のレコードを取れていない `T_` 呼び出しなど、
-  「書いてあるが実は何もしていない」式がある。コードを読んだ理解ではなく、記録のとおりに書く。
-- `:jump` の URL の2番目の部分は `$sys->debugfn` で、debuglog を使っていなければ空になる（`index.php//page.html`）。動作に影響は無い。
+- **`:g` drops everything but digits and commas.** `?mode=1login` becomes `1` (the login page
+  relies on this: `` `1__mode__:g:seq` ``). A string is taken as it is only where a function
+  of `tables.php` reads `$_GET` itself.
+- **`{if}` is true when the value is not 0 as an integer.** The empty string, `"0"` and
+  strings that do not start with a digit are false; `"1@abc"` is true.
+- **The where of `selectrows`**: `` `v__f__:sqleq` `` puts `f = ?` at the **front** of the
+  where, joined with `and`. `from t where 1 or x = 0 `v__f__:sqleq`` becomes
+  `where f = ? and 1 or x = 0`, i.e. `(f = ?) or x = 0`. `where 1` is padding for this mechanism.
+- **A row of `selectrows`** gives the fields inside `mixed` as well as the columns.
+- When the same table name (alias) appears in more than one **`tableid`** of a page, **the
+  record of the first one** is used. A `tableid` without an id is a new empty record (storing it inserts).
+- **Double escaping**: a `bq_` function that returns a string already passed through
+  `htmlspecialchars()`, in an expression without `:raw`, is escaped again (`&` shows as
+  `&amp;`). The opposite also happens: a `:raw` expression that carries a string from the
+  query unescaped (XSS). Both are found by putting special characters into the records (test).
+- There are expressions that are written but do nothing: a `bq_` function whose return value
+  is not an array, a `T_` call that does not have the record it means. Write what the
+  records show, not what reading the code suggests.
+- The second part of a `:jump` URL is `$sys->debugfn`, empty when no debug log is used
+  (`index.php//page.html`). It makes no difference.
 
-## データベース
+## Database
 
-変えません。書き直したコードは同じファイルを読み書きし、旧コードと新コードを同じデータベースで交互に動かせます。
+It does not change. The rewritten code reads and writes the same file, and the old and the
+new code can run on the same database in turns.
 
-- 各テーブルは `id`、`mixed`、`created`、`updated`、`deleted` と、`getconfig()` に書かれた列を持つ。
-- **列でないフィールドは `mixed` に入る**: `キー=rawurlencode(値)` をタブで区切ったもの。テンプレートの入力欄や
-  `$r->v_xxx = …` で、列を増やさずにフィールドを増やせるのはこのため。主要なデータが `mixed` にあることも多い。
-- 保存のとき、列の値はすべて文字列にされる（NULL は空文字列になる）。`created`（insert のとき）と `updated` は `$sys->now`。
-- lib の `rec` はこれをそのまま再現する。`$r->f` に列と `mixed` のフィールドが区別なく入り、`save()` が書き分ける。
-  **新しいコードが知らないフィールドも、読んだまま書き戻す**（debuglog の `debuglogfn` や、上に書いた入力欄の残りなど）。
-- `$SCHEMA` には、`tables.php` の `getconfig()` の行をそのまま写す。空のデータベースからテーブルを作るときに使う。
-  既存のデータベースは変更しない（列の追加が要るときは、明示的に `alter table` する）。
-- `simple` テーブル（`__dbinfo` などを持つ）は読み書きしない。旧コードに戻したとき、そのまま動く。
-- 大きなテーブルを全部読むときは `rec::each()`（1件ずつ）を使う。`rec::select()` は全件をメモリに載せる。
+- Every table has `id`, `mixed`, `created`, `updated`, `deleted` and the columns of `getconfig()`.
+- **Fields that are no columns are in `mixed`**: `key=rawurlencode(value)` separated by tabs.
+  This is how inputs of a template, or `$r->v_xxx = …`, add fields without adding columns.
+  Often the main data is in `mixed`.
+- On every save all column values become strings (NULL becomes the empty string). `created`
+  (on insert) and `updated` are `$sys->now`.
+- `rec` of lib does exactly this. `$r->f` holds columns and `mixed` fields alike; `save()`
+  puts them where they belong. **Fields the new code does not know are written back as they
+  were read** (`debuglogfn` of the debug log, the leftovers of inputs described above, …).
+- `$SCHEMA` takes the lines of `getconfig()` of `tables.php` as they are. It is used to make
+  the tables of an empty database. An existing database is not altered (to add a column, run
+  an explicit `alter table`).
+- The `simple` table (`__dbinfo` etc.) is neither read nor written, so the old code still
+  works when it is brought back.
+- To read a whole big table use `rec::each()` (one record at a time). `rec::select()` holds all records in memory.
 
-## ログイン
+## Login
 
-lib の `login_request()` などは、**2023-03 の版**（`v_ismaillogin` がある版）の動作です。
-アプリケーションの版の `loginrecord.php`（古い版では `index.php` の中）と見比べて、合わせてください。
+`login_request()` etc. of lib behave like **the version of 2023-03** (the one with
+`v_ismaillogin`). Compare with `loginrecord.php` of the application's version (inside
+`index.php` in old versions) and adjust.
 
-共通の仕組み:
+Common to all versions:
 
-- Cookie は `sessionid`（ログインレコードの id）と `sessionkey`。パスは `index.php` の手前まで。
-- ログインレコードに `sessionkey = myhash(salt . Cookie の sessionkey)`、`submitkey`（フォーム用）、`pass = myhash(パスワード . salt)`。
-  `myhash` は sha256（`env.php` で差し替えられる）。
-- **同じ URL に置けば、旧コードでログインしたまま新コードを使える**（逆も同じ）。切り替えで利用者はログインし直さずに済む。
-- ログインレコードを `update()` すると、`forcelogoutonupdate`（既定で有効）により `sessionkey` が消え、ログアウトになる。
-  プロフィールや API キーの変更でログアウトするのは、この動作。lib `login_update()`。
-  ログイン・パスワード設定・メール送信は `parent::update()` を直接呼ぶので、ログアウトにならない。
-- パスワードが空でログインフォームを送ると、`$sys->mailcmd` でパスワード設定用の URL
-  （`?mode=1login&uid=…&key=…&`）をメールする。**ログイン名がシェルのコマンドに入るので、文字種の検査を必ず残す。**
-- アプリケーションの `login_table`（`tables.php`）が `update()` を上書きしていたら、その処理を `login_beforeupdate($r)` に書く。
+- The cookies are `sessionid` (id of the login record) and `sessionkey`. The path is the part before `index.php`.
+- The login record holds `sessionkey = myhash(salt . the cookie sessionkey)`, `submitkey`
+  (for forms) and `pass = myhash(password . salt)`. `myhash` is sha256 (replaceable in `env.php`).
+- **At the same URL, a user logged in through the old code stays logged in through the new
+  code** (and back). Nobody has to log in again when the code is switched.
+- An `update()` of the login record clears `sessionkey` because of `forcelogoutonupdate`
+  (on by default): the user is logged out. This is why changing a profile or an API key logs
+  out. lib `login_update()`. Login, setting a password and sending the mail call
+  `parent::update()` directly and do not log out.
+- A login form sent with an empty password mails the URL that sets a password
+  (`?mode=1login&uid=…&key=…&`) with `$sys->mailcmd`. **The login name goes into a shell
+  command: keep the check of its characters.**
+- If the `login_table` of the application (`tables.php`) overrides `update()`, put what it
+  does into `login_beforeupdate($r)`.
 
-版による違い（確認すること）:
+Differences between versions (check them):
 
-| | 2023-03 の版 | 2024-09 以降（このリポジトリの現在の版） |
+| | version of 2023-03 | 2024-09 and later (this repository now) |
 |---|---|---|
-| ログインの処理 | `:login` という name の submit が出力されたとき（つまり index.html を作る途中） | ページを作る前（`onload()`）。`$_POST[":login"]` があり、未ログインのとき |
-| `v_ismaillogin` | あり（メールの URL だけでログインするユーザー） | 廃止。メールの URL のページでパスワードを空にして送ると、パスワード無しでログイン |
-| Cookie のパス | `$cookiepath` | `$cookiepath` と `$cookiepath."/"` の両方に設定 |
-| ログアウト | `:logout` の式 | `ispost()` で `$_POST[":logout"]` があるとき |
-| トランザクション | `execsql("begin;")` | PDO の `beginTransaction()`、`bq_dbbegin` などで差し替え可 |
+| Login is handled | when the submit named `:login` is output (i.e. while index.html is made) | before the page is made (`onload()`), when `$_POST[":login"]` exists and nobody is logged in |
+| `v_ismaillogin` | exists (users who log in with the mailed URL only) | removed. Sending the page of the mailed URL with an empty password logs in without a password |
+| Cookie path | `$cookiepath` | both `$cookiepath` and `$cookiepath."/"` |
+| Logout | the expression `:logout` | when `ispost()` and `$_POST[":logout"]` exists |
+| Transaction | `execsql("begin;")` | PDO `beginTransaction()`, replaceable with `bq_dbbegin` etc. |
 
-## テンプレートから PHP へ
+## From templates to PHP
 
-ページ1つが関数1つです。関数はページを出力し、押されたボタンの処理（呼び出せるもの）か null を返します。
-`example/pages.php` に、元のテンプレートをコメントで添えた例があります。
+One page is one function. It prints the page and returns the action of the pressed button
+(a callable) or null. `example/pages.php` shows examples with the original template in comments.
 
 ```php
 function	page_memo()
@@ -183,93 +207,108 @@ function	page_memo()
 }
 ```
 
-- ボタンの name は `do_save` のような普通の名前にする。表示（value）は変えない。テストはボタンを value で探すので、
-  name が変わっても同じシナリオが使える。未ログインのフォームの `:login` は、そのままにする。
-- 出力は必ず `h()`（`htmlspecialchars(…, ENT_QUOTES)`）を通す。通さないのは、自分で組み立てた HTML だけ。
-- 繰り返しの中のボタン（行ごとの「追加」など）は、name に id を入れ（`do_add12`）、その行を出力したところで判定する。
-- `tables.php` の `t_xxx` / `bq_xxx` は、`$this->v_x` を `$r->f["x"]` に、`$tablelist["t"]->getrecord($id)` を `rec::get("t", $id)` に
-  置き換えれば、ほぼそのまま関数になる。`getrecordidlist("where …", …)` は `rec::select("t", "where …", …)`。
-- `$_GET` / `$_POST` は `getstr()` / `poststr()` で読む（配列が来ても文字列か null になる）。
-- 設定は、元の `env.php` をそのまま読めるようにする（`$sys->xxx = …;` の形なので、`sys` クラスがあれば動く）。
-  新しいコードが使わない項目は無視される。本番の設定ファイルを書き換えずに切り替えられる。
-- ファイルは役割で分ける（例：入口、lib、処理、ページ）。ページごとに分ける必要は無い。
+- Give buttons ordinary names like `do_save`. Do not change what they show (value). The test
+  finds buttons by their value, so the same scenario works although the names change. Keep
+  `:login` in the form for users who are not logged in.
+- Everything that is output goes through `h()` (`htmlspecialchars(…, ENT_QUOTES)`), except
+  HTML the code builds itself.
+- A button inside a loop (an "add" per row) gets the id in its name (`do_add12`) and is
+  tested where its row is printed.
+- `t_xxx` / `bq_xxx` of `tables.php` become functions almost as they are: `$this->v_x`
+  becomes `$r->f["x"]`, `$tablelist["t"]->getrecord($id)` becomes `rec::get("t", $id)`,
+  `getrecordidlist("where …", …)` becomes `rec::select("t", "where …", …)`.
+- Read `$_GET` / `$_POST` with `getstr()` / `poststr()` (a string or null, also when an array is sent).
+- Let the new code read the original `env.php` as it is (it has the form `$sys->xxx = …;`,
+  which works with the class `sys`). What the new code does not use is ignored. Production's
+  settings file need not be touched for the switch.
+- Split the files by role (entry, lib, logic, pages), not by page.
 
-### 意図して変えてよいもの
+### What may be changed on purpose
 
-同じ動作で書くのが原則ですが、次は直します。直したものは一覧にして、人に伝えます。
+The rule is the same behaviour, but fix the following. List what was fixed and tell the person.
 
-- エスケープされずに出ていたクエリ由来の文字列（XSS）。フォームの `action`、`:raw` の式。
-- 二重のエスケープ（表示が壊れているもの）。
-- Cookie の `SameSite=Lax`、鍵やハッシュの比較の `hash_equals()`、`X-Content-Type-Options: nosniff`。
-- 関係ない入力欄がレコードに保存される動作（保存しない）。
-- `?mode=sql`、`?mode=import`、debuglog、coverage は移さない（必要なら別の手段で）。
+- Strings from the query that were output unescaped (XSS): the `action` of forms, `:raw` expressions.
+- Double escaping (where the display is broken).
+- `SameSite=Lax` on the cookies, `hash_equals()` for keys and hashes, `X-Content-Type-Options: nosniff`.
+- Unrelated inputs stored in records (do not store them).
+- `?mode=sql`, `?mode=import`, the debug log and coverage are not carried over (use other means if needed).
 
-それ以外の「おかしな動作」（効いていない式、紛らわしい操作）は、そのまま再現し、一覧にして人に判断を仰ぎます。
+Other "odd behaviour" (expressions without effect, confusing operations) is reproduced as it
+is, listed, and left to the person to decide.
 
-## テスト
+## Test
 
-`test/golden.py` は、**空のデータベース**から始めて、シナリオの各ステップで次を1ファイルに記録します。
-ステータス、Location、設定された Cookie の名前、HTML、送信されたメール、全テーブルの全レコード
-（時刻・乱数の鍵・ハッシュは伏せる）。`php -S` で動かすので、Web サーバーは要りません。
+`test/golden.py` starts from an **empty database** and, for every step of a scenario, writes
+one file with: status, Location, the names of the cookies set, the HTML, the mails sent, and
+every record of every table (times, random keys and hashes masked). It runs the code under
+`php -S`; no web server is needed.
 
 ```
-python3 -I test/golden.py <旧コードの写し> /tmp/old 8901 <シナリオのディレクトリ>
-python3 -I test/golden.py <新しいコード>   /tmp/new 8902 <シナリオのディレクトリ>
+python3 -I test/golden.py <copy of the old code> /tmp/old 8901 <scenario dir>
+python3 -I test/golden.py <the new code>         /tmp/new 8902 <scenario dir>
 python3 -I test/compare.py /tmp/old/out /tmp/new/out
 ```
 
-- シナリオ（`scenario.py`）は Python で、`get()`、`submit()`（ボタンの value を指定してフォームを送る）、
-  `post()`（そのまま送る。API や、submitkey の無い偽の POST）を並べたもの。`test/scenario.py` は example 用の例。
-- 設定は `config.py` の `ENV` に書く。テスト対象のコードは、環境変数（既定は `APP_ENV`）のファイルを設定として読むようにする。
-  nophp 版は、コードを写して `env.php` を `<?php require(getenv("APP_ENV"));` に置き換える。
-- メールを送るアプリケーションは、テストのときだけファイルに書くようにする（環境変数 `OUTBOX` のディレクトリ。
-  golden.py はそこのファイルを記録して消す）。ログインのメールは `mailcmd` を `cat > {work}/loginmail.txt` にして、URL を取り出す。
+- The scenario (`scenario.py`) is Python: a list of `get()`, `submit()` (send the form of the
+  button with a given value) and `post()` (send as it is: APIs, forged POSTs without
+  submitkey). `test/scenario.py` is the one of the example.
+- Settings are in `ENV` of `config.py`. The code under test must load the file named by an
+  environment variable (default `APP_ENV`) as its settings. For the nophp version, copy the
+  code and replace `env.php` by `<?php require(getenv("APP_ENV"));`.
+- An application that sends mail writes it to a file during tests (the directory in the
+  environment variable `OUTBOX`; golden.py records the files there and removes them). For the
+  login mail set `mailcmd` to `cat > {work}/loginmail.txt` and take the URL from it.
 
-シナリオに入れるもの（chatmail では 95 ステップ）:
+What goes into the scenario (95 steps for chatmail):
 
-- 未ログインでの各ページ、ログインの全経路（メールの URL、パスワード設定、誤ったパスワード、存在しないユーザー）。
-- 全ページを、データが無いとき・あるとき・存在しない id・id 無しで。
-- **全部のボタン**。空の入力、複数行、**`<b> & " '` を含む文字列**、CRLF。同じボタンが複数あるページでは2つ目以降も。
-- 表示が分岐する条件を、両方（閉じたもの／開いたもの、フラグの有無）。
-- submitkey の無い POST、違う POST。ログアウト後。API があれば、正しい鍵・誤った鍵・ログイン中。
-- ページを見るだけでデータベースが変わる箇所（記録の `---- db` を前のステップと比べると分かる）。
+- every page while not logged in; every way to log in (mailed URL, setting a password, wrong password, unknown user);
+- every page with no data, with data, with an id that does not exist, without an id;
+- **every button**: empty input, several lines, **strings with `<b> & " '`**, CRLF; on pages
+  with several buttons of the same kind, the second and later ones too;
+- both sides of every condition of the display (closed / open, flag set / not set);
+- a POST without submitkey and with a wrong one; after logout; for an API: the right key, a wrong key, while logged in;
+- places where looking at a page changes the database (compare `---- db` with the step before).
 
-`compare.py` が無視するのは、ボタンの name、HTML の空行とインデント、`action` の中の `&` と `&amp;`、
-リダイレクトの `index.php//` だけです。それ以外の差は、直すか、「意図して変えたもの」として記録を差し替えます
-（nophp 版の記録を `expected/` としてリポジトリに置き、以後の回帰テストに使う。差し替えた理由を書いておく）。
+`compare.py` ignores only: the names of buttons, empty lines and indentation of the HTML,
+`&` / `&amp;` in `action`, and `index.php//` in redirects. Any other difference is fixed, or,
+when it is a change on purpose, the record is replaced (keep the records of the nophp version
+in the repository as `expected/` for later regression tests, and write down why a record was replaced).
 
-機能を足すときは、先にシナリオにステップを足し、`expected/` を更新します。
+When a feature is added later: add steps to the scenario first, then update `expected/`.
 
-## 点検（本番のデータ）
+## Check (production data)
 
-テストのデータは作りものです。本番のデータには、テストに無い形（古い版が残したフィールド、NULL、巨大なレコード）が
-あります。**本番のデータは会話に出さない**ので、件数だけを出す `check.php` を人に実行してもらいます。
+Test data is made up. Production data has shapes the test does not have (fields left by old
+versions, NULLs, huge records). **Production data must not appear in the conversation**, so a
+person runs `check.php`, which prints counts only.
 
-- 全レコードを読み、「保存したら変わるレコード」の数を数える（0 でなければ、`rec` がそのデータを正しく扱えていない）。
-- `mixed` にあるフィールド名と件数を出す（知らないフィールドに気づける）。
-- 全ページを（最初のユーザーとして）作り、例外と警告を数える。何も保存しない（最後に rollback する。
-  `finish()` は `$checkmode` のとき commit せず例外を投げる）。
-- テーブルは1件ずつ読む。全件を一度に読むと、本番の量ではメモリが足りなくなる。
+- It reads every record and counts those that "would change when saved" (if not 0, `rec` does not handle that data correctly).
+- It prints the names of the fields in `mixed` with their counts (unknown fields become visible).
+- It makes every page (as the first user) and counts exceptions and warnings. Nothing is
+  stored: it rolls back at the end (`finish()` throws instead of committing when `$checkmode` is set).
+- Tables are read row by row. Reading a table at once runs out of memory with production's amounts.
 
-`check.php` の「APPLICATION」の部分を、アプリケーションに合わせて書きます。出力の最後の行が
-`ok: nothing would change, every page was made` なら問題ありません。
+Write the part of `check.php` marked "APPLICATION" for the application. All is well when the
+last line is `ok: nothing would change, every page was made`.
 
-## 切り替え
+## Switching
 
-1. 新しいコードを旧コードと**同じ URL** に置く（Web サーバーの設定で、入口の PHP ファイルを差し替える）。
-   Cookie とログインレコードが共通なので、利用者はログインしたまま。
-2. 旧コードは別のディレクトリに残す。戻すのは、入口のパスを旧コードに向け直すだけ（データベースもセッションも共通）。
-   実際に一度戻して、動くことを確かめておく。
-3. 切り替える前に、データベースのバックアップを取る（`sqlite3 db ".backup …"`）。
-4. 切り替えたら `check.php` を実行し、取り消せない操作（メールの送信など）を、害の無い相手で1回試す。
-5. 1〜2週間問題が無ければ、旧コードとバックアップを消す。
+1. Put the new code at **the same URL** as the old code (in the web server's settings,
+   exchange the PHP file of the entry). Cookies and login records are shared: users stay logged in.
+2. Keep the old code in another directory. Going back is pointing the entry at the old code
+   again (database and sessions are shared). Do go back once, to see that it works.
+3. Back up the database before the switch (`sqlite3 db ".backup …"`).
+4. After the switch run `check.php`, and try what cannot be undone (sending a mail) once with a harmless recipient.
+5. After one or two weeks without problems, remove the old code and the backup.
 
-別の URL に新しいコードを並べて試す方法は、おすすめしません。Cookie のパスが変わるので別のログインになり、
-ログインすると（ログインレコードが共通なので）もう一方のセッションが切れます。
+Running the new code next to the old one at another URL is not recommended: the cookie path
+differs, so it is another login, and logging in there ends the session of the other one (the
+login record is shared).
 
-## 作業の見積もり
+## How much work it is
 
-chatmail の例: テンプレート5つ（約300行）、`tables.php` 約760行、ボタン約15種類。
-棚卸し・記録（95ステップ）・書き直し・比較・点検・切り替えまで、Claude の1セッションで終わりました。
-時間がかかったのは、棚卸し（本体の式の処理を読む）と、シナリオを実際のデータの並びに合わせる部分です。
-書き直し自体は、記録があれば、差が無くなるまで直すだけです。
+chatmail: five templates (about 300 lines), `tables.php` of about 760 lines, about 15 kinds of
+buttons. Inventory, records (95 steps), rewrite, comparison, check and switch were done in one
+session of Claude. The time went into the inventory (reading how nophp handles expressions)
+and into fitting the scenario to the order of the real data. With the records at hand, the
+rewrite itself is fixing until no difference is left.

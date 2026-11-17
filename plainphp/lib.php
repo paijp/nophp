@@ -354,7 +354,7 @@ function	login_start($r, $ismaillogin = 0)
 
 # The login form (submit name ":login") was sent, or its page is shown.
 # This is the behaviour of nophp of 2023-03 (with v_ismaillogin). For the
-# differences of later versions see README.md, "ログイン".
+# differences of later versions see README.md, "Login".
 # Every answer is a redirect to the login page; the text is only for logs.
 function	login_request()
 {
