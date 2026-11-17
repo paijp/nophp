@@ -89,5 +89,10 @@ https://github.com/paijp/nophp/discussions/2
 - html/debuglog/ (any path, optional)
 	- *.php (automatically created)
 
+# Moving off the framework.
+
+- To Python, with the same HTML templates and the same database: py/MIGRATION.md
+- To plain PHP without templates (same database, same URLs, same login): plainphp/README.md
+
 # Samples in English are now ready.
 
